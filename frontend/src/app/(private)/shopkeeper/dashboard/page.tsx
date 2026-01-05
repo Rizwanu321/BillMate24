@@ -1,0 +1,562 @@
+'use client';
+
+import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+import {
+    IndianRupee,
+    TrendingUp,
+    TrendingDown,
+    Users,
+    Package,
+    ArrowUpRight,
+    ArrowDownRight,
+    CreditCard,
+    Banknote,
+    Smartphone,
+    Receipt,
+    AlertTriangle,
+    AlertCircle,
+    Info,
+    ChevronRight,
+    Calendar,
+    Clock,
+    FileText,
+    Activity,
+    Target,
+    Wallet,
+    PieChart,
+    Sparkles,
+} from 'lucide-react';
+import { Header } from '@/components/app/header';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import api from '@/config/axios';
+import { format } from 'date-fns';
+
+interface DashboardData {
+    // Sales data (from bills)
+    todaySales: number;
+    yesterdaySales: number;
+    weekSales: number;
+    monthSales: number;
+    // Collected data (from transactions/payments)
+    todayCollected: number;
+    yesterdayCollected: number;
+    weekCollected: number;
+    monthCollected: number;
+    // Purchase data
+    todayPurchases: number;
+    monthPurchases: number;
+    // Counts
+    todayBillCount: number;
+    monthBillCount: number;
+    // Dues
+    totalDueFromCustomers: number;
+    totalDueToWholesalers: number;
+    paymentMethodSplit: { cash: number; card: number; online: number };
+    recentTransactions: any[];
+    totalCustomers: number;
+    totalWholesalers: number;
+    customersWithDues: number;
+    wholesalersWithDues: number;
+    recentBills: any[];
+    weeklyTrend: { date: string; sales: number; purchases: number; collected: number }[];
+    topCustomersDue: any[];
+    topWholesalersDue: any[];
+    alerts: { type: string; message: string; count: number }[];
+}
+
+function formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(amount);
+}
+
+function formatCompactCurrency(amount: number): string {
+    if (amount >= 100000) {
+        return `₹${(amount / 100000).toFixed(1)}L`;
+    } else if (amount >= 1000) {
+        return `₹${(amount / 1000).toFixed(1)}K`;
+    }
+    return formatCurrency(amount);
+}
+
+function getPercentageChange(current: number, previous: number): { value: number; isPositive: boolean } {
+    if (previous === 0) return { value: current > 0 ? 100 : 0, isPositive: current >= 0 };
+    const change = ((current - previous) / previous) * 100;
+    return { value: Math.abs(change), isPositive: change >= 0 };
+}
+
+export default function ShopkeeperDashboard() {
+    const { data: dashboard, isLoading } = useQuery<DashboardData>({
+        queryKey: ['shopkeeper-dashboard'],
+        queryFn: async () => {
+            const response = await api.get('/dashboard');
+            return response.data.data;
+        },
+        refetchInterval: 60000, // Refresh every minute
+    });
+
+    const todaySalesChange = dashboard ? getPercentageChange(dashboard.todaySales, dashboard.yesterdaySales) : null;
+    const totalPayments = dashboard ? (dashboard.paymentMethodSplit.cash + dashboard.paymentMethodSplit.card + dashboard.paymentMethodSplit.online) : 0;
+    const netDue = dashboard ? (dashboard.totalDueFromCustomers - dashboard.totalDueToWholesalers) : 0;
+    const monthProfit = dashboard ? (dashboard.monthSales - dashboard.monthPurchases) : 0;
+
+    // Get current date info
+    const now = new Date();
+    const greeting = now.getHours() < 12 ? 'Good Morning' : now.getHours() < 17 ? 'Good Afternoon' : 'Good Evening';
+
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-purple-50">
+            <Header title="Dashboard" />
+
+            {/* Mobile-optimized content */}
+            <div className="p-4 md:p-6">
+                {/* Welcome Section - Compact on mobile */}
+                <div className="mb-4 md:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-gray-900 bg-clip-text text-transparent">
+                                {greeting}!
+                            </h2>
+                            <Sparkles className="h-5 w-5 md:h-8 md:w-8 text-purple-900" />
+                        </div>
+                        <p className="text-gray-600 text-sm md:text-base mt-0.5 md:mt-1 flex items-center gap-2">
+                            <Calendar className="h-3 w-3 md:h-4 md:w-4" />
+                            {format(now, 'EEE, MMM d, yyyy')}
+                        </p>
+                    </div>
+                    {/* Quick action buttons - Hidden on mobile (using bottom nav instead) */}
+                    <div className="hidden md:flex gap-3">
+                        <Link href="/shopkeeper/billing">
+                            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/25">
+                                <Receipt className="h-4 w-4 mr-2" />
+                                New Bill
+                            </Button>
+                        </Link>
+                        <Link href="/shopkeeper/reports/daily">
+                            <Button variant="outline">
+                                <FileText className="h-4 w-4 mr-2" />
+                                Reports
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
+
+                {isLoading ? (
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="h-28 md:h-36 animate-pulse bg-gray-200 rounded-2xl" />
+                        ))}
+                    </div>
+                ) : (
+                    <>
+                        {/* Alerts Section - Compact on mobile */}
+                        {dashboard?.alerts && dashboard.alerts.length > 0 && (
+                            <div className="mb-4 md:mb-6 space-y-2">
+                                {dashboard.alerts.map((alert, index) => (
+                                    <div
+                                        key={index}
+                                        className={`flex items-center justify-between p-3 md:p-4 rounded-xl border text-sm ${alert.type === 'error'
+                                            ? 'bg-red-50 border-red-200 text-red-800'
+                                            : alert.type === 'warning'
+                                                ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                                                : 'bg-blue-50 border-blue-200 text-blue-800'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-2 md:gap-3">
+                                            {alert.type === 'error' ? (
+                                                <AlertTriangle className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
+                                            ) : alert.type === 'warning' ? (
+                                                <AlertCircle className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
+                                            ) : (
+                                                <Info className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
+                                            )}
+                                            <span className="font-medium text-xs md:text-sm line-clamp-1">{alert.message}</span>
+                                        </div>
+                                        <Link href="/shopkeeper/reports/dues">
+                                            <Button variant="ghost" size="sm" className="text-current hover:bg-current/10 text-xs whitespace-nowrap">
+                                                view <ChevronRight className="h-3 w-3 md:h-4 md:w-4 ml-0.5 md:ml-1" />
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Main Stats Grid - 2 columns on mobile */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-4 md:mb-8">
+                            {/* Today's Sales */}
+                            <Card className="relative overflow-hidden border-0 shadow-lg md:shadow-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+                                <CardContent className="p-3 md:p-6">
+                                    <div className="flex items-center justify-between mb-2 md:mb-4">
+                                        <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
+                                            <IndianRupee className="h-4 w-4 md:h-6 md:w-6" />
+                                        </div>
+                                        {todaySalesChange && (
+                                            <Badge className={`${todaySalesChange.isPositive ? 'bg-white/20' : 'bg-red-500/50'} text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2`}>
+                                                {todaySalesChange.isPositive ? <ArrowUpRight className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5" /> : <ArrowDownRight className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5" />}
+                                                {todaySalesChange.value.toFixed(0)}%
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(dashboard?.todaySales || 0)}</h3>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Today's Sales</p>
+                                    <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
+                                        <div className="flex items-center justify-between text-[10px] md:text-sm">
+                                            <span className="text-white/70">Collected</span>
+                                            <span className="font-semibold">{formatCompactCurrency(dashboard?.todayCollected || 0)}</span>
+                                        </div>
+                                        <p className="text-[10px] md:text-xs text-white/60 mt-1 flex items-center gap-1">
+                                            <Clock className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                                            {dashboard?.todayBillCount || 0} bills
+                                        </p>
+                                    </div>
+                                </CardContent>
+                                <div className="absolute -bottom-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
+                            </Card>
+
+                            {/* This Month */}
+                            <Card className="relative overflow-hidden border-0 shadow-lg md:shadow-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+                                <CardContent className="p-3 md:p-6">
+                                    <div className="flex items-center justify-between mb-2 md:mb-4">
+                                        <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
+                                            <TrendingUp className="h-4 w-4 md:h-6 md:w-6" />
+                                        </div>
+                                        <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
+                                            {format(now, 'MMM')}
+                                        </Badge>
+                                    </div>
+                                    <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(dashboard?.monthSales || 0)}</h3>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Month's Sales</p>
+                                    <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
+                                        <div className="flex items-center justify-between text-[10px] md:text-sm">
+                                            <span className="text-white/70">Collected</span>
+                                            <span className="font-semibold">{formatCompactCurrency(dashboard?.monthCollected || 0)}</span>
+                                        </div>
+                                        <p className="text-[10px] md:text-xs text-white/60 mt-1 flex items-center gap-1">
+                                            <Activity className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                                            {dashboard?.monthBillCount || 0} bills
+                                        </p>
+                                    </div>
+                                </CardContent>
+                                <div className="absolute -bottom-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
+                            </Card>
+
+                            {/* Due from Customers */}
+                            <Card className="relative overflow-hidden border-0 shadow-lg md:shadow-xl bg-gradient-to-br from-orange-500 to-red-500 text-white">
+                                <CardContent className="p-3 md:p-6">
+                                    <div className="flex items-center justify-between mb-2 md:mb-4">
+                                        <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
+                                            <Users className="h-4 w-4 md:h-6 md:w-6" />
+                                        </div>
+                                        <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
+                                            To Collect
+                                        </Badge>
+                                    </div>
+                                    <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(dashboard?.totalDueFromCustomers || 0)}</h3>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Receivables</p>
+                                    <p className="text-[10px] md:text-xs text-white/60 mt-2 flex items-center gap-1">
+                                        <Target className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                                        {dashboard?.customersWithDues || 0} with dues
+                                    </p>
+                                </CardContent>
+                                <div className="absolute -bottom-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
+                            </Card>
+
+                            {/* Due to Wholesalers */}
+                            <Card className="relative overflow-hidden border-0 shadow-lg md:shadow-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
+                                <CardContent className="p-3 md:p-6">
+                                    <div className="flex items-center justify-between mb-2 md:mb-4">
+                                        <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
+                                            <Package className="h-4 w-4 md:h-6 md:w-6" />
+                                        </div>
+                                        <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
+                                            To Pay
+                                        </Badge>
+                                    </div>
+                                    <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(dashboard?.totalDueToWholesalers || 0)}</h3>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Payables</p>
+                                    <p className="text-[10px] md:text-xs text-white/60 mt-2 flex items-center gap-1">
+                                        <Target className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                                        {dashboard?.wholesalersWithDues || 0} pending
+                                    </p>
+                                </CardContent>
+                                <div className="absolute -bottom-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
+                            </Card>
+                        </div>
+
+                        {/* Secondary Stats Row - Scrollable on mobile */}
+                        <div className="flex md:grid md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-8 overflow-x-auto pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow flex-shrink-0 w-36 md:w-auto">
+                                <CardContent className="p-3 md:p-4 flex items-center gap-3 md:gap-4">
+                                    <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-green-100">
+                                        <Wallet className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-base md:text-2xl font-bold text-gray-900">{formatCompactCurrency(dashboard?.weekSales || 0)}</p>
+                                        <p className="text-xs md:text-sm text-gray-500">Week Sales</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow flex-shrink-0 w-36 md:w-auto">
+                                <CardContent className="p-3 md:p-4 flex items-center gap-3 md:gap-4">
+                                    <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-purple-100">
+                                        <Users className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-base md:text-2xl font-bold text-gray-900">{dashboard?.totalCustomers || 0}</p>
+                                        <p className="text-xs md:text-sm text-gray-500">Customers</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow flex-shrink-0 w-36 md:w-auto">
+                                <CardContent className="p-3 md:p-4 flex items-center gap-3 md:gap-4">
+                                    <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-blue-100">
+                                        <Package className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-base md:text-2xl font-bold text-gray-900">{dashboard?.totalWholesalers || 0}</p>
+                                        <p className="text-xs md:text-sm text-gray-500">Wholesalers</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Main Content Grid - Stack on mobile */}
+                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 md:gap-6 mb-4 md:mb-8">
+                            {/* Payment Methods */}
+                            <Card className="border-0 shadow-md md:shadow-lg">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 md:px-6 pt-3 md:pt-6">
+                                    <CardTitle className="text-sm md:text-lg flex items-center gap-2">
+                                        <PieChart className="h-4 w-4 md:h-5 md:w-5 text-purple-500" />
+                                        Payment Methods
+                                    </CardTitle>
+                                    <Badge variant="secondary" className="text-[10px] md:text-xs">This Month</Badge>
+                                </CardHeader>
+                                <CardContent className="space-y-3 md:space-y-4 px-3 md:px-6 pb-3 md:pb-6">
+                                    {/* Cash */}
+                                    <div className="space-y-1.5 md:space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-1.5 md:p-2 rounded-lg bg-green-100">
+                                                    <Banknote className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
+                                                </div>
+                                                <span className="font-medium text-xs md:text-sm">Cash</span>
+                                            </div>
+                                            <span className="font-semibold text-xs md:text-sm">{formatCompactCurrency(dashboard?.paymentMethodSplit.cash || 0)}</span>
+                                        </div>
+                                        <Progress
+                                            value={totalPayments > 0 ? (dashboard?.paymentMethodSplit.cash || 0) / totalPayments * 100 : 0}
+                                            className="h-1.5 md:h-2 bg-green-100"
+                                        />
+                                    </div>
+
+                                    {/* Card */}
+                                    <div className="space-y-1.5 md:space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-1.5 md:p-2 rounded-lg bg-blue-100">
+                                                    <CreditCard className="h-3 w-3 md:h-4 md:w-4 text-blue-600" />
+                                                </div>
+                                                <span className="font-medium text-xs md:text-sm">Card</span>
+                                            </div>
+                                            <span className="font-semibold text-xs md:text-sm">{formatCompactCurrency(dashboard?.paymentMethodSplit.card || 0)}</span>
+                                        </div>
+                                        <Progress
+                                            value={totalPayments > 0 ? (dashboard?.paymentMethodSplit.card || 0) / totalPayments * 100 : 0}
+                                            className="h-1.5 md:h-2 bg-blue-100"
+                                        />
+                                    </div>
+
+                                    {/* Online */}
+                                    <div className="space-y-1.5 md:space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-1.5 md:p-2 rounded-lg bg-purple-100">
+                                                    <Smartphone className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
+                                                </div>
+                                                <span className="font-medium text-xs md:text-sm">Online/UPI</span>
+                                            </div>
+                                            <span className="font-semibold text-xs md:text-sm">{formatCompactCurrency(dashboard?.paymentMethodSplit.online || 0)}</span>
+                                        </div>
+                                        <Progress
+                                            value={totalPayments > 0 ? (dashboard?.paymentMethodSplit.online || 0) / totalPayments * 100 : 0}
+                                            className="h-1.5 md:h-2 bg-purple-100"
+                                        />
+                                    </div>
+
+                                    <div className="pt-3 md:pt-4 border-t">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-semibold text-gray-700 text-xs md:text-sm">Total</span>
+                                            <span className="font-bold text-sm md:text-lg">{formatCompactCurrency(totalPayments)}</span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Top Dues - Combined */}
+                            <Card className="border-0 shadow-md md:shadow-lg">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 md:px-6 pt-3 md:pt-6">
+                                    <CardTitle className="text-sm md:text-lg flex items-center gap-2">
+                                        <AlertCircle className="h-4 w-4 md:h-5 md:w-5 text-orange-500" />
+                                        Top Dues
+                                    </CardTitle>
+                                    <Link href="/shopkeeper/reports/dues">
+                                        <Button variant="ghost" size="sm" className="text-xs h-7 md:h-8">View All</Button>
+                                    </Link>
+                                </CardHeader>
+                                <CardContent className="space-y-3 md:space-y-4 px-3 md:px-6 pb-3 md:pb-6">
+                                    {/* Customer Dues */}
+                                    <div>
+                                        <p className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase mb-1.5 md:mb-2">From Customers</p>
+                                        {dashboard?.topCustomersDue && dashboard.topCustomersDue.length > 0 ? (
+                                            <div className="space-y-1.5 md:space-y-2">
+                                                {dashboard.topCustomersDue.slice(0, 3).map((customer: any) => (
+                                                    <div key={customer._id} className="flex items-center justify-between p-1.5 md:p-2 rounded-lg bg-red-50 hover:bg-red-100 transition-colors">
+                                                        <div className="flex items-center gap-1.5 md:gap-2">
+                                                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-red-200 flex items-center justify-center text-red-700 font-semibold text-[10px] md:text-sm">
+                                                                {customer.name.charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <span className="font-medium text-[11px] md:text-sm truncate max-w-[80px] md:max-w-none">{customer.name}</span>
+                                                        </div>
+                                                        <Badge variant="destructive" className="font-mono text-[10px] md:text-xs px-1.5 md:px-2">
+                                                            {formatCompactCurrency(customer.outstandingDue)}
+                                                        </Badge>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-500 text-center py-2">No pending dues</p>
+                                        )}
+                                    </div>
+
+                                    {/* Wholesaler Dues */}
+                                    <div>
+                                        <p className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase mb-1.5 md:mb-2">To Wholesalers</p>
+                                        {dashboard?.topWholesalersDue && dashboard.topWholesalersDue.length > 0 ? (
+                                            <div className="space-y-1.5 md:space-y-2">
+                                                {dashboard.topWholesalersDue.slice(0, 3).map((wholesaler: any) => (
+                                                    <div key={wholesaler._id} className="flex items-center justify-between p-1.5 md:p-2 rounded-lg bg-orange-50 hover:bg-orange-100 transition-colors">
+                                                        <div className="flex items-center gap-1.5 md:gap-2">
+                                                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-orange-200 flex items-center justify-center text-orange-700 font-semibold text-[10px] md:text-sm">
+                                                                {wholesaler.name.charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <span className="font-medium text-[11px] md:text-sm truncate max-w-[80px] md:max-w-none">{wholesaler.name}</span>
+                                                        </div>
+                                                        <Badge className="bg-orange-100 text-orange-700 font-mono text-[10px] md:text-xs px-1.5 md:px-2">
+                                                            {formatCompactCurrency(wholesaler.outstandingDue)}
+                                                        </Badge>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-500 text-center py-2">No pending payments</p>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Recent Bills */}
+                            <Card className="border-0 shadow-md md:shadow-lg">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 md:px-6 pt-3 md:pt-6">
+                                    <CardTitle className="text-sm md:text-lg flex items-center gap-2">
+                                        <Receipt className="h-4 w-4 md:h-5 md:w-5 text-blue-500" />
+                                        Recent Bills
+                                    </CardTitle>
+                                    <Link href="/shopkeeper/billing/history">
+                                        <Button variant="ghost" size="sm" className="text-xs h-7 md:h-8">View All</Button>
+                                    </Link>
+                                </CardHeader>
+                                <CardContent className="px-3 md:px-6 pb-3 md:pb-6">
+                                    {dashboard?.recentBills && dashboard.recentBills.length > 0 ? (
+                                        <div className="space-y-2 md:space-y-3">
+                                            {dashboard.recentBills.slice(0, 4).map((bill: any) => (
+                                                <div key={bill._id} className="flex items-center justify-between p-2 md:p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                                                    <div className="flex items-center gap-2 md:gap-3">
+                                                        <div className={`p-1.5 md:p-2 rounded-lg ${bill.billType === 'sale' ? 'bg-green-100' : 'bg-orange-100'}`}>
+                                                            {bill.billType === 'sale' ? (
+                                                                <ArrowUpRight className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
+                                                            ) : (
+                                                                <ArrowDownRight className="h-3 w-3 md:h-4 md:w-4 text-orange-600" />
+                                                            )}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-medium text-[11px] md:text-sm truncate max-w-[100px] md:max-w-none">{bill.entityName}</p>
+                                                            <p className="text-[10px] md:text-xs text-gray-500">
+                                                                {bill.billNumber} • {format(new Date(bill.createdAt), 'dd MMM')}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className={`font-semibold text-xs md:text-sm ${bill.billType === 'sale' ? 'text-green-600' : 'text-orange-600'}`}>
+                                                            {formatCompactCurrency(bill.totalAmount)}
+                                                        </p>
+                                                        {bill.dueAmount > 0 && (
+                                                            <p className="text-[10px] md:text-xs text-red-500">Due: {formatCompactCurrency(bill.dueAmount)}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-6 md:py-8 text-gray-500">
+                                            <Receipt className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-2 text-gray-300" />
+                                            <p className="text-xs md:text-sm">No bills yet</p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Quick Actions - Hidden on mobile (using bottom nav) */}
+                        <Card className="hidden md:block border-0 shadow-lg bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 text-white">
+                            <CardContent className="py-6">
+                                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                                    <div>
+                                        <h3 className="text-xl font-bold">Quick Actions</h3>
+                                        <p className="text-white/70 text-sm">Manage your business efficiently</p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-3">
+                                        <Link href="/shopkeeper/billing">
+                                            <Button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-white/20">
+                                                <Receipt className="h-4 w-4 mr-2" />
+                                                Create Bill
+                                            </Button>
+                                        </Link>
+                                        <Link href="/shopkeeper/wholesalers/payments">
+                                            <Button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-white/20">
+                                                <CreditCard className="h-4 w-4 mr-2" />
+                                                Record Payment
+                                            </Button>
+                                        </Link>
+                                        <Link href="/shopkeeper/customers/due">
+                                            <Button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-white/20">
+                                                <Users className="h-4 w-4 mr-2" />
+                                                View Customers
+                                            </Button>
+                                        </Link>
+                                        <Link href="/shopkeeper/wholesalers">
+                                            <Button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-white/20">
+                                                <Package className="h-4 w-4 mr-2" />
+                                                View Wholesalers
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
