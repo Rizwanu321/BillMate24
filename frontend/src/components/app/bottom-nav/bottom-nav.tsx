@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 const navItems = [
     { href: '/shopkeeper/dashboard', label: 'Home', icon: LayoutDashboard },
     { href: '/shopkeeper/billing', label: 'Bill', icon: Receipt },
-    { href: '/shopkeeper/customers', label: 'Customers', icon: Users },
+    { href: '/shopkeeper/customers/dashboard', label: 'Customers', icon: Users },
     { href: '/shopkeeper/wholesalers', label: 'Wholesalers', icon: Package },
     { href: '/shopkeeper/reports/daily', label: 'Reports', icon: BarChart3 },
 ];
