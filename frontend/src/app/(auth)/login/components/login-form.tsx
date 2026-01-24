@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Store, Mail, Lock } from 'lucide-react';
+import { Loader2, Store, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,10 +13,13 @@ import { loginSchema, LoginInput } from '@/schemas/auth.schema';
 import { useAuthStore } from '@/store/auth.store';
 import api from '@/config/axios';
 import { toast } from 'sonner';
+import Link from 'next/link';
+import { Logo } from '@/components/app/logo';
 
 export function LoginForm() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const setAuth = useAuthStore((state) => state.setAuth);
 
     const {
@@ -62,13 +65,13 @@ export function LoginForm() {
 
             <Card className="w-full max-w-md relative bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl">
                 <CardHeader className="text-center space-y-4">
-                    <div className="mx-auto w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
-                        <Store className="w-8 h-8 text-white" />
+                    <div className="flex justify-center mb-2">
+                        <Logo iconOnly size="lg" className="bg-white/5 p-1 rounded-3xl" />
                     </div>
                     <div>
-                        <CardTitle className="text-2xl font-bold text-white">Welcome Back</CardTitle>
+                        <CardTitle className="text-3xl font-bold text-white tracking-tight">Welcome to BillMate24</CardTitle>
                         <CardDescription className="text-gray-300">
-                            Sign in to your Revenue Management System
+                            Sign in to your BillMate24 account
                         </CardDescription>
                     </div>
                 </CardHeader>
@@ -99,16 +102,36 @@ export function LoginForm() {
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                                 <Input
                                     id="password"
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     placeholder="••••••••"
-                                    className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-purple-400 focus:ring-purple-400"
+                                    className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-purple-400 focus:ring-purple-400"
                                     {...register('password')}
                                     disabled={isLoading}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors focus:outline-none"
+                                    tabIndex={-1}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-5 w-5" />
+                                    ) : (
+                                        <Eye className="h-5 w-5" />
+                                    )}
+                                </button>
                             </div>
                             {errors.password && (
                                 <p className="text-sm text-red-400">{errors.password.message}</p>
                             )}
+                            <div className="flex justify-end">
+                                <Link
+                                    href="/forgot-password"
+                                    className="text-xs text-purple-400 hover:text-purple-300 font-medium transition-colors"
+                                >
+                                    Forgot password?
+                                </Link>
+                            </div>
                         </div>
 
                         <Button
@@ -129,7 +152,7 @@ export function LoginForm() {
 
                     <div className="mt-6 text-center">
                         <p className="text-sm text-gray-400">
-                            Demo credentials: <span className="text-purple-300">shop@rms.com / Shop@123</span>
+                            Demo credentials: <span className="text-purple-300">shop@billmate24.com / Shop@123</span>
                         </p>
                     </div>
                 </CardContent>

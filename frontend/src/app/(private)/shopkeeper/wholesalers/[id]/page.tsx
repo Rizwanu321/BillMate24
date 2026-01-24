@@ -273,7 +273,7 @@ export default function WholesalerDetailPage() {
                                 </div>
                             </CardHeader>
                             <CardContent className="p-0">
-                                <TransactionsTable bills={filteredBills} isLoading={billsLoading} />
+                                <TransactionsTable bills={filteredBills} wholesaler={wholesaler} isLoading={billsLoading} />
                                 {filteredBills.length > 0 && (
                                     <div className="border-t">
                                         <Pagination

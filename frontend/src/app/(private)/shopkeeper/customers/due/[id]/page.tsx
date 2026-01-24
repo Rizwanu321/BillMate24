@@ -240,7 +240,7 @@ export default function DueCustomerDetailPage() {
                                     filters={filters}
                                     onFiltersChange={handleFiltersChange}
                                 />
-                                <SalesTable bills={filteredBills} isLoading={billsLoading} />
+                                <SalesTable bills={filteredBills} customer={customer} isLoading={billsLoading} />
                                 {filteredBills.length > 0 && billsPagination.totalPages > 1 && (
                                     <Pagination
                                         page={billsPage}

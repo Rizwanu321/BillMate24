@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SidebarItem as SidebarItemType } from './sidebar-config';
@@ -12,11 +12,12 @@ interface SidebarItemProps {
     item: SidebarItemType;
     hasFeature: (feature: keyof Features) => boolean;
     isCollapsed?: boolean;
+    isOpen?: boolean;
+    onToggle?: () => void;
 }
 
-export function SidebarItem({ item, hasFeature, isCollapsed }: SidebarItemProps) {
+export function SidebarItem({ item, hasFeature, isCollapsed, isOpen = false, onToggle }: SidebarItemProps) {
     const pathname = usePathname();
-    const [isOpen, setIsOpen] = useState(false);
 
     // Check if item should be visible based on feature
     if (item.feature && !hasFeature(item.feature)) {
@@ -39,19 +40,14 @@ export function SidebarItem({ item, hasFeature, isCollapsed }: SidebarItemProps)
     );
     const isActive = isActiveExact || isChildActive;
 
-    // Auto-expand when a child is active
-    useEffect(() => {
-        if (hasChildren && isChildActive) {
-            setIsOpen(true);
-        }
-    }, [hasChildren, isChildActive]);
+
 
     // Handle parent menu click
     const handleParentClick = (e: React.MouseEvent) => {
-        if (hasChildren) {
+        if (hasChildren && onToggle) {
             e.preventDefault();
             e.stopPropagation();
-            setIsOpen(!isOpen);
+            onToggle();
         }
         // If no children, let the Link handle navigation
     };

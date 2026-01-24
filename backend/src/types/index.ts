@@ -23,6 +23,8 @@ export interface IUser {
     features: Features;
     isActive: boolean;
     refreshToken?: string;
+    resetPasswordOTP?: string;
+    resetPasswordOTPExpires?: Date;
     createdAt: Date;
     updatedAt: Date;
 }

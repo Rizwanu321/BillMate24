@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Plus, Search, MoreHorizontal, Trash2, Edit, Eye, Package, Calendar,
     LayoutDashboard, Phone, MapPin, CreditCard, Filter, X, ChevronLeft,
-    ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, CheckCircle, Users
+    ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, CheckCircle, Users, IndianRupee
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Header } from '@/components/app/header';
@@ -48,6 +48,7 @@ import { Label } from '@/components/ui/label';
 import api from '@/config/axios';
 import { Wholesaler, PaginatedResponse } from '@/types';
 import { toast } from 'sonner';
+import { wholesalerSchema } from '@/schemas/wholesaler.schema';
 import { WholesalerStats, DeleteConfirmDialog, EditWholesalerDialog } from './components';
 
 interface WholesalerStatsData {
@@ -239,12 +240,29 @@ export default function WholesalersPage() {
     const handleCreate = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        createMutation.mutate({
+
+        const initialPurchasedValue = formData.get('initialPurchased') as string;
+
+        const rawData: any = {
             name: formData.get('name'),
             phone: formData.get('phone'),
             whatsappNumber: formData.get('whatsappNumber'),
             address: formData.get('address'),
-        });
+        };
+
+        // Handle number conversion
+        if (initialPurchasedValue && !isNaN(parseFloat(initialPurchasedValue))) {
+            rawData.initialPurchased = parseFloat(initialPurchasedValue);
+        }
+
+        const validation = wholesalerSchema.safeParse(rawData);
+
+        if (!validation.success) {
+            toast.error(validation.error.issues[0].message);
+            return;
+        }
+
+        createMutation.mutate(validation.data);
     };
 
     const handleEditClick = (wholesaler: Wholesaler) => {
@@ -342,7 +360,7 @@ export default function WholesalersPage() {
                                     <span className="sm:hidden">Add New</span>
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-md">
+                            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                     <DialogTitle className="flex items-center gap-2">
                                         <div className="p-2 rounded-lg bg-purple-100">
@@ -350,31 +368,101 @@ export default function WholesalersPage() {
                                         </div>
                                         Add New Wholesaler
                                     </DialogTitle>
+                                    <p className="text-sm text-gray-600 mt-2">Create a new wholesaler account. You can optionally record any advance payment made.</p>
                                 </DialogHeader>
                                 <form onSubmit={handleCreate} className="space-y-4 mt-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="name">Name *</Label>
-                                        <Input id="name" name="name" required placeholder="Enter wholesaler name" />
+                                        <Label htmlFor="name">
+                                            Wholesaler Name <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input
+                                            id="name"
+                                            name="name"
+                                            required
+                                            placeholder="Enter wholesaler name"
+                                        />
                                     </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="phone">
+                                                Phone Number <span className="text-red-500">*</span>
+                                            </Label>
+                                            <Input
+                                                id="phone"
+                                                name="phone"
+                                                type="tel"
+                                                placeholder="+91"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="whatsappNumber">WhatsApp</Label>
+                                            <Input
+                                                id="whatsappNumber"
+                                                name="whatsappNumber"
+                                                type="tel"
+                                                placeholder="+91"
+                                            />
+                                        </div>
+                                    </div>
+
                                     <div className="space-y-2">
-                                        <Label htmlFor="phone">Phone</Label>
-                                        <Input id="phone" name="phone" placeholder="+91 XXXXX XXXXX" />
+                                        <Label htmlFor="address">
+                                            Address <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input
+                                            id="address"
+                                            name="address"
+                                            placeholder="Enter complete address"
+                                            required
+                                        />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
-                                        <Input id="whatsappNumber" name="whatsappNumber" placeholder="+91 XXXXX XXXXX" />
+
+                                    <div className="border-t pt-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="initialPurchased" className="flex items-center gap-2">
+                                                Opening Balance (Optional)
+                                                <span className="text-xs text-gray-500 font-normal">
+                                                    - Total purchased before using app
+                                                </span>
+                                            </Label>
+                                            <div className="relative">
+                                                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                                                <Input
+                                                    id="initialPurchased"
+                                                    name="initialPurchased"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    placeholder="0.00"
+                                                    className="pl-10"
+                                                />
+                                            </div>
+                                            <p className="text-xs text-gray-500">
+                                                Enter the total amount purchased from this wholesaler before using this app.
+                                                This will be recorded as outstanding debt to be paid.
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="address">Address</Label>
-                                        <Input id="address" name="address" placeholder="Enter address" />
+
+                                    <div className="flex gap-3 pt-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => setIsCreateOpen(false)}
+                                            className="flex-1"
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600"
+                                            disabled={createMutation.isPending}
+                                        >
+                                            {createMutation.isPending ? 'Creating...' : 'Add Wholesaler'}
+                                        </Button>
                                     </div>
-                                    <Button
-                                        type="submit"
-                                        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600"
-                                        disabled={createMutation.isPending}
-                                    >
-                                        {createMutation.isPending ? 'Creating...' : 'Add Wholesaler'}
-                                    </Button>
                                 </form>
                             </DialogContent>
                         </Dialog>

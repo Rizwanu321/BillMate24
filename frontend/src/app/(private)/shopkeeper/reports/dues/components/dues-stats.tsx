@@ -31,11 +31,7 @@ function formatCurrency(amount: number): string {
 }
 
 function formatCompactCurrency(amount: number): string {
-    if (amount >= 100000) {
-        return `₹${(amount / 100000).toFixed(1)}L`;
-    } else if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}K`;
-    }
+    // User requested to see full amounts without K/L suffixes
     return formatCurrency(amount);
 }
 

@@ -1,6 +1,7 @@
 import { User } from '../users/user.model';
 import { hashPassword, comparePassword, generateTokens, verifyRefreshToken } from '../../utils/auth';
-import { LoginInput, RegisterInput } from './auth.validation';
+import { LoginInput, RegisterInput, ForgotPasswordInput, VerifyOTPInput, ResetPasswordInput } from './auth.validation';
+import { emailService } from '../../utils/email.service';
 import { LoginResponse, AuthTokens, IUser } from '../../types';
 
 export class AuthService {
@@ -147,6 +148,82 @@ export class AuthService {
         }
 
         return user.toObject() as Omit<IUser, 'password' | 'refreshToken'>;
+    }
+
+    async updateProfile(userId: string, data: { name?: string; phone?: string; businessName?: string; address?: string }): Promise<Omit<IUser, 'password' | 'refreshToken'>> {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        if (data.name) user.name = data.name;
+        if (data.phone) user.phone = data.phone;
+        if (data.businessName) user.businessName = data.businessName;
+        if (data.address) user.address = data.address;
+
+        await user.save();
+
+        const userResponse = user.toObject();
+        delete (userResponse as any).password;
+        delete (userResponse as any).refreshToken;
+
+        return userResponse as Omit<IUser, 'password' | 'refreshToken'>;
+    }
+
+    async forgotPassword(email: string): Promise<void> {
+        const user = await User.findOne({ email: email.toLowerCase() });
+
+        if (!user) {
+            throw new Error('User with this email does not exist');
+        }
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Set expiry (10 minutes)
+        const expiry = new Date();
+        expiry.setMinutes(expiry.getMinutes() + 10);
+
+        user.resetPasswordOTP = otp;
+        user.resetPasswordOTPExpires = expiry;
+        await user.save();
+
+        // Send Email
+        await emailService.sendOTP(user.email, otp, user.name);
+    }
+
+    async verifyOTP(email: string, otp: string): Promise<boolean> {
+        const user = await User.findOne({
+            email: email.toLowerCase(),
+            resetPasswordOTP: otp,
+            resetPasswordOTPExpires: { $gt: new Date() }
+        });
+
+        if (!user) {
+            throw new Error('Invalid or expired OTP');
+        }
+
+        return true;
+    }
+
+    async resetPassword(input: ResetPasswordInput): Promise<void> {
+        const user = await User.findOne({
+            email: input.email.toLowerCase(),
+            resetPasswordOTP: input.otp,
+            resetPasswordOTPExpires: { $gt: new Date() }
+        });
+
+        if (!user) {
+            throw new Error('Invalid or expired OTP');
+        }
+
+        const hashedPassword = await hashPassword(input.password);
+        user.password = hashedPassword;
+        user.resetPasswordOTP = undefined;
+        user.resetPasswordOTPExpires = undefined;
+        user.refreshToken = undefined; // Force logout from all devices
+        await user.save();
     }
 }
 

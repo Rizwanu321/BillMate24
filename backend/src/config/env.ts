@@ -14,6 +14,12 @@ const envSchema = z.object({
     FRONTEND_URL: z.string().default('http://localhost:3000'),
     RATE_LIMIT_WINDOW_MS: z.string().default('900000'),
     RATE_LIMIT_MAX: z.string().default('100'),
+    // Email configuration
+    EMAIL_HOST: z.string().default('smtp.gmail.com'),
+    EMAIL_PORT: z.string().default('587'),
+    EMAIL_USER: z.string().optional(),
+    EMAIL_PASSWORD: z.string().optional(),
+    EMAIL_FROM: z.string().default('Rizwanurahmanop@gmail.com'),
 });
 
 const parsed = envSchema.safeParse(process.env);

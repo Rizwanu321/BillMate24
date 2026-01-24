@@ -11,5 +11,7 @@ router.get('/', billController.getAll.bind(billController));
 router.get('/recent', billController.getRecent.bind(billController));
 router.get('/stats', billController.getStats.bind(billController));
 router.get('/:id', billController.getById.bind(billController));
+router.patch('/:id', billController.update.bind(billController));
+router.delete('/:id', billController.delete.bind(billController));
 
 export const billRoutes = router;

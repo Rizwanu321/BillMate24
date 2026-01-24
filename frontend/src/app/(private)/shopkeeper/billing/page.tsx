@@ -43,8 +43,16 @@ const billSchema = z.object({
     entityName: z.string().optional(),
     totalAmount: z.number().min(0.01, 'Amount must be greater than 0'),
     paidAmount: z.number().min(0, 'Paid amount must be positive'),
-    paymentMethod: z.enum(['cash', 'card', 'online']),
+    paymentMethod: z.enum(['cash', 'card', 'online']).optional(),
     notes: z.string().optional(),
+}).refine((data) => {
+    if (data.paidAmount > 0 && !data.paymentMethod) {
+        return false;
+    }
+    return true;
+}, {
+    message: 'Payment method is required',
+    path: ['paymentMethod'],
 });
 
 type BillFormData = z.infer<typeof billSchema>;
@@ -54,6 +62,7 @@ export default function BillingPage() {
     const { hasFeature } = useAuth();
     const [billType, setBillType] = useState<'purchase' | 'sale'>('sale');
     const [customerType, setCustomerType] = useState<'due_customer' | 'normal_customer'>('due_customer');
+    const [resetKey, setResetKey] = useState(0);
 
     const {
         register,
@@ -69,6 +78,7 @@ export default function BillingPage() {
             entityType: 'due_customer',
             paidAmount: 0,
             paymentMethod: 'cash',
+            totalAmount: 0,
         },
     });
 
@@ -76,7 +86,18 @@ export default function BillingPage() {
     const paidAmount = watch('paidAmount') || 0;
     const dueAmount = Math.max(0, totalAmount - paidAmount);
 
-    // Fetch wholesalers
+    // Calculate excess payment (when paying more than the current bill)
+    const excessPayment = Math.max(0, paidAmount - totalAmount);
+
+    // Calculate effective paid amount for UI logic
+    const effectivePaidAmount = (billType === 'sale' && customerType === 'normal_customer')
+        ? totalAmount
+        : paidAmount;
+
+    // State for selected entity - must be before useMemo that uses it
+    const [selectedEntityId, setSelectedEntityId] = useState<string>('');
+
+    // Fetch wholesalers - must be before useMemo that uses it
     const { data: wholesalers } = useQuery({
         queryKey: ['wholesalers-list'],
         queryFn: async () => {
@@ -86,7 +107,7 @@ export default function BillingPage() {
         enabled: billType === 'purchase' && hasFeature('wholesalers'),
     });
 
-    // Fetch due customers
+    // Fetch due customers - must be before useMemo that uses it
     const { data: dueCustomers } = useQuery({
         queryKey: ['due-customers-list'],
         queryFn: async () => {
@@ -95,6 +116,23 @@ export default function BillingPage() {
         },
         enabled: billType === 'sale' && customerType === 'due_customer' && hasFeature('dueCustomers'),
     });
+
+    // Get selected entity's outstanding due
+    const selectedEntity = useMemo(() => {
+        if (billType === 'purchase') {
+            return wholesalers?.find(w => w._id === selectedEntityId);
+        } else if (customerType === 'due_customer') {
+            return dueCustomers?.find(c => c._id === selectedEntityId);
+        }
+        return null;
+    }, [billType, customerType, selectedEntityId, wholesalers, dueCustomers]);
+
+    const entityOutstandingDue = selectedEntity?.outstandingDue || 0;
+
+    // Calculate how much excess can be applied to reduce outstanding
+    const applicableExcess = Math.min(excessPayment, entityOutstandingDue);
+    // Remaining outstanding after excess is applied
+    const newOutstandingDue = Math.max(0, entityOutstandingDue - excessPayment);
 
     // Transform wholesalers to combobox options
     const wholesalerOptions: ComboboxOption[] = useMemo(() => {
@@ -114,9 +152,6 @@ export default function BillingPage() {
         }));
     }, [dueCustomers]);
 
-    // State for selected entity
-    const [selectedEntityId, setSelectedEntityId] = useState<string>('');
-
     const createBillMutation = useMutation({
         mutationFn: async (data: BillFormData) => {
             const response = await api.post('/bills', data);
@@ -131,6 +166,7 @@ export default function BillingPage() {
             queryClient.invalidateQueries({ queryKey: ['customer-dashboard'] });
             queryClient.invalidateQueries({ queryKey: ['customers'] });
             queryClient.invalidateQueries({ queryKey: ['due-customers'] });
+            queryClient.invalidateQueries({ queryKey: ['due-customers-list'] });
             queryClient.invalidateQueries({ queryKey: ['due-customers-stats'] });
             queryClient.invalidateQueries({ queryKey: ['normal-customer-sales'] });
 
@@ -143,11 +179,31 @@ export default function BillingPage() {
 
             // Wholesaler queries (for purchases)
             queryClient.invalidateQueries({ queryKey: ['wholesalers'] });
+            queryClient.invalidateQueries({ queryKey: ['wholesalers-list'] });
             queryClient.invalidateQueries({ queryKey: ['wholesaler-stats'] });
             queryClient.invalidateQueries({ queryKey: ['wholesaler-dashboard'] });
 
             toast.success('Bill created successfully!');
-            reset();
+
+            // Increment reset key to force-refresh interactive components (clears search inputs)
+            setResetKey(prev => prev + 1);
+
+            // Reset customer type to default (Due Customer)
+            setCustomerType('due_customer');
+
+            // Reset all form fields
+            // billType is retained for bulk entry
+            reset({
+                billType: billType,
+                entityType: billType === 'purchase' ? 'wholesaler' : 'due_customer',
+                paidAmount: 0,
+                paymentMethod: 'cash',
+                totalAmount: 0,
+                notes: '',
+                entityId: '',
+                entityName: ''
+            });
+            setSelectedEntityId('');
         },
         onError: (error: any) => {
             toast.error(error.response?.data?.message || 'Failed to create bill');
@@ -163,13 +219,19 @@ export default function BillingPage() {
             ? data.totalAmount
             : data.paidAmount;
 
-        createBillMutation.mutate({
+        const payload: any = {
             ...data,
             entityName,
             paidAmount,
             billType,
             entityType: billType === 'purchase' ? 'wholesaler' : customerType,
-        });
+        };
+
+        if (paidAmount === 0) {
+            delete payload.paymentMethod;
+        }
+
+        createBillMutation.mutate(payload);
     };
 
     const handleEntitySelect = (value: string, option?: ComboboxOption) => {
@@ -195,7 +257,7 @@ export default function BillingPage() {
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)}>
-                    <div className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                    <div key={resetKey} className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
 
                         {/* Transaction Type Toggle - Clear selection colors */}
                         <div className="p-3 md:p-6 border-b-2 border-slate-100 bg-slate-50">
@@ -440,8 +502,8 @@ export default function BillingPage() {
                                         </div>
                                     )}
 
-                                    {/* Fully Paid indicator */}
-                                    {dueAmount <= 0 && totalAmount > 0 && (
+                                    {/* Fully Paid indicator - no excess */}
+                                    {dueAmount <= 0 && excessPayment === 0 && totalAmount > 0 && (
                                         <div className="mt-4 p-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-lg">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
@@ -454,40 +516,106 @@ export default function BillingPage() {
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* Excess Payment - Reduces existing outstanding */}
+                                    {excessPayment > 0 && totalAmount > 0 && (
+                                        <div className="mt-4 space-y-3">
+                                            {/* Fully Paid indicator */}
+                                            <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl shadow-lg">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm">
+                                                            ✓
+                                                        </div>
+                                                        <span className="text-white font-bold text-sm">Bill Fully Paid</span>
+                                                    </div>
+                                                    <span className="text-lg md:text-xl font-bold text-white">₹{totalAmount.toLocaleString('en-IN')}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Excess payment reduces outstanding */}
+                                            <div className="p-4 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl shadow-lg">
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/20 flex items-center justify-center">
+                                                                <ArrowRight className="h-4 w-4 md:h-5 md:w-5 text-white" />
+                                                            </div>
+                                                            <span className="text-white font-bold text-sm md:text-base">Extra Payment</span>
+                                                        </div>
+                                                        <span className="text-2xl md:text-3xl font-bold text-white">₹{excessPayment.toLocaleString('en-IN')}</span>
+                                                    </div>
+
+                                                    {/* Show outstanding reduction if entity is selected and has dues */}
+                                                    {selectedEntity && entityOutstandingDue > 0 && (
+                                                        <div className="mt-3 pt-3 border-t border-white/20">
+                                                            <div className="flex items-center justify-between text-sm">
+                                                                <span className="text-white/80">Current Outstanding:</span>
+                                                                <span className="text-white font-semibold">₹{entityOutstandingDue.toLocaleString('en-IN')}</span>
+                                                            </div>
+                                                            <div className="flex items-center justify-between text-sm mt-1">
+                                                                <span className="text-white/80">After this payment:</span>
+                                                                <span className="text-white font-bold">₹{newOutstandingDue.toLocaleString('en-IN')}</span>
+                                                            </div>
+                                                            {excessPayment > entityOutstandingDue && (
+                                                                <div className="mt-2 p-2 bg-yellow-400/20 rounded-lg">
+                                                                    <p className="text-yellow-200 text-xs font-medium">
+                                                                        ⚠️ Extra ₹{(excessPayment - entityOutstandingDue).toLocaleString('en-IN')} will create advance balance
+                                                                    </p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Show message when no entity selected */}
+                                                    {!selectedEntity && (
+                                                        <p className="text-white/80 text-xs mt-2">
+                                                            This extra amount will reduce {billType === 'purchase' ? "wholesaler's" : "customer's"} existing outstanding balance
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </div>
 
-                        {/* Payment Method - Clear pills */}
-                        <div className="p-3 md:p-6 border-b-2 border-slate-100">
-                            <label className="text-xs md:text-sm font-bold text-slate-800 mb-3 block uppercase tracking-wide">
-                                Payment Method
-                            </label>
-                            <div className="flex gap-2 md:gap-3">
-                                {[
-                                    { value: 'cash', label: 'Cash', icon: <Banknote className="h-5 w-5 md:h-6 md:w-6" />, color: 'green' },
-                                    { value: 'card', label: 'Card', icon: <CreditCard className="h-5 w-5 md:h-6 md:w-6" />, color: 'blue' },
-                                    { value: 'online', label: 'UPI', icon: <Smartphone className="h-5 w-5 md:h-6 md:w-6" />, color: 'purple' },
-                                ].map((method) => (
-                                    <button
-                                        key={method.value}
-                                        type="button"
-                                        onClick={() => setValue('paymentMethod', method.value as any)}
-                                        className={`flex-1 py-3 md:py-4 px-3 md:px-4 rounded-xl text-sm md:text-base font-bold transition-all flex flex-col items-center gap-2 ${watch('paymentMethod') === method.value
-                                            ? method.color === 'green'
-                                                ? 'bg-green-500 text-white shadow-lg shadow-green-500/30 ring-2 ring-green-500/20'
-                                                : method.color === 'blue'
-                                                    ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-500/20'
-                                                    : 'bg-purple-500 text-white shadow-lg shadow-purple-500/30 ring-2 ring-purple-500/20'
-                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-2 border-slate-200'
-                                            }`}
-                                    >
-                                        {method.icon}
-                                        {method.label}
-                                    </button>
-                                ))}
+                        {/* Payment Method - Clear pills - Only show if paid amount > 0 */}
+                        {effectivePaidAmount > 0 && (
+                            <div className="p-3 md:p-6 border-b-2 border-slate-100">
+                                <label className="text-xs md:text-sm font-bold text-slate-800 mb-3 block uppercase tracking-wide">
+                                    Payment Method
+                                </label>
+                                <div className="flex gap-2 md:gap-3">
+                                    {[
+                                        { value: 'cash', label: 'Cash', icon: <Banknote className="h-5 w-5 md:h-6 md:w-6" />, color: 'green' },
+                                        { value: 'card', label: 'Card', icon: <CreditCard className="h-5 w-5 md:h-6 md:w-6" />, color: 'blue' },
+                                        { value: 'online', label: 'UPI', icon: <Smartphone className="h-5 w-5 md:h-6 md:w-6" />, color: 'purple' },
+                                    ].map((method) => (
+                                        <button
+                                            key={method.value}
+                                            type="button"
+                                            onClick={() => setValue('paymentMethod', method.value as any)}
+                                            className={`flex-1 py-3 md:py-4 px-3 md:px-4 rounded-xl text-sm md:text-base font-bold transition-all flex flex-col items-center gap-2 ${watch('paymentMethod') === method.value
+                                                ? method.color === 'green'
+                                                    ? 'bg-green-500 text-white shadow-lg shadow-green-500/30 ring-2 ring-green-500/20'
+                                                    : method.color === 'blue'
+                                                        ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-500/20'
+                                                        : 'bg-purple-500 text-white shadow-lg shadow-purple-500/30 ring-2 ring-purple-500/20'
+                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-2 border-slate-200'
+                                                }`}
+                                        >
+                                            {method.icon}
+                                            {method.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                {errors.paymentMethod && (
+                                    <p className="text-xs text-red-500 mt-2 font-medium">{errors.paymentMethod.message}</p>
+                                )}
                             </div>
-                        </div>
+                        )}
 
                         {/* Notes - Subtle */}
                         <div className="p-3 md:p-6 border-b-2 border-slate-100 bg-slate-50">

@@ -25,6 +25,38 @@ export interface User {
     updatedAt: string;
 }
 
+// Storage statistics interface
+export interface StorageStats {
+    shopkeeperId: string;
+    storage: {
+        totalBytes: number;
+        formatted: string;
+    };
+    customers: {
+        total: number;
+        due: number;
+        normal: number;
+    };
+    wholesalers: {
+        total: number;
+    };
+    bills: {
+        total: number;
+        purchase: number;
+        sale: number;
+    };
+    revenue: {
+        total: number;
+        expenses: number;
+        profit: number;
+    };
+}
+
+// User with storage stats
+export interface UserWithStorage extends User {
+    storageStats: StorageStats;
+}
+
 // Wholesaler interface
 export interface Wholesaler {
     _id: string;

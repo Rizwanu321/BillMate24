@@ -9,7 +9,7 @@ import {
     ChevronsLeft, ChevronsRight, LayoutDashboard, Users, Receipt, IndianRupee,
     CreditCard, Banknote, Smartphone, TrendingUp, ShoppingBag
 } from 'lucide-react';
-import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subDays } from 'date-fns';
 import { Header } from '@/components/app/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,7 +65,7 @@ interface PaginatedResponse<T> {
     };
 }
 
-type TimeFilterOption = 'all' | 'today' | 'this_week' | 'this_month' | 'this_year' | 'custom';
+type TimeFilterOption = 'all' | 'today' | 'yesterday' | 'this_week' | 'this_month' | 'this_year' | 'custom';
 
 interface FiltersState {
     search: string;
@@ -78,6 +78,7 @@ interface FiltersState {
 const filterLabels: Record<TimeFilterOption, string> = {
     all: 'All Time',
     today: 'Today',
+    yesterday: 'Yesterday',
     this_week: 'This Week',
     this_month: 'This Month',
     this_year: 'This Year',
@@ -114,6 +115,9 @@ function getDateRangeForFilter(option: TimeFilterOption): { startDate?: string; 
             return {};
         case 'today':
             return { startDate: format(startOfDay(now), 'yyyy-MM-dd'), endDate: format(endOfDay(now), 'yyyy-MM-dd') };
+        case 'yesterday':
+            const yesterday = subDays(now, 1);
+            return { startDate: format(startOfDay(yesterday), 'yyyy-MM-dd'), endDate: format(endOfDay(yesterday), 'yyyy-MM-dd') };
         case 'this_week':
             return { startDate: format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd'), endDate: format(endOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd') };
         case 'this_month':
@@ -442,7 +446,7 @@ export default function NormalCustomersPage() {
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="start" className="w-48">
-                                            {(['all', 'today', 'this_week', 'this_month', 'this_year'] as TimeFilterOption[]).map((option) => (
+                                            {(['all', 'today', 'yesterday', 'this_week', 'this_month', 'this_year'] as TimeFilterOption[]).map((option) => (
                                                 <DropdownMenuItem
                                                     key={option}
                                                     onClick={() => handleTimeFilterChange(option)}

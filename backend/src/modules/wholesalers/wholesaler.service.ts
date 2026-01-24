@@ -3,12 +3,34 @@ import { CreateWholesalerInput, UpdateWholesalerInput } from './wholesaler.valid
 
 export class WholesalerService {
     async create(shopkeeperId: string, input: CreateWholesalerInput): Promise<any> {
+        const { initialPurchased, ...wholesalerData } = input;
+
         const wholesaler = new Wholesaler({
-            ...input,
+            ...wholesalerData,
             shopkeeperId,
+            // If there's an initial purchase amount, it represents:
+            // - Total purchased from this wholesaler before using the app
+            // - This becomes the outstanding debt (totalPaid = 0 initially)
+            totalPurchased: initialPurchased || 0,
+            totalPaid: 0,
+            outstandingDue: initialPurchased || 0,  // Positive value = shopkeeper owes wholesaler
         });
-        await wholesaler.save();
-        return wholesaler.toObject();
+
+        try {
+            await wholesaler.save();
+            return wholesaler.toObject();
+        } catch (error: any) {
+            // Handle duplicate key errors
+            if (error.code === 11000) {
+                const field = Object.keys(error.keyPattern || {})[1]; // Second key is phone/whatsappNumber
+                if (field === 'phone') {
+                    throw new Error('Phone number already exists for another wholesaler');
+                } else if (field === 'whatsappNumber') {
+                    throw new Error('WhatsApp number already exists for another wholesaler');
+                }
+            }
+            throw error;
+        }
     }
 
     async getAll(
@@ -84,15 +106,28 @@ export class WholesalerService {
     }
 
     async update(shopkeeperId: string, id: string, input: UpdateWholesalerInput): Promise<any> {
-        const wholesaler = await Wholesaler.findOneAndUpdate(
-            { _id: id, shopkeeperId },
-            { $set: input },
-            { new: true }
-        );
-        if (!wholesaler) {
-            throw new Error('Wholesaler not found');
+        try {
+            const wholesaler = await Wholesaler.findOneAndUpdate(
+                { _id: id, shopkeeperId },
+                { $set: input },
+                { new: true, runValidators: true }
+            );
+            if (!wholesaler) {
+                throw new Error('Wholesaler not found');
+            }
+            return wholesaler.toObject();
+        } catch (error: any) {
+            // Handle duplicate key errors
+            if (error.code === 11000) {
+                const field = Object.keys(error.keyPattern || {})[1]; // Second key is phone/whatsappNumber
+                if (field === 'phone') {
+                    throw new Error('Phone number already exists for another wholesaler');
+                } else if (field === 'whatsappNumber') {
+                    throw new Error('WhatsApp number already exists for another wholesaler');
+                }
+            }
+            throw error;
         }
-        return wholesaler.toObject();
     }
 
     async delete(shopkeeperId: string, id: string): Promise<void> {

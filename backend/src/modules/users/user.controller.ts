@@ -12,6 +12,8 @@ export class UserController {
         } catch (error: any) {
             if (error.message === 'Email already registered') {
                 sendError(res, error.message, 409);
+            } else if (error.message === 'Phone number already registered') {
+                sendError(res, error.message, 409);
             } else {
                 next(error);
             }
@@ -57,6 +59,8 @@ export class UserController {
         } catch (error: any) {
             if (error.message === 'Shopkeeper not found') {
                 sendError(res, error.message, 404);
+            } else if (error.message === 'Phone number already registered') {
+                sendError(res, error.message, 409);
             } else {
                 next(error);
             }
@@ -107,6 +111,33 @@ export class UserController {
         try {
             const stats = await userService.getShopkeeperStats();
             sendSuccess(res, stats, 'Stats retrieved successfully');
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getShopkeeperStorageStats(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const stats = await userService.getShopkeeperStorageStats(req.params.id);
+            sendSuccess(res, stats, 'Storage stats retrieved successfully');
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getAllShopkeepersWithStorage(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { page, limit } = getPaginationParams(
+                req.query.page as string,
+                req.query.limit as string
+            );
+            const result = await userService.getAllShopkeepersWithStorage(page, limit);
+            sendPaginated(res, result.users, {
+                page,
+                limit,
+                total: result.total,
+                totalPages: result.totalPages,
+            });
         } catch (error) {
             next(error);
         }

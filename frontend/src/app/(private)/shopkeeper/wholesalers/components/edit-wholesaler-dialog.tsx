@@ -104,13 +104,14 @@ export function EditWholesalerDialog({
                             <div className="space-y-2">
                                 <Label htmlFor="edit-phone" className="flex items-center gap-2 text-sm font-medium">
                                     <Phone className="h-4 w-4 text-gray-400" />
-                                    Phone
+                                    Phone <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
                                     id="edit-phone"
                                     value={formData.phone}
                                     onChange={(e) => handleChange('phone', e.target.value)}
                                     placeholder="+91 XXXXX XXXXX"
+                                    required
                                     className="h-11"
                                 />
                             </div>
@@ -194,7 +195,7 @@ export function EditWholesalerDialog({
                         </Button>
                         <Button
                             type="submit"
-                            disabled={isSaving || !formData.name.trim()}
+                            disabled={isSaving || !formData.name.trim() || !formData.phone.trim()}
                             className="flex-1 sm:flex-none bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
                         >
                             {isSaving ? (

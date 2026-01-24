@@ -1,8 +1,8 @@
 'use client';
 
-import { ReactNode } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface StatsCardProps {
     title: string;
@@ -41,15 +41,15 @@ const iconColors = {
 
 export function StatsCard({ title, value, icon: Icon, gradient, subtitle }: StatsCardProps) {
     return (
-        <Card className={`border-0 shadow-lg bg-gradient-to-br ${gradients[gradient]} text-white`}>
+        <Card className={cn("border-0 shadow-lg bg-gradient-to-br text-white", gradients[gradient])}>
             <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className={`${lightColors[gradient]} text-sm`}>{title}</p>
-                        <p className="text-3xl font-bold">{value}</p>
-                        {subtitle && <p className={`${lightColors[gradient]} text-xs mt-1`}>{subtitle}</p>}
+                        <p className={cn("text-sm mb-1 opacity-90", lightColors[gradient])}>{title}</p>
+                        <p className="text-2xl font-bold">{value}</p>
+                        {subtitle && <p className={cn("text-xs mt-1 font-medium", lightColors[gradient])}>{subtitle}</p>}
                     </div>
-                    <Icon className={`h-10 w-10 ${iconColors[gradient]}`} />
+                    <Icon className={cn("h-10 w-10 opacity-40", iconColors[gradient])} />
                 </div>
             </CardContent>
         </Card>

@@ -12,6 +12,11 @@ import {
 } from '@/components/ui/table';
 import { format } from 'date-fns';
 
+interface Customer {
+    totalSales: number;
+    outstandingDue: number;
+}
+
 interface Bill {
     _id: string;
     billNumber: string;
@@ -24,6 +29,7 @@ interface Bill {
 
 interface SalesTableProps {
     bills: Bill[];
+    customer?: Customer;
     isLoading?: boolean;
 }
 
@@ -47,9 +53,14 @@ const paymentMethodConfig: Record<string, { label: string; icon: React.ReactNode
     card: { label: 'Card', icon: <CreditCardIcon className="h-3 w-3" />, bgColor: 'bg-blue-100', color: 'text-blue-700' },
     upi: { label: 'UPI', icon: <Smartphone className="h-3 w-3" />, bgColor: 'bg-purple-100', color: 'text-purple-700' },
     online: { label: 'Online', icon: <Smartphone className="h-3 w-3" />, bgColor: 'bg-purple-100', color: 'text-purple-700' },
+    none: { label: '---', icon: null, bgColor: 'bg-gray-100', color: 'text-gray-600' },
 };
 
-export function SalesTable({ bills, isLoading }: SalesTableProps) {
+export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
+    // Calculate opening balance (total sales that came from before using the app)
+    const billsTotal = bills.reduce((sum, bill) => sum + bill.totalAmount, 0);
+    const openingBalance = customer ? Math.max(0, customer.totalSales - billsTotal) : 0;
+
     if (isLoading) {
         return (
             <div className="p-8 md:p-12 text-center">
@@ -59,7 +70,7 @@ export function SalesTable({ bills, isLoading }: SalesTableProps) {
         );
     }
 
-    if (!bills || bills.length === 0) {
+    if ((!bills || bills.length === 0) && openingBalance <= 0) {
         return (
             <div className="p-8 md:p-12 text-center">
                 <Receipt className="h-8 w-8 md:h-12 md:w-12 text-gray-300 mx-auto mb-3 md:mb-4" />
@@ -86,8 +97,43 @@ export function SalesTable({ bills, isLoading }: SalesTableProps) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
+                        {/* Opening Balance Row */}
+                        {openingBalance > 0 && (
+                            <TableRow className="bg-blue-50/50 border-b-2 border-blue-200">
+                                <TableCell className="text-gray-600 font-medium">
+                                    Before App
+                                </TableCell>
+                                <TableCell>
+                                    <Badge className="bg-blue-100 text-blue-700 border-0 font-mono text-sm">
+                                        Opening Balance
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="text-right font-bold text-gray-900">
+                                    {formatCurrency(openingBalance)}
+                                </TableCell>
+                                <TableCell className="text-right font-semibold text-gray-400">
+                                    ₹0
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <span className="font-semibold text-orange-600">
+                                        {formatCurrency(openingBalance)}
+                                    </span>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge className="bg-gray-100 text-gray-600 border-0 text-xs">
+                                        N/A
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge className="bg-orange-100 text-orange-700 border-0">
+                                        Pending
+                                    </Badge>
+                                </TableCell>
+                            </TableRow>
+                        )}
+
                         {bills.map((bill) => {
-                            const methodConfig = paymentMethodConfig[bill.paymentMethod] || paymentMethodConfig.cash;
+                            const methodConfig = bill.paymentMethod ? (paymentMethodConfig[bill.paymentMethod] || paymentMethodConfig.cash) : paymentMethodConfig.none;
                             const due = bill.dueAmount || (bill.totalAmount - bill.paidAmount);
                             return (
                                 <TableRow key={bill._id} className="hover:bg-emerald-50/30">
@@ -129,8 +175,51 @@ export function SalesTable({ bills, isLoading }: SalesTableProps) {
 
             {/* Mobile Cards */}
             <div className="md:hidden">
+                {/* Opening Balance Card */}
+                {openingBalance > 0 && (
+                    <div className="p-3 bg-blue-50 rounded-xl shadow-sm border-l-4 border-l-blue-500 border-2 border-blue-200 mb-2">
+                        {/* Header Row */}
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <Badge className="bg-blue-100 text-blue-700 border-0 text-[10px] px-1.5 font-mono">
+                                    Opening Balance
+                                </Badge>
+                                <Badge className="bg-gray-100 text-gray-600 border-0 text-[10px] px-1.5">
+                                    N/A
+                                </Badge>
+                            </div>
+                            <Badge className="bg-orange-100 text-orange-700 border-0 text-[10px] px-1.5">
+                                Pending
+                            </Badge>
+                        </div>
+
+                        {/* Amount Row */}
+                        <div className="bg-white rounded-lg p-2">
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                                <div>
+                                    <p className="text-[10px] text-gray-500 font-medium">Total</p>
+                                    <p className="font-bold text-gray-900 text-sm">{formatCompact(openingBalance)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-gray-500 font-medium">Paid</p>
+                                    <p className="font-bold text-gray-400 text-sm">₹0</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-gray-500 font-medium">Due</p>
+                                    <p className="font-bold text-orange-600 text-sm">{formatCompact(openingBalance)}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Date */}
+                        <p className="text-[10px] text-gray-500 mt-2 font-medium">
+                            Before using app
+                        </p>
+                    </div>
+                )}
+
                 {bills.map((bill, index) => {
-                    const methodConfig = paymentMethodConfig[bill.paymentMethod] || paymentMethodConfig.cash;
+                    const methodConfig = bill.paymentMethod ? (paymentMethodConfig[bill.paymentMethod] || paymentMethodConfig.cash) : paymentMethodConfig.none;
                     const due = bill.dueAmount || (bill.totalAmount - bill.paidAmount);
 
                     return (

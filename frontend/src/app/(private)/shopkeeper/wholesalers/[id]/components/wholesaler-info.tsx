@@ -79,8 +79,8 @@ export function WholesalerInfo({ wholesaler }: WholesalerInfoProps) {
                                     {wholesaler.name}
                                 </h1>
                                 <Badge className={`text-xs px-2 py-0.5 ${wholesaler.isActive !== false
-                                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                                        : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                    : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
                                     }`}>
                                     {wholesaler.isActive !== false ? '● Active' : '○ Inactive'}
                                 </Badge>
@@ -154,8 +154,8 @@ export function WholesalerInfo({ wholesaler }: WholesalerInfoProps) {
 
                         {/* Outstanding */}
                         <div className={`rounded-xl md:rounded-2xl p-3 md:p-4 border text-center ${wholesaler.outstandingDue > 0
-                                ? 'bg-rose-500/10 border-rose-500/20'
-                                : 'bg-emerald-500/10 border-emerald-500/20'
+                            ? 'bg-rose-500/10 border-rose-500/20'
+                            : 'bg-emerald-500/10 border-emerald-500/20'
                             }`}>
                             <div className="flex items-center justify-center gap-1.5 mb-1.5">
                                 {wholesaler.outstandingDue > 0 ? (
@@ -189,10 +189,10 @@ export function WholesalerInfo({ wholesaler }: WholesalerInfoProps) {
                         <div className="h-2.5 md:h-3 bg-slate-600/50 rounded-full overflow-hidden">
                             <div
                                 className={`h-full rounded-full transition-all duration-700 ease-out ${paymentPercentage >= 75
-                                        ? 'bg-gradient-to-r from-emerald-500 to-green-400'
-                                        : paymentPercentage >= 50
-                                            ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
-                                            : 'bg-gradient-to-r from-rose-500 to-orange-400'
+                                    ? 'bg-gradient-to-r from-emerald-500 to-green-400'
+                                    : paymentPercentage >= 50
+                                        ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
+                                        : 'bg-gradient-to-r from-rose-500 to-orange-400'
                                     }`}
                                 style={{ width: `${paymentPercentage}%` }}
                             />

@@ -29,6 +29,7 @@ const wholesalerSchema = new Schema(
         },
         phone: {
             type: String,
+            required: [true, 'Phone number is required'],
             trim: true,
         },
         whatsappNumber: {
@@ -37,6 +38,7 @@ const wholesalerSchema = new Schema(
         },
         address: {
             type: String,
+            required: [true, 'Address is required'],
             trim: true,
         },
         gstNumber: {
@@ -56,7 +58,9 @@ const wholesalerSchema = new Schema(
         outstandingDue: {
             type: Number,
             default: 0,
-            min: 0,
+            // No min constraint - can be negative (credit) or positive (debt)
+            // Negative: Shopkeeper has paid in advance (wholesaler owes shopkeeper)
+            // Positive: Shopkeeper owes wholesaler
         },
         isActive: {
             type: Boolean,
@@ -80,6 +84,17 @@ const wholesalerSchema = new Schema(
 wholesalerSchema.index({ shopkeeperId: 1, name: 1 });
 wholesalerSchema.index({ shopkeeperId: 1, isActive: 1 });
 wholesalerSchema.index({ shopkeeperId: 1, outstandingDue: -1 });
+
+// Unique indexes for phone and whatsappNumber per shopkeeper
+// sparse: true ensures uniqueness only for non-null values
+wholesalerSchema.index(
+    { shopkeeperId: 1, phone: 1 },
+    { unique: true, sparse: true, name: 'unique_phone_per_shopkeeper' }
+);
+wholesalerSchema.index(
+    { shopkeeperId: 1, whatsappNumber: 1 },
+    { unique: true, sparse: true, name: 'unique_whatsapp_per_shopkeeper' }
+);
 
 export const Wholesaler = mongoose.model<WholesalerDocument>('Wholesaler', wholesalerSchema);
 

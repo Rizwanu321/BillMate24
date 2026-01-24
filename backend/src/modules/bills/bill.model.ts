@@ -20,6 +20,13 @@ interface BillDocument extends Document {
     paymentMethod: 'cash' | 'card' | 'online';
     items?: BillItem[];
     notes?: string;
+    isDeleted: boolean;
+    deletedAt?: Date;
+    isEdited: boolean;
+    editHistory?: {
+        modifiedAt: Date;
+        previousState: any;
+    }[];
 }
 
 const billItemSchema = new Schema(
@@ -81,13 +88,30 @@ const billSchema = new Schema(
         paymentMethod: {
             type: String,
             enum: ['cash', 'card', 'online'],
-            required: [true, 'Payment method is required'],
+            required: function (this: any) { return this.paidAmount > 0; },
         },
         items: [billItemSchema],
         notes: {
             type: String,
             trim: true,
         },
+        isDeleted: {
+            type: Boolean,
+            default: false,
+        },
+        deletedAt: {
+            type: Date,
+        },
+        isEdited: {
+            type: Boolean,
+            default: false,
+        },
+        editHistory: [
+            {
+                modifiedAt: { type: Date, default: Date.now },
+                previousState: { type: Schema.Types.Mixed },
+            },
+        ],
     },
     {
         timestamps: true,
@@ -95,8 +119,9 @@ const billSchema = new Schema(
 );
 
 // Pre-save middleware to calculate due amount
+// dueAmount is always >= 0, excess payment reduces entity's outstanding
 billSchema.pre('save', function (next) {
-    this.dueAmount = this.totalAmount - this.paidAmount;
+    this.dueAmount = Math.max(0, this.totalAmount - this.paidAmount);
     next();
 });
 
@@ -106,6 +131,7 @@ billSchema.index({ shopkeeperId: 1, billType: 1 });
 billSchema.index({ shopkeeperId: 1, entityType: 1 });
 billSchema.index({ shopkeeperId: 1, entityId: 1 });
 billSchema.index({ billNumber: 1 });
+billSchema.index({ shopkeeperId: 1, isDeleted: 1 });
 
 export const Bill = mongoose.model<BillDocument>('Bill', billSchema);
 

@@ -10,8 +10,14 @@ export class CustomerController {
             const validatedData = createCustomerSchema.parse(req.body);
             const customer = await customerService.create(req.user!._id, validatedData);
             sendSuccess(res, customer, 'Customer created successfully', 201);
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            if (error.message === 'Phone number already exists for another customer') {
+                sendError(res, error.message, 409);
+            } else if (error.message === 'WhatsApp number already exists for another customer') {
+                sendError(res, error.message, 409);
+            } else {
+                next(error);
+            }
         }
     }
 
@@ -69,6 +75,10 @@ export class CustomerController {
         } catch (error: any) {
             if (error.message === 'Customer not found') {
                 sendError(res, error.message, 404);
+            } else if (error.message === 'Phone number already exists for another customer') {
+                sendError(res, error.message, 409);
+            } else if (error.message === 'WhatsApp number already exists for another customer') {
+                sendError(res, error.message, 409);
             } else {
                 next(error);
             }

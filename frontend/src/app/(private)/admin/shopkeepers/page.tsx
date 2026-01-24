@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, MoreHorizontal, UserCheck, UserX, Settings2 } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, UserCheck, UserX, Settings2, Database, Eye } from 'lucide-react';
 import { Header } from '@/components/app/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,19 +31,24 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import api from '@/config/axios';
-import { User, PaginatedResponse } from '@/types';
+import { User, UserWithStorage, PaginatedResponse } from '@/types';
 import { toast } from 'sonner';
+import { EditShopkeeperDialog } from './components/edit-shopkeeper-dialog';
+import { ViewShopkeeperDialog } from './components/view-shopkeeper-dialog';
 
 export default function ShopkeepersPage() {
     const queryClient = useQueryClient();
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
+    const [selectedShopkeeper, setSelectedShopkeeper] = useState<UserWithStorage | null>(null);
+    const [isViewOpen, setIsViewOpen] = useState(false);
+    const [isEditOpen, setIsEditOpen] = useState(false);
 
     const { data, isLoading } = useQuery({
         queryKey: ['shopkeepers', page],
         queryFn: async () => {
-            const response = await api.get<PaginatedResponse<User>>(`/users?page=${page}&limit=10`);
+            const response = await api.get<PaginatedResponse<UserWithStorage>>(`/users/with-storage?page=${page}&limit=10`);
             return response.data;
         },
     });
@@ -171,6 +176,7 @@ export default function ShopkeepersPage() {
                                         <TableHead>Name</TableHead>
                                         <TableHead>Email</TableHead>
                                         <TableHead>Business</TableHead>
+                                        <TableHead>Storage</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Features</TableHead>
                                         <TableHead className="w-[50px]"></TableHead>
@@ -182,6 +188,17 @@ export default function ShopkeepersPage() {
                                             <TableCell className="font-medium">{user.name}</TableCell>
                                             <TableCell>{user.email}</TableCell>
                                             <TableCell>{user.businessName || '-'}</TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    <Database className="h-4 w-4 text-purple-600" />
+                                                    <span className="text-sm font-medium text-gray-900">
+                                                        {user.storageStats.storage.formatted}
+                                                    </span>
+                                                </div>
+                                                <div className="text-xs text-gray-500 mt-1">
+                                                    {user.storageStats.bills.total} bills • {user.storageStats.customers.total} customers
+                                                </div>
+                                            </TableCell>
                                             <TableCell>
                                                 <Badge variant={user.isActive ? 'default' : 'secondary'}>
                                                     {user.isActive ? 'Active' : 'Inactive'}
@@ -205,7 +222,26 @@ export default function ShopkeepersPage() {
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuItem
+                                                            onClick={() => {
+                                                                setSelectedShopkeeper(user);
+                                                                setIsViewOpen(true);
+                                                            }}
+                                                        >
+                                                            <Eye className="mr-2 h-4 w-4" />
+                                                            View Details
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() => {
+                                                                setSelectedShopkeeper(user);
+                                                                setIsEditOpen(true);
+                                                            }}
+                                                        >
+                                                            <Settings2 className="mr-2 h-4 w-4" />
+                                                            Edit & Features
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
                                                             onClick={() => toggleStatusMutation.mutate(user._id)}
+                                                            className={user.isActive ? 'text-red-600' : 'text-green-600'}
                                                         >
                                                             {user.isActive ? (
                                                                 <>
@@ -218,10 +254,6 @@ export default function ShopkeepersPage() {
                                                                     Activate
                                                                 </>
                                                             )}
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem>
-                                                            <Settings2 className="mr-2 h-4 w-4" />
-                                                            Edit Features
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
@@ -256,6 +288,18 @@ export default function ShopkeepersPage() {
                     </div>
                 )}
             </div>
+
+            <ViewShopkeeperDialog
+                shopkeeper={selectedShopkeeper}
+                open={isViewOpen}
+                onOpenChange={setIsViewOpen}
+            />
+
+            <EditShopkeeperDialog
+                shopkeeper={selectedShopkeeper}
+                open={isEditOpen}
+                onOpenChange={setIsEditOpen}
+            />
         </div>
     );
 }

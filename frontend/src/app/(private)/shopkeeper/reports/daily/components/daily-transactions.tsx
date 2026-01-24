@@ -118,7 +118,11 @@ export function DailyTransactions({ bills, isLoading }: DailyTransactionsProps) 
                             <TableCell className={`text-right ${due > 0 ? 'text-red-600' : 'text-gray-400'}`}>
                                 {formatCurrency(due)}
                             </TableCell>
-                            <TableCell className="capitalize">{bill.paymentMethod}</TableCell>
+                            <TableCell>
+                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${!bill.paymentMethod ? 'bg-gray-100 text-gray-600' : 'bg-blue-50 text-blue-700'}`}>
+                                    {bill.paymentMethod ? bill.paymentMethod.toUpperCase() : '---'}
+                                </span>
+                            </TableCell>
                             <TableCell>
                                 {isPaid ? (
                                     <Badge className="bg-green-100 text-green-700">Paid</Badge>

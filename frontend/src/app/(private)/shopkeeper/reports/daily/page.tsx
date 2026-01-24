@@ -146,6 +146,8 @@ export default function RevenueReportPage() {
             const response = await api.get<PaginatedResponse<Bill>>(`/bills?${params.toString()}`);
             return response.data;
         },
+        refetchOnMount: 'always',
+        staleTime: 0,
     });
 
     // Fetch payments for accurate cash flow calculation
@@ -159,6 +161,29 @@ export default function RevenueReportPage() {
             const response = await api.get<{ data: Payment[] }>(`/payments?${params.toString()}`);
             return response.data;
         },
+        refetchOnMount: 'always',
+        staleTime: 0,
+    });
+
+    // Fetch total outstanding dues (all time) for receivables and payables
+    const { data: duesData } = useQuery({
+        queryKey: ['total-dues'],
+        queryFn: async () => {
+            const [customersRes, wholesalersRes] = await Promise.all([
+                api.get<PaginatedResponse<any>>('/customers?type=due&limit=1000'),
+                api.get<PaginatedResponse<any>>('/wholesalers?limit=1000'),
+            ]);
+
+            const totalCustomerDue = (customersRes.data.data || []).reduce((sum: number, c: any) => sum + (c.outstandingDue || 0), 0);
+            const totalWholesalerDue = (wholesalersRes.data.data || []).reduce((sum: number, w: any) => sum + (w.outstandingDue || 0), 0);
+
+            return {
+                totalCustomerDue,
+                totalWholesalerDue,
+            };
+        },
+        refetchOnMount: 'always',
+        staleTime: 0,
     });
 
     const bills = (data?.data || []) as Bill[];
@@ -474,13 +499,30 @@ export default function RevenueReportPage() {
                                 </Badge>
                             </div>
                             <h3 className="text-lg md:text-3xl font-bold">
-                                <span className="md:hidden">{formatCompact(stats.totalSalesAmount)}</span>
-                                <span className="hidden md:inline">{formatCurrency(stats.totalSalesAmount)}</span>
+                                <span className="md:hidden">{formatCompact(
+                                    timeFilter === 'all'
+                                        ? (duesData?.totalCustomerDue || 0) + stats.totalSalesCollected
+                                        : stats.totalSalesAmount
+                                )}</span>
+                                <span className="hidden md:inline">{formatCurrency(
+                                    timeFilter === 'all'
+                                        ? (duesData?.totalCustomerDue || 0) + stats.totalSalesCollected
+                                        : stats.totalSalesAmount
+                                )}</span>
                             </h3>
-                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Total Sales</p>
+                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
+                                Total Sales{timeFilter === 'all' ? ' (incl. opening)' : ''}
+                            </p>
                             <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
-                                <span className="text-white/70">Collected</span>
-                                <span className="font-semibold">{formatCompact(stats.totalSalesCollected)}</span>
+                                <span className="text-white/70">
+                                    {timeFilter === 'all' ? 'Outstanding' : 'Collected'}
+                                </span>
+                                <span className="font-semibold">
+                                    {timeFilter === 'all'
+                                        ? formatCompact(duesData?.totalCustomerDue || 0)
+                                        : formatCompact(stats.totalSalesCollected)
+                                    }
+                                </span>
                             </div>
                         </CardContent>
                         <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />
@@ -498,41 +540,124 @@ export default function RevenueReportPage() {
                                 </Badge>
                             </div>
                             <h3 className="text-lg md:text-3xl font-bold">
-                                <span className="md:hidden">{formatCompact(stats.totalPurchasesAmount)}</span>
-                                <span className="hidden md:inline">{formatCurrency(stats.totalPurchasesAmount)}</span>
+                                <span className="md:hidden">{formatCompact(
+                                    timeFilter === 'all'
+                                        ? (duesData?.totalWholesalerDue || 0) + stats.totalPurchasesPaid
+                                        : stats.totalPurchasesAmount
+                                )}</span>
+                                <span className="hidden md:inline">{formatCurrency(
+                                    timeFilter === 'all'
+                                        ? (duesData?.totalWholesalerDue || 0) + stats.totalPurchasesPaid
+                                        : stats.totalPurchasesAmount
+                                )}</span>
                             </h3>
-                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Total Purchases</p>
+                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
+                                Total Purchases{timeFilter === 'all' ? ' (incl. opening)' : ''}
+                            </p>
                             <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
-                                <span className="text-white/70">Paid</span>
-                                <span className="font-semibold">{formatCompact(stats.totalPurchasesPaid)}</span>
+                                <span className="text-white/70">
+                                    {timeFilter === 'all' ? 'Outstanding' : 'Paid'}
+                                </span>
+                                <span className="font-semibold">
+                                    {timeFilter === 'all'
+                                        ? formatCompact(duesData?.totalWholesalerDue || 0)
+                                        : formatCompact(stats.totalPurchasesPaid)
+                                    }
+                                </span>
                             </div>
                         </CardContent>
                         <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />
                     </Card>
 
                     {/* Gross Profit */}
-                    <Card className={`relative overflow-hidden border-0 shadow-lg md:shadow-xl text-white rounded-xl md:rounded-2xl ${stats.grossProfit >= 0
-                        ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
-                        : 'bg-gradient-to-br from-red-500 to-rose-600'
+                    <Card className={`relative overflow-hidden border-0 shadow-lg md:shadow-xl text-white rounded-xl md:rounded-2xl ${timeFilter === 'all'
+                        ? (
+                            (stats.grossProfit +
+                                Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
+                                Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
+                                ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
+                                : 'bg-gradient-to-br from-red-500 to-rose-600'
+                        )
+                        : (
+                            stats.grossProfit >= 0
+                                ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
+                                : 'bg-gradient-to-br from-red-500 to-rose-600'
+                        )
                         }`}>
                         <CardContent className="p-3 md:p-6">
                             <div className="flex items-center justify-between mb-2 md:mb-3">
                                 <div className="p-2 md:p-2.5 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
                                     <IndianRupee className="h-4 w-4 md:h-5 md:w-5" />
                                 </div>
-                                <Badge className={`border-0 text-[10px] md:text-xs px-1.5 md:px-2 ${stats.grossProfit >= 0 ? 'bg-white/20 text-white' : 'bg-white text-red-600'}`}>
-                                    {stats.grossProfit >= 0 ? '✓' : '✗'}
+                                <Badge className={`border-0 text-[10px] md:text-xs px-1.5 md:px-2 ${timeFilter === 'all'
+                                    ? (
+                                        (stats.grossProfit +
+                                            Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
+                                            Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
+                                            ? 'bg-white/20 text-white'
+                                            : 'bg-white text-red-600'
+                                    )
+                                    : (
+                                        stats.grossProfit >= 0
+                                            ? 'bg-white/20 text-white'
+                                            : 'bg-white text-red-600'
+                                    )
+                                    }`}>
+                                    {timeFilter === 'all'
+                                        ? (
+                                            (stats.grossProfit +
+                                                Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
+                                                Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
+                                                ? '✓'
+                                                : '✗'
+                                        )
+                                        : (stats.grossProfit >= 0 ? '✓' : '✗')
+                                    }
                                 </Badge>
                             </div>
                             <h3 className="text-lg md:text-3xl font-bold">
-                                <span className="md:hidden">{formatCompact(Math.abs(stats.grossProfit))}</span>
-                                <span className="hidden md:inline">{formatCurrency(Math.abs(stats.grossProfit))}</span>
+                                <span className="md:hidden">{formatCompact(Math.abs(
+                                    timeFilter === 'all'
+                                        ? (
+                                            stats.grossProfit +
+                                            Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
+                                            Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)
+                                        )
+                                        : stats.grossProfit
+                                ))}</span>
+                                <span className="hidden md:inline">{formatCurrency(Math.abs(
+                                    timeFilter === 'all'
+                                        ? (
+                                            stats.grossProfit +
+                                            Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
+                                            Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)
+                                        )
+                                        : stats.grossProfit
+                                ))}</span>
                             </h3>
-                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Gross {stats.grossProfit >= 0 ? 'Profit' : 'Loss'}</p>
+                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
+                                {timeFilter === 'all'
+                                    ? (
+                                        (stats.grossProfit +
+                                            Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
+                                            Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
+                                            ? 'Total Profit'
+                                            : 'Total Loss'
+                                    )
+                                    : (
+                                        'Gross ' + (stats.grossProfit >= 0 ? 'Profit' : 'Loss')
+                                    )
+                                }
+                            </p>
                             <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
-                                <span className="text-white/70">Margin</span>
+                                <span className="text-white/70">
+                                    {timeFilter === 'all' ? 'All Time' : 'Margin'}
+                                </span>
                                 <span className="font-semibold">
-                                    {stats.totalSalesAmount > 0 ? ((stats.grossProfit / stats.totalSalesAmount) * 100).toFixed(1) : 0}%
+                                    {timeFilter === 'all'
+                                        ? '(incl. opening)'
+                                        : (stats.totalSalesAmount > 0 ? ((stats.grossProfit / stats.totalSalesAmount) * 100).toFixed(1) + '%' : '0%')
+                                    }
                                 </span>
                             </div>
                         </CardContent>
@@ -620,8 +745,9 @@ export default function RevenueReportPage() {
                                     <AlertCircle className="h-4 w-4 md:h-5 md:w-5 text-yellow-600" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] md:text-xs text-gray-500">Receivables</p>
-                                    <p className="text-sm md:text-lg font-bold text-yellow-600">{formatCurrency(stats.totalSalesDue)}</p>
+                                    <p className="text-[10px] md:text-xs text-gray-500">Total Receivables (All Time)</p>
+                                    <p className="text-sm md:text-lg font-bold text-yellow-600">{formatCurrency(duesData?.totalCustomerDue || 0)}</p>
+                                    <p className="text-[8px] md:text-[10px] text-gray-400 mt-0.5">Including opening balance</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -634,8 +760,9 @@ export default function RevenueReportPage() {
                                     <AlertCircle className="h-4 w-4 md:h-5 md:w-5 text-red-600" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] md:text-xs text-gray-500">Payables</p>
-                                    <p className="text-sm md:text-lg font-bold text-red-600">{formatCurrency(stats.totalPurchasesDue)}</p>
+                                    <p className="text-[10px] md:text-xs text-gray-500">Total Payables (All Time)</p>
+                                    <p className="text-sm md:text-lg font-bold text-red-600">{formatCurrency(duesData?.totalWholesalerDue || 0)}</p>
+                                    <p className="text-[8px] md:text-[10px] text-gray-400 mt-0.5">Including opening balance</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -659,28 +786,104 @@ export default function RevenueReportPage() {
                                     Profit Calculation
                                 </h4>
                                 <div className="space-y-3">
-                                    <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                        <span className="text-gray-600 flex items-center gap-2">
-                                            <TrendingUp className="h-4 w-4 text-green-500" />
-                                            Total Sales (what you sold)
-                                        </span>
-                                        <span className="font-semibold text-green-600">{formatCurrency(stats.totalSalesAmount)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                        <span className="text-gray-600 flex items-center gap-2">
-                                            <TrendingDown className="h-4 w-4 text-orange-500" />
-                                            Total Purchases (what you bought)
-                                        </span>
-                                        <span className="font-semibold text-orange-600">- {formatCurrency(stats.totalPurchasesAmount)}</span>
-                                    </div>
-                                    <div className={`flex justify-between items-center py-2 px-3 rounded-lg ${stats.grossProfit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-                                        <span className={`font-medium ${stats.grossProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                                            = Gross Profit {stats.grossProfit < 0 && '(Loss)'}
-                                        </span>
-                                        <span className={`font-bold text-lg ${stats.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                            {formatCurrency(stats.grossProfit)}
-                                        </span>
-                                    </div>
+                                    {timeFilter === 'all' ? (
+                                        /* All Time - Show complete profit including opening balance */
+                                        <>
+                                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                                <span className="text-gray-600 flex items-center gap-2">
+                                                    <TrendingUp className="h-4 w-4 text-green-500" />
+                                                    Total Sales (in app)
+                                                </span>
+                                                <span className="font-semibold text-green-600">{formatCurrency(stats.totalSalesAmount)}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                                <span className="text-gray-600 flex items-center gap-2">
+                                                    <TrendingDown className="h-4 w-4 text-orange-500" />
+                                                    Total Purchases (in app)
+                                                </span>
+                                                <span className="font-semibold text-orange-600">- {formatCurrency(stats.totalPurchasesAmount)}</span>
+                                            </div>
+                                            <div className={`flex justify-between items-center py-2 px-3 rounded-lg ${stats.grossProfit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
+                                                <span className={`font-medium ${stats.grossProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                                    = Profit from Bills {stats.grossProfit < 0 && '(Loss)'}
+                                                </span>
+                                                <span className={`font-bold text-lg ${stats.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                    {formatCurrency(stats.grossProfit)}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2 border-t border-gray-200 pt-2">
+                                                <span className="text-sm text-gray-600 flex items-center gap-2">
+                                                    <TrendingUp className="h-4 w-4 text-blue-500" />
+                                                    + Opening Balance (Sales)
+                                                </span>
+                                                <span className="font-semibold text-sm text-blue-600">
+                                                    + {formatCurrency(Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue))}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2">
+                                                <span className="text-sm text-gray-600 flex items-center gap-2">
+                                                    <TrendingDown className="h-4 w-4 text-orange-500" />
+                                                    - Opening Balance (Purchases)
+                                                </span>
+                                                <span className="font-semibold text-sm text-orange-600">
+                                                    - {formatCurrency(Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue))}
+                                                </span>
+                                            </div>
+                                            <div className={`flex justify-between items-center py-2 px-3 rounded-lg ${(stats.grossProfit +
+                                                Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
+                                                Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
+                                                ? 'bg-purple-50 border border-purple-200'
+                                                : 'bg-red-50 border border-red-200'
+                                                }`}>
+                                                <span className={`font-bold ${(stats.grossProfit +
+                                                    Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
+                                                    Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
+                                                    ? 'text-purple-700'
+                                                    : 'text-red-700'
+                                                    }`}>
+                                                    = Total Profit/Loss (All Time)
+                                                </span>
+                                                <span className={`font-bold text-xl ${(stats.grossProfit +
+                                                    Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
+                                                    Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
+                                                    ? 'text-purple-600'
+                                                    : 'text-red-600'
+                                                    }`}>
+                                                    {formatCurrency(
+                                                        stats.grossProfit +
+                                                        Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
+                                                        Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)
+                                                    )}
+                                                </span>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        /* Period Specific - Show period profit only */
+                                        <>
+                                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                                <span className="text-gray-600 flex items-center gap-2">
+                                                    <TrendingUp className="h-4 w-4 text-green-500" />
+                                                    Total Sales (what you sold)
+                                                </span>
+                                                <span className="font-semibold text-green-600">{formatCurrency(stats.totalSalesAmount)}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2 border-b border-dashed">
+                                                <span className="text-gray-600 flex items-center gap-2">
+                                                    <TrendingDown className="h-4 w-4 text-orange-500" />
+                                                    Total Purchases (what you bought)
+                                                </span>
+                                                <span className="font-semibold text-orange-600">- {formatCurrency(stats.totalPurchasesAmount)}</span>
+                                            </div>
+                                            <div className={`flex justify-between items-center py-2 px-3 rounded-lg ${stats.grossProfit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
+                                                <span className={`font-medium ${stats.grossProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                                    = Gross Profit {stats.grossProfit < 0 && '(Loss)'}
+                                                </span>
+                                                <span className={`font-bold text-lg ${stats.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                    {formatCurrency(stats.grossProfit)}
+                                                </span>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
@@ -716,47 +919,183 @@ export default function RevenueReportPage() {
                                 </div>
                             </div>
 
-                            {/* Outstanding Dues */}
+                            {/* Sales & Receivables - Smart Merged View */}
                             <div className="p-4 bg-white rounded-xl shadow-sm border">
                                 <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                                    Receivables (Money Customers Owe You)
+                                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                    Sales & Receivables
                                 </h4>
                                 <div className="space-y-3">
-                                    <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                        <span className="text-gray-600">Total Sales Made</span>
-                                        <span className="font-semibold">{formatCurrency(stats.totalSalesAmount)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                        <span className="text-gray-600">Amount Collected</span>
-                                        <span className="font-semibold text-green-600">- {formatCurrency(stats.totalSalesCollected)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-yellow-50">
-                                        <span className="font-medium text-yellow-700">= Still Pending from Customers</span>
-                                        <span className="font-bold text-lg text-yellow-600">{formatCurrency(stats.totalSalesDue)}</span>
-                                    </div>
+                                    {timeFilter === 'all' ? (
+                                        /* All Time - Show complete unified breakdown with opening balance */
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center py-1.5">
+                                                <span className="text-sm text-gray-600">Total Sales Made (in app)</span>
+                                                <span className="font-semibold text-sm">{formatCurrency(stats.totalSalesAmount)}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-1.5">
+                                                <span className="text-sm text-gray-600">Amount Collected</span>
+                                                <span className="font-semibold text-sm text-green-600">- {formatCurrency(stats.totalSalesCollected)}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-yellow-50">
+                                                <span className="font-medium text-sm text-yellow-700">= Pending from Bills</span>
+                                                <span className="font-bold text-yellow-600">{formatCurrency(stats.totalSalesDue)}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-1.5 border-t border-gray-200 pt-2">
+                                                <span className="text-sm text-gray-600">+ Opening Balance (before app)</span>
+                                                <span className="font-semibold text-sm text-blue-600">
+                                                    + {formatCurrency(Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue))}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-green-50 border border-green-200">
+                                                <span className="text-sm font-medium text-green-700">= Total Outstanding</span>
+                                                <span className="font-bold text-lg text-green-600">{formatCurrency(duesData?.totalCustomerDue || 0)}</span>
+                                            </div>
+                                            <div className="p-3 mt-2 rounded-lg bg-blue-50 border border-blue-200">
+                                                <p className="text-xs text-blue-700 font-medium">ℹ️ What is this?</p>
+                                                <p className="text-xs text-gray-600 mt-1">
+                                                    Total Outstanding includes:
+                                                </p>
+                                                <ul className="text-xs text-gray-600 mt-1 ml-4 list-disc">
+                                                    <li>Sales made before using the app (Opening Balance)</li>
+                                                    <li>Unpaid portion of all sales bills created in app</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        /* Period Specific - Show both period breakdown and cumulative total */
+                                        <>
+                                            {/* Period Specific Section */}
+                                            <div className="pb-3 border-b-2 border-gray-200">
+                                                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                                                    {timeFilter === 'custom' ? 'Selected Period' : filterLabels[timeFilter]}
+                                                </p>
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between items-center py-1.5">
+                                                        <span className="text-sm text-gray-600">Total Sales Made</span>
+                                                        <span className="font-semibold text-sm">{formatCurrency(stats.totalSalesAmount)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center py-1.5">
+                                                        <span className="text-sm text-gray-600">Amount Collected</span>
+                                                        <span className="font-semibold text-sm text-green-600">- {formatCurrency(stats.totalSalesCollected)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-yellow-50">
+                                                        <span className="font-medium text-sm text-yellow-700">= Pending from Period</span>
+                                                        <span className="font-bold text-yellow-600">{formatCurrency(stats.totalSalesDue)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* All Time Total Section */}
+                                            <div className="pt-2">
+                                                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">All Time Total</p>
+                                                <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-green-50 border border-green-200">
+                                                    <span className="text-sm font-medium text-green-700">Outstanding from Customers</span>
+                                                    <span className="font-bold text-lg text-green-600">{formatCurrency(duesData?.totalCustomerDue || 0)}</span>
+                                                </div>
+                                                <div className="p-3 mt-2 rounded-lg bg-blue-50 border border-blue-200">
+                                                    <p className="text-xs text-blue-700 font-medium">ℹ️ What is this?</p>
+                                                    <p className="text-xs text-gray-600 mt-1">
+                                                        This is the total amount customers owe you, including:
+                                                    </p>
+                                                    <ul className="text-xs text-gray-600 mt-1 ml-4 list-disc">
+                                                        <li>Sales made before using the app (Opening Balance)</li>
+                                                        <li>Unpaid portion of all sales bills</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Payables */}
+                            {/* Purchases & Payables - Smart Merged View */}
                             <div className="p-4 bg-white rounded-xl shadow-sm border">
                                 <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                    Payables (Money You Owe Wholesalers)
+                                    <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                                    Purchases & Payables
                                 </h4>
                                 <div className="space-y-3">
-                                    <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                        <span className="text-gray-600">Total Purchases Made</span>
-                                        <span className="font-semibold">{formatCurrency(stats.totalPurchasesAmount)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                        <span className="text-gray-600">Amount Paid</span>
-                                        <span className="font-semibold text-green-600">- {formatCurrency(stats.totalPurchasesPaid)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-red-50">
-                                        <span className="font-medium text-red-700">= Still Due to Wholesalers</span>
-                                        <span className="font-bold text-lg text-red-600">{formatCurrency(stats.totalPurchasesDue)}</span>
-                                    </div>
+                                    {timeFilter === 'all' ? (
+                                        /* All Time - Show complete unified breakdown with opening balance */
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center py-1.5">
+                                                <span className="text-sm text-gray-600">Total Purchases Made (in app)</span>
+                                                <span className="font-semibold text-sm">{formatCurrency(stats.totalPurchasesAmount)}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-1.5">
+                                                <span className="text-sm text-gray-600">Amount Paid</span>
+                                                <span className="font-semibold text-sm text-green-600">- {formatCurrency(stats.totalPurchasesPaid)}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-orange-50">
+                                                <span className="font-medium text-sm text-orange-700">= Pending from Bills</span>
+                                                <span className="font-bold text-orange-600">{formatCurrency(stats.totalPurchasesDue)}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-1.5 border-t border-gray-200 pt-2">
+                                                <span className="text-sm text-gray-600">+ Opening Balance (before app)</span>
+                                                <span className="font-semibold text-sm text-blue-600">
+                                                    + {formatCurrency(Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue))}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-red-50 border border-red-200">
+                                                <span className="text-sm font-medium text-red-700">= Total Outstanding</span>
+                                                <span className="font-bold text-lg text-red-600">{formatCurrency(duesData?.totalWholesalerDue || 0)}</span>
+                                            </div>
+                                            <div className="p-3 mt-2 rounded-lg bg-blue-50 border border-blue-200">
+                                                <p className="text-xs text-blue-700 font-medium">ℹ️ What is this?</p>
+                                                <p className="text-xs text-gray-600 mt-1">
+                                                    Total Outstanding includes:
+                                                </p>
+                                                <ul className="text-xs text-gray-600 mt-1 ml-4 list-disc">
+                                                    <li>Purchases made before using the app (Opening Balance)</li>
+                                                    <li>Unpaid portion of all purchase bills created in app</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        /* Period Specific - Show both period breakdown and cumulative total */
+                                        <>
+                                            {/* Period Specific Section */}
+                                            <div className="pb-3 border-b-2 border-gray-200">
+                                                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                                                    {timeFilter === 'custom' ? 'Selected Period' : filterLabels[timeFilter]}
+                                                </p>
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between items-center py-1.5">
+                                                        <span className="text-sm text-gray-600">Total Purchases Made</span>
+                                                        <span className="font-semibold text-sm">{formatCurrency(stats.totalPurchasesAmount)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center py-1.5">
+                                                        <span className="text-sm text-gray-600">Amount Paid</span>
+                                                        <span className="font-semibold text-sm text-green-600">- {formatCurrency(stats.totalPurchasesPaid)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-orange-50">
+                                                        <span className="font-medium text-sm text-orange-700">= Pending from Period</span>
+                                                        <span className="font-bold text-orange-600">{formatCurrency(stats.totalPurchasesDue)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* All Time Total Section */}
+                                            <div className="pt-2">
+                                                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">All Time Total</p>
+                                                <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-red-50 border border-red-200">
+                                                    <span className="text-sm font-medium text-red-700">Outstanding to Wholesalers</span>
+                                                    <span className="font-bold text-lg text-red-600">{formatCurrency(duesData?.totalWholesalerDue || 0)}</span>
+                                                </div>
+                                                <div className="p-3 mt-2 rounded-lg bg-blue-50 border border-blue-200">
+                                                    <p className="text-xs text-blue-700 font-medium">ℹ️ What is this?</p>
+                                                    <p className="text-xs text-gray-600 mt-1">
+                                                        This is the total amount you owe wholesalers, including:
+                                                    </p>
+                                                    <ul className="text-xs text-gray-600 mt-1 ml-4 list-disc">
+                                                        <li>Purchases made before using the app (Opening Balance)</li>
+                                                        <li>Unpaid portion of all purchase bills</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -785,13 +1124,13 @@ export default function RevenueReportPage() {
                                             : 'You paid out more than you collected. Check dues!'}
                                     </p>
                                 </div>
-                                <div className={`p-3 rounded-lg ${stats.totalSalesDue > 0 ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'}`}>
-                                    <p className={`text-sm font-medium ${stats.totalSalesDue > 0 ? 'text-yellow-700' : 'text-green-700'}`}>
-                                        {stats.totalSalesDue > 0 ? `📋 ${formatCurrency(stats.totalSalesDue)} Pending` : '✨ All Collected'}
+                                <div className={`p-3 rounded-lg ${(timeFilter === 'all' ? (duesData?.totalCustomerDue || 0) : stats.totalSalesDue) > 0 ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'}`}>
+                                    <p className={`text-sm font-medium ${(timeFilter === 'all' ? (duesData?.totalCustomerDue || 0) : stats.totalSalesDue) > 0 ? 'text-yellow-700' : 'text-green-700'}`}>
+                                        {(timeFilter === 'all' ? (duesData?.totalCustomerDue || 0) : stats.totalSalesDue) > 0 ? `📋 ${formatCurrency(timeFilter === 'all' ? (duesData?.totalCustomerDue || 0) : stats.totalSalesDue)} ${timeFilter === 'all' ? 'Outstanding' : 'Pending'}` : '✨ All Collected'}
                                     </p>
                                     <p className="text-xs text-gray-600 mt-1">
-                                        {stats.totalSalesDue > 0
-                                            ? 'Some customers have pending dues. Follow up!'
+                                        {(timeFilter === 'all' ? (duesData?.totalCustomerDue || 0) : stats.totalSalesDue) > 0
+                                            ? (timeFilter === 'all' ? 'Total amount customers owe (including opening balance).' : 'Some customers have pending dues. Follow up!')
                                             : 'All sales payments collected. Excellent!'}
                                     </p>
                                 </div>

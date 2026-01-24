@@ -1,6 +1,6 @@
-# Revenue Management System
+# BillMate24
 
-Full-stack Revenue & Ledger Management System for retail shops.
+Smart Billing & Revenue Management System.
 
 ## Tech Stack
 

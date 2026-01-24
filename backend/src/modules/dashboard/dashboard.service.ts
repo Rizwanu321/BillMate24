@@ -36,6 +36,8 @@ export class DashboardService {
         topCustomersDue: any[];
         topWholesalersDue: any[];
         alerts: { type: string; message: string; count: number }[];
+        totalLifetimeSales: number;
+        totalCollected: number;
     }> {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -351,17 +353,36 @@ export class DashboardService {
             });
         }
 
+        // Total Collected (Lifetime)
+        const totalCollectedResult = await Transaction.aggregate([
+            {
+                $match: {
+                    shopkeeperId: shopkeeperObjectId,
+                    type: 'income',
+                },
+            },
+            { $group: { _id: null, total: { $sum: '$amount' } } },
+        ]);
+        const totalCollected = totalCollectedResult[0]?.total || 0;
+
+        // Total Lifetime Sales (Implicit: Outstanding + Collected)
+        // This ensures opening balances are accounted for in the total "value" delivered
+        const totalLifetimeSales = customerDueResult[0]?.total || 0 + totalCollected;
+
+
         return {
             // Sales data
             todaySales: todaySalesResult[0]?.total || 0,
             yesterdaySales: yesterdaySalesResult[0]?.total || 0,
             weekSales: weekSalesResult[0]?.total || 0,
             monthSales: monthSalesResult[0]?.total || 0,
+            totalLifetimeSales, // New field
             // Collected data
             todayCollected: todayCollectedResult[0]?.total || 0,
             yesterdayCollected: yesterdayCollectedResult[0]?.total || 0,
             weekCollected: weekCollectedResult[0]?.total || 0,
             monthCollected: monthCollectedResult[0]?.total || 0,
+            totalCollected, // New field
             // Purchase data
             todayPurchases: todayPurchasesResult[0]?.total || 0,
             monthPurchases: monthPurchasesResult[0]?.total || 0,

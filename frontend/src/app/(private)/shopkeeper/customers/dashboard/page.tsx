@@ -78,13 +78,24 @@ export default function CustomerDashboardPage() {
     const startDate = format(dateRange.startDate, 'yyyy-MM-dd');
     const endDate = format(dateRange.endDate, 'yyyy-MM-dd');
 
-    // Fetch due customers
+    // Fetch due customers (needed for listing)
     const { data: dueCustomersData } = useQuery({
         queryKey: ['due-customers-all'],
         queryFn: async () => {
             const response = await api.get('/customers?type=due&limit=100');
             return response.data;
         },
+    });
+
+    // New Query: Fetch aggregate stats for "All Time" accuracy (including opening balances)
+    const { data: summaryStats } = useQuery({
+        queryKey: ['customer-dashboard-summary-stats'],
+        queryFn: async () => {
+            const response = await api.get('/customers/stats?type=due');
+            return response.data.data;
+        },
+        staleTime: 0,
+        refetchOnMount: 'always'
     });
 
     // Normal customers are walk-in customers tracked via bills, not a separate entity
@@ -169,8 +180,6 @@ export default function CustomerDashboardPage() {
         });
 
         // Add additional payments per customer (payments made later, separate from bill creation)
-        // Note: Payments created at bill time have billId, we should not double count
-        // But to handle legacy data, we use payment records as supplementary source
         const paymentsByCustomer: Record<string, number> = {};
         payments.forEach(payment => {
             paymentsByCustomer[payment.entityId] = (paymentsByCustomer[payment.entityId] || 0) + payment.amount;
@@ -188,17 +197,22 @@ export default function CustomerDashboardPage() {
                 customerMap[customerId].totalPurchased - customerMap[customerId].totalPaid);
         });
 
+        // For All Time view, supplement with summaryStats data if needed or rely on accurate accumulated queries
+        // Currently, we rely on periodCustomers for the LIST below which is fine
+
         return Object.values(customerMap).sort((a, b) => b.totalPurchased - a.totalPurchased);
     }, [sales, payments, allCustomers]);
 
     // Calculate stats for the selected period using the accurate periodCustomers data
     const periodSales = sales.reduce((sum, b) => sum + b.totalAmount, 0);
-    // Use bill.paidAmount as primary source (includes all immediate payments)
     const billsCollected = sales.reduce((sum, b) => sum + b.paidAmount, 0);
-    // Also check payment records for any additional payments
     const paymentsCollected = payments.reduce((sum, p) => sum + p.amount, 0);
-    // Take the higher to avoid undercounting
+    // For Collection, we want the total collected in this period.
+    // If we are looking at specific period, simple sum of payments is usually correct.
+    // But safely: in "All Time" view (startDate=2020), paymentsCollected will be the total lifetime payments.
     const periodCollected = Math.max(billsCollected, paymentsCollected);
+
+    // Period outstanding for the cards (for non-All-Time views)
     const periodOutstanding = Math.max(0, periodSales - periodCollected);
     const previousPeriodSales = previousSales.reduce((sum, b) => sum + b.totalAmount, 0);
 
@@ -216,17 +230,8 @@ export default function CustomerDashboardPage() {
             }
         });
 
-        // Also add from payment records (for separate payments)
-        payments.forEach(payment => {
-            const method = payment.paymentMethod as keyof typeof breakdown;
-            if (breakdown[method] !== undefined) {
-                // To avoid double counting, only add if payment amount differs from bill totals
-                // For now, we'll use bill data as primary source for breakdown
-            }
-        });
-
         return breakdown;
-    }, [sales, payments]);
+    }, [sales]);
 
     // Customers with pending dues
     const customersWithDues = periodCustomers.filter(c => c.outstandingDue > 0);
@@ -281,6 +286,8 @@ export default function CustomerDashboardPage() {
                     transactionCount={sales.length}
                     thisMonthSales={periodSales}
                     lastMonthSales={previousPeriodSales}
+                    timeFilter={timeFilter}
+                    statsData={summaryStats}
                 />
 
                 {/* Two Column Layout */}

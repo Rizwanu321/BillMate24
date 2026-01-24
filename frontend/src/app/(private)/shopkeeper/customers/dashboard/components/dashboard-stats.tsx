@@ -11,6 +11,13 @@ interface CustomerDashboardStatsProps {
     transactionCount: number;
     thisMonthSales: number;
     lastMonthSales: number;
+    timeFilter?: string;
+    statsData?: {
+        total: number;
+        totalOutstanding: number;
+        totalSales: number;
+        totalPaid: number;
+    };
 }
 
 function formatCurrency(amount: number): string {
@@ -18,14 +25,17 @@ function formatCurrency(amount: number): string {
         style: 'currency',
         currency: 'INR',
         minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
     }).format(amount);
 }
 
 function formatCompact(amount: number): string {
-    if (amount >= 100000) {
-        return `₹${(amount / 100000).toFixed(1)}L`;
+    if (amount >= 10000000) { // 1 Crore
+        return `₹${(amount / 10000000).toFixed(2)}Cr`;
+    } else if (amount >= 100000) { // 1 Lakh
+        return `₹${(amount / 100000).toFixed(2)}L`;
     } else if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}K`;
+        return `₹${(amount / 1000).toFixed(1)}k`;
     }
     return formatCurrency(amount);
 }
@@ -37,155 +47,154 @@ export function CustomerDashboardStats({
     totalOutstanding,
     transactionCount,
     thisMonthSales,
-    lastMonthSales
+    lastMonthSales,
+    timeFilter = 'today',
+    statsData
 }: CustomerDashboardStatsProps) {
     const growth = lastMonthSales > 0
         ? ((thisMonthSales - lastMonthSales) / lastMonthSales * 100).toFixed(1)
         : thisMonthSales > 0 ? 100 : 0;
 
     const isPositiveGrowth = Number(growth) >= 0;
-    const collectionRate = totalSales > 0 ? ((totalCollected / totalSales) * 100).toFixed(1) : 0;
+    const isAllTime = timeFilter === 'all_time';
+
+    const displayOutstanding = isAllTime && statsData ? statsData.totalOutstanding : totalOutstanding;
+
+    // For All Time: Sales = Outstanding + Collected
+    const displaySales = isAllTime && statsData
+        ? displayOutstanding + totalCollected
+        : totalSales;
+
+    const displayCustomers = isAllTime && statsData ? statsData.total : totalCustomers;
+
+    const collectionRate = displaySales > 0 ? ((totalCollected / displaySales) * 100).toFixed(1) : 0;
+
+    // Common styling for cards
+    const cardContentClass = "p-3 sm:p-4 md:p-5 lg:p-6 flex flex-col justify-between h-full relative z-10";
+    const iconContainerClass = "p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl bg-white/20 backdrop-blur-sm shadow-sm";
+    const iconClass = "h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6";
+    const labelClass = "text-[10px] sm:text-xs font-medium opacity-90 mb-1";
+    const valueClass = "text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold tracking-tight";
+    const subtextClass = "text-[10px] sm:text-xs opacity-80 mt-1 sm:mt-2 font-medium truncate";
+    const bgBlurClass = "absolute -top-6 -right-6 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full blur-3xl pointer-events-none";
+
+    // Card Definition Helper
+    const StatCard = ({
+        title,
+        value,
+        subtext,
+        icon: Icon,
+        gradient,
+        textColor = "text-white",
+        subtextColor,
+        extra
+    }: any) => (
+        <Card className={`relative overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300 ${gradient} ${textColor} rounded-xl sm:rounded-2xl`}>
+            <div className={bgBlurClass} />
+            <CardContent className={cardContentClass}>
+                <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1 min-w-0 mr-2">
+                        <p className={labelClass}>{title}</p>
+                        <p className={valueClass}>{value}</p>
+                    </div>
+                    <div className={`${iconContainerClass} shrink-0`}>
+                        <Icon className={iconClass} />
+                    </div>
+                </div>
+                <div>
+                    {extra}
+                    <p className={`${subtextClass} ${subtextColor}`}>{subtext}</p>
+                </div>
+            </CardContent>
+        </Card>
+    );
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-2 md:gap-4 mb-4 md:mb-6">
-            {/* Active Customers */}
-            <Card className="relative overflow-hidden border-0 shadow-lg md:shadow-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-xl md:rounded-2xl">
-                <div className="absolute -top-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
-                <CardContent className="p-3 md:pt-6 md:pb-6 md:px-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-indigo-100 text-[10px] md:text-sm font-medium">Customers</p>
-                            <p className="text-2xl md:text-4xl font-bold mt-0.5 md:mt-1">{totalCustomers}</p>
-                            <p className="text-indigo-200 text-[10px] md:text-xs mt-1 md:mt-2">In selected period</p>
-                        </div>
-                        <div className="p-2 md:p-3 rounded-xl md:rounded-2xl bg-white/20 backdrop-blur-sm">
-                            <Users className="h-5 w-5 md:h-8 md:w-8" />
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+        // Adjusted grid to use max 3 columns even on large screens to give more breathing room for large numbers
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6 mb-6">
 
-            {/* Total Sales */}
-            <Card className="relative overflow-hidden border-0 shadow-lg md:shadow-xl bg-gradient-to-br from-emerald-500 to-green-600 text-white rounded-xl md:rounded-2xl">
-                <div className="absolute -top-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
-                <CardContent className="p-3 md:pt-6 md:pb-6 md:px-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-emerald-100 text-[10px] md:text-sm font-medium">Sales</p>
-                            <p className="text-lg md:text-2xl font-bold mt-0.5 md:mt-1">
-                                <span className="md:hidden">{formatCompact(totalSales)}</span>
-                                <span className="hidden md:inline">{formatCurrency(totalSales)}</span>
-                            </p>
-                            <p className="text-emerald-200 text-[10px] md:text-xs mt-1 md:mt-2">Total sales amount</p>
-                        </div>
-                        <div className="p-2 md:p-3 rounded-xl md:rounded-2xl bg-white/20 backdrop-blur-sm">
-                            <IndianRupee className="h-5 w-5 md:h-8 md:w-8" />
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* Customers */}
+            <StatCard
+                title="Customers"
+                value={displayCustomers}
+                subtext={isAllTime ? 'Total Due Customers' : 'In selected period'}
+                icon={Users}
+                gradient="bg-gradient-to-br from-indigo-500 to-purple-600"
+                subtextColor="text-indigo-100"
+            />
 
-            {/* Amount Collected */}
-            <Card className="relative overflow-hidden border-0 shadow-lg md:shadow-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white rounded-xl md:rounded-2xl">
-                <div className="absolute -top-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
-                <CardContent className="p-3 md:pt-6 md:pb-6 md:px-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-cyan-100 text-[10px] md:text-sm font-medium">Collected</p>
-                            <p className="text-lg md:text-2xl font-bold mt-0.5 md:mt-1">
-                                <span className="md:hidden">{formatCompact(totalCollected)}</span>
-                                <span className="hidden md:inline">{formatCurrency(totalCollected)}</span>
-                            </p>
-                            <div className="flex items-center gap-2 mt-1 md:mt-2">
-                                <div className="h-1 md:h-1.5 w-12 md:w-16 bg-white/30 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-white rounded-full"
-                                        style={{ width: `${Math.min(100, Number(collectionRate))}%` }}
-                                    />
-                                </div>
-                                <span className="text-cyan-200 text-[10px] md:text-xs">{collectionRate}%</span>
-                            </div>
-                        </div>
-                        <div className="p-2 md:p-3 rounded-xl md:rounded-2xl bg-white/20 backdrop-blur-sm">
-                            <CreditCard className="h-5 w-5 md:h-8 md:w-8" />
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* Sales */}
+            <StatCard
+                title="Sales"
+                value={
+                    <>
+                        <span className="lg:hidden">{formatCompact(displaySales)}</span>
+                        <span className="hidden lg:inline">{formatCurrency(displaySales)}</span>
+                    </>
+                }
+                subtext={isAllTime ? 'Incl. Opening Bal' : 'Total sales'}
+                icon={IndianRupee}
+                gradient="bg-gradient-to-br from-emerald-500 to-green-600"
+                subtextColor="text-emerald-100"
+            />
 
-            {/* Outstanding Dues */}
-            <Card className={`relative overflow-hidden border-0 shadow-lg md:shadow-xl text-white rounded-xl md:rounded-2xl ${totalOutstanding > 0
-                ? 'bg-gradient-to-br from-rose-500 to-red-600'
-                : 'bg-gradient-to-br from-green-500 to-emerald-600'
-                }`}>
-                <div className="absolute -top-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
-                <CardContent className="p-3 md:pt-6 md:pb-6 md:px-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className={`text-[10px] md:text-sm font-medium ${totalOutstanding > 0 ? 'text-rose-100' : 'text-green-100'}`}>
-                                Outstanding
-                            </p>
-                            <p className="text-lg md:text-2xl font-bold mt-0.5 md:mt-1">
-                                <span className="md:hidden">{formatCompact(totalOutstanding)}</span>
-                                <span className="hidden md:inline">{formatCurrency(totalOutstanding)}</span>
-                            </p>
-                            <p className={`text-[10px] md:text-xs mt-1 md:mt-2 ${totalOutstanding > 0 ? 'text-rose-200' : 'text-green-200'}`}>
-                                {totalOutstanding > 0 ? 'Pending collection' : 'All cleared!'}
-                            </p>
-                        </div>
-                        <div className="p-2 md:p-3 rounded-xl md:rounded-2xl bg-white/20 backdrop-blur-sm">
-                            <AlertCircle className="h-5 w-5 md:h-8 md:w-8" />
-                        </div>
+            {/* Collected */}
+            <StatCard
+                title="Collected"
+                value={
+                    <>
+                        <span className="lg:hidden">{formatCompact(totalCollected)}</span>
+                        <span className="hidden lg:inline">{formatCurrency(totalCollected)}</span>
+                    </>
+                }
+                subtext={`${collectionRate}% Collection Rate`}
+                icon={CreditCard}
+                gradient="bg-gradient-to-br from-cyan-500 to-blue-600"
+                subtextColor="text-cyan-100"
+                extra={
+                    <div className="h-1 sm:h-1.5 w-full bg-black/20 rounded-full overflow-hidden mt-1 mb-1">
+                        <div
+                            className="h-full bg-white/90 rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min(100, Number(collectionRate))}%` }}
+                        />
                     </div>
-                </CardContent>
-            </Card>
+                }
+            />
 
-            {/* Transactions */}
-            <Card className="relative overflow-hidden border-0 shadow-lg md:shadow-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-xl md:rounded-2xl">
-                <div className="absolute -top-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
-                <CardContent className="p-3 md:pt-6 md:pb-6 md:px-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-amber-100 text-[10px] md:text-sm font-medium">Bills</p>
-                            <p className="text-2xl md:text-4xl font-bold mt-0.5 md:mt-1">{transactionCount}</p>
-                            <p className="text-amber-200 text-[10px] md:text-xs mt-1 md:mt-2">Sales in period</p>
-                        </div>
-                        <div className="p-2 md:p-3 rounded-xl md:rounded-2xl bg-white/20 backdrop-blur-sm">
-                            <Receipt className="h-5 w-5 md:h-8 md:w-8" />
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* Outstanding */}
+            <StatCard
+                title="Outstanding"
+                value={
+                    <>
+                        <span className="lg:hidden">{formatCompact(displayOutstanding)}</span>
+                        <span className="hidden lg:inline">{formatCurrency(displayOutstanding)}</span>
+                    </>
+                }
+                subtext={displayOutstanding > 0 ? 'Pending collection' : 'All cleared!'}
+                icon={AlertCircle}
+                gradient={displayOutstanding > 0 ? 'bg-gradient-to-br from-rose-500 to-red-600' : 'bg-gradient-to-br from-green-500 to-emerald-600'}
+                subtextColor={displayOutstanding > 0 ? 'text-rose-100' : 'text-green-100'}
+            />
+
+            {/* Bills */}
+            <StatCard
+                title="Bills"
+                value={transactionCount}
+                subtext="Sales in period"
+                icon={Receipt}
+                gradient="bg-gradient-to-br from-amber-500 to-orange-600"
+                subtextColor="text-amber-100"
+            />
 
             {/* Growth */}
-            <Card className={`relative overflow-hidden border-0 shadow-lg md:shadow-xl text-white rounded-xl md:rounded-2xl ${isPositiveGrowth
-                ? 'bg-gradient-to-br from-teal-500 to-cyan-600'
-                : 'bg-gradient-to-br from-slate-500 to-gray-600'
-                }`}>
-                <div className="absolute -top-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
-                <CardContent className="p-3 md:pt-6 md:pb-6 md:px-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className={`text-[10px] md:text-sm font-medium ${isPositiveGrowth ? 'text-teal-100' : 'text-slate-100'}`}>
-                                Growth
-                            </p>
-                            <p className="text-xl md:text-3xl font-bold mt-0.5 md:mt-1">
-                                {isPositiveGrowth ? '+' : ''}{growth}%
-                            </p>
-                            <p className={`text-[10px] md:text-xs mt-1 md:mt-2 ${isPositiveGrowth ? 'text-teal-200' : 'text-slate-200'}`}>
-                                vs previous
-                            </p>
-                        </div>
-                        <div className="p-2 md:p-3 rounded-xl md:rounded-2xl bg-white/20 backdrop-blur-sm">
-                            {isPositiveGrowth ? (
-                                <TrendingUp className="h-5 w-5 md:h-8 md:w-8" />
-                            ) : (
-                                <TrendingDown className="h-5 w-5 md:h-8 md:w-8" />
-                            )}
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            <StatCard
+                title="Growth"
+                value={`${isPositiveGrowth ? '+' : ''}${growth}%`}
+                subtext="vs previous period"
+                icon={isPositiveGrowth ? TrendingUp : TrendingDown}
+                gradient={isPositiveGrowth ? 'bg-gradient-to-br from-teal-500 to-cyan-600' : 'bg-gradient-to-br from-slate-500 to-gray-600'}
+                subtextColor={isPositiveGrowth ? 'text-teal-100' : 'text-slate-200'}
+            />
         </div>
     );
 }

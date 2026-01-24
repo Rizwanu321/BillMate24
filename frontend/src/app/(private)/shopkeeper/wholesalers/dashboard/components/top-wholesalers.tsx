@@ -94,9 +94,9 @@ export function TopWholesalers({ wholesalers, isLoading }: TopWholesalersProps) 
                                 <div
                                     key={w._id || `wholesaler-${index}`}
                                     className={`relative p-2.5 md:p-4 rounded-xl bg-gradient-to-r from-gray-50 to-white border-l-4 border border-gray-100 hover:border-purple-200 hover:shadow-md transition-all duration-200 group active:scale-[0.99] ${index === 0 ? 'border-l-yellow-500' :
-                                            index === 1 ? 'border-l-gray-400' :
-                                                index === 2 ? 'border-l-orange-500' :
-                                                    'border-l-purple-400'
+                                        index === 1 ? 'border-l-gray-400' :
+                                            index === 2 ? 'border-l-orange-500' :
+                                                'border-l-purple-400'
                                         }`}
                                 >
                                     {/* Progress bar background */}

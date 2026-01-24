@@ -13,5 +13,11 @@ router.post('/refresh-token', authController.refreshToken.bind(authController));
 router.post('/logout', authenticate, authController.logout.bind(authController));
 router.post('/change-password', authenticate, authController.changePassword.bind(authController));
 router.get('/profile', authenticate, authController.getProfile.bind(authController));
+router.patch('/profile', authenticate, authController.updateProfile.bind(authController));
+
+// Password recovery routes (Public)
+router.post('/forgot-password', authRateLimiter, authController.forgotPassword.bind(authController));
+router.post('/verify-otp', authRateLimiter, authController.verifyOTP.bind(authController));
+router.post('/reset-password', authRateLimiter, authController.resetPassword.bind(authController));
 
 export const authRoutes = router;

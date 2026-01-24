@@ -19,7 +19,9 @@ export const errorHandler = (
 
     // MongoDB duplicate key error
     if (error.name === 'MongoServerError' && (error as any).code === 11000) {
-        sendError(res, 'Duplicate entry found', 409);
+        const field = Object.keys((error as any).keyValue)[0];
+        const formattedField = field ? field.charAt(0).toUpperCase() + field.slice(1) : 'Entry';
+        sendError(res, `${formattedField} already exists`, 409);
         return;
     }
 

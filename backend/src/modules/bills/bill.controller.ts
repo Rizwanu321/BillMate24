@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { billService } from './bill.service';
-import { createBillSchema, billFilterSchema } from './bill.validation';
+import { createBillSchema, billFilterSchema, updateBillSchema } from './bill.validation';
 import { sendSuccess, sendError, sendPaginated, getPaginationParams } from '../../utils/helpers';
 
 export class BillController {
@@ -28,6 +28,8 @@ export class BillController {
                 startDate: req.query.startDate,
                 endDate: req.query.endDate,
                 search: req.query.search,
+                includeDeleted: req.query.includeDeleted,
+                isEdited: req.query.isEdited,
             });
             const result = await billService.getAll(req.user!._id, page, limit, filters);
             sendPaginated(res, result.bills, {
@@ -70,6 +72,33 @@ export class BillController {
             sendSuccess(res, stats, 'Bill stats retrieved successfully');
         } catch (error) {
             next(error);
+        }
+    }
+
+    async update(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const validatedData = updateBillSchema.parse(req.body);
+            const bill = await billService.update(req.user!._id, req.params.id, validatedData);
+            sendSuccess(res, bill, 'Bill updated successfully');
+        } catch (error: any) {
+            if (error.message === 'Bill not found') {
+                sendError(res, error.message, 404);
+            } else {
+                next(error);
+            }
+        }
+    }
+
+    async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            await billService.delete(req.user!._id, req.params.id);
+            sendSuccess(res, null, 'Bill deleted successfully');
+        } catch (error: any) {
+            if (error.message === 'Bill not found') {
+                sendError(res, error.message, 404);
+            } else {
+                next(error);
+            }
         }
     }
 }

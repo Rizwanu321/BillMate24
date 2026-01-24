@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import {
     Search,
@@ -24,6 +24,10 @@ import {
     Filter,
     CalendarDays,
     X,
+    Trash2,
+    Edit,
+    History,
+    AlertTriangle,
 } from 'lucide-react';
 import { Header } from '@/components/app/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,6 +57,14 @@ import {
 } from '@/components/ui/popover';
 import api from '@/config/axios';
 import { format, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { EditBillModal } from './components/edit-bill-modal';
+import { DeleteBillDialog } from './components/delete-bill-dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface Bill {
     _id: string;
@@ -65,6 +77,9 @@ interface Bill {
     dueAmount: number;
     paymentMethod: string;
     createdAt: string;
+    isDeleted?: boolean;
+    isEdited?: boolean;
+    notes?: string;
 }
 
 type TimeFilter = 'all' | 'today' | 'yesterday' | 'this_week' | 'this_month' | 'last_month' | 'custom';
@@ -130,6 +145,7 @@ const timeFilterOptions = [
 ];
 
 export default function BillHistoryPage() {
+    const queryClient = useQueryClient();
     const [page, setPage] = useState(1);
     const [billType, setBillType] = useState<string>('all');
     const [paymentMethod, setPaymentMethod] = useState<string>('all');
@@ -138,7 +154,16 @@ export default function BillHistoryPage() {
     const [customEndDate, setCustomEndDate] = useState<string>('');
     const [search, setSearch] = useState('');
     const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
-    const limit = 10;
+    const [includeDeleted, setIncludeDeleted] = useState(false);
+    const [showOnlyEdited, setShowOnlyEdited] = useState(false);
+
+    // Management States
+    const [editingBill, setEditingBill] = useState<Bill | null>(null);
+    const [deletingBill, setDeletingBill] = useState<Bill | null>(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+    const [limit, setLimit] = useState(10);
 
     // Calculate date range based on selected filter
     const dateRange = useMemo(() => {
@@ -151,8 +176,8 @@ export default function BillHistoryPage() {
         return getDateRange(timeFilter);
     }, [timeFilter, customStartDate, customEndDate]);
 
-    const { data, isLoading } = useQuery({
-        queryKey: ['bills', page, billType, paymentMethod, dateRange.startDate, dateRange.endDate],
+    const { data, isLoading, refetch } = useQuery({
+        queryKey: ['bills', page, billType, paymentMethod, dateRange.startDate, dateRange.endDate, includeDeleted, showOnlyEdited],
         queryFn: async () => {
             let url = `/bills?page=${page}&limit=${limit}`;
             if (billType !== 'all') {
@@ -166,6 +191,12 @@ export default function BillHistoryPage() {
             }
             if (dateRange.endDate) {
                 url += `&endDate=${dateRange.endDate}`;
+            }
+            if (includeDeleted) {
+                url += `&includeDeleted=true`;
+            }
+            if (showOnlyEdited) {
+                url += `&isEdited=true`;
             }
             const response = await api.get(url);
             return response.data;
@@ -190,11 +221,12 @@ export default function BillHistoryPage() {
     );
 
     const getPaymentMethodIcon = (method: string) => {
+        if (!method) return <Clock className="h-3.5 w-3.5 text-gray-400" />;
         switch (method) {
             case 'cash': return <Banknote className="h-4 w-4" />;
             case 'card': return <CreditCard className="h-4 w-4" />;
             case 'online': return <Smartphone className="h-4 w-4" />;
-            default: return null;
+            default: return <Clock className="h-3.5 w-3.5 text-gray-400" />;
         }
     };
 
@@ -227,11 +259,28 @@ export default function BillHistoryPage() {
         setCustomStartDate('');
         setCustomEndDate('');
         setSearch('');
+        setIncludeDeleted(false);
+        setShowOnlyEdited(false);
         setPage(1);
     };
 
+    const handleEdit = (bill: Bill) => {
+        setEditingBill(bill);
+        setIsEditModalOpen(true);
+    };
+
+    const handleDelete = (bill: Bill) => {
+        setDeletingBill(bill);
+        setIsDeleteOpen(true);
+    };
+
+    const handleSuccess = () => {
+        refetch();
+        queryClient.invalidateQueries({ queryKey: ['bill-stats'] });
+    };
+
     // Check if any filter is active
-    const hasActiveFilters = timeFilter !== 'all' || billType !== 'all' || paymentMethod !== 'all';
+    const hasActiveFilters = timeFilter !== 'all' || billType !== 'all' || paymentMethod !== 'all' || includeDeleted || showOnlyEdited;
 
     // Generate page numbers for pagination
     const getPageNumbers = () => {
@@ -650,6 +699,42 @@ export default function BillHistoryPage() {
                                             </Select>
                                         </div>
 
+                                        {/* Status Filter */}
+                                        <div className="flex-shrink-0">
+                                            <Select
+                                                value={includeDeleted ? 'deleted' : showOnlyEdited ? 'edited' : 'active'}
+                                                onValueChange={(v) => {
+                                                    setIncludeDeleted(v === 'deleted');
+                                                    setShowOnlyEdited(v === 'edited');
+                                                    setPage(1);
+                                                }}
+                                            >
+                                                <SelectTrigger className="w-[100px] md:w-36 h-8 md:h-10 text-xs md:text-sm bg-white">
+                                                    <SelectValue placeholder="Status" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="active">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="h-2 w-2 rounded-full bg-green-500" />
+                                                            Active
+                                                        </div>
+                                                    </SelectItem>
+                                                    <SelectItem value="edited">
+                                                        <div className="flex items-center gap-2">
+                                                            <History className="h-4 w-4 text-blue-500" />
+                                                            Edited
+                                                        </div>
+                                                    </SelectItem>
+                                                    <SelectItem value="deleted">
+                                                        <div className="flex items-center gap-2">
+                                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                                            Deleted
+                                                        </div>
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
                                         {/* Payment Method Filter */}
                                         <div className="flex-shrink-0">
                                             <Select value={paymentMethod} onValueChange={(v) => { setPaymentMethod(v); setPage(1); }}>
@@ -711,13 +796,24 @@ export default function BillHistoryPage() {
                                                     <TableHead className="font-semibold">Status</TableHead>
                                                     <TableHead className="font-semibold">Method</TableHead>
                                                     <TableHead className="font-semibold">Date</TableHead>
+                                                    <TableHead className="font-semibold text-right">Actions</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
                                                 {filteredBills.map((bill) => (
-                                                    <TableRow key={bill._id} className="hover:bg-gray-50 transition-colors">
+                                                    <TableRow
+                                                        key={bill._id}
+                                                        className={`hover:bg-gray-50 transition-colors ${bill.isDeleted ? 'opacity-50 grayscale-[0.5] bg-gray-50/50' : ''}`}
+                                                    >
                                                         <TableCell className="font-mono text-sm font-semibold">
-                                                            {bill.billNumber}
+                                                            <div className="flex flex-col">
+                                                                <span>{bill.billNumber}</span>
+                                                                {bill.isEdited && (
+                                                                    <span className="text-[10px] text-blue-500 font-bold flex items-center gap-0.5">
+                                                                        <History className="h-2.5 w-2.5" /> EDITED
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </TableCell>
                                                         <TableCell>
                                                             <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${bill.billType === 'sale'
@@ -753,16 +849,45 @@ export default function BillHistoryPage() {
                                                             )}
                                                         </TableCell>
                                                         <TableCell>
-                                                            <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs ${bill.paymentMethod === 'cash' ? 'bg-green-50 text-green-700' :
-                                                                bill.paymentMethod === 'card' ? 'bg-blue-50 text-blue-700' :
-                                                                    'bg-purple-50 text-purple-700'
+                                                            <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs ${!bill.paymentMethod ? 'bg-gray-100 text-gray-600' :
+                                                                bill.paymentMethod === 'cash' ? 'bg-green-50 text-green-700' :
+                                                                    bill.paymentMethod === 'card' ? 'bg-blue-50 text-blue-700' :
+                                                                        'bg-purple-50 text-purple-700'
                                                                 }`}>
                                                                 {getPaymentMethodIcon(bill.paymentMethod)}
-                                                                <span className="capitalize font-medium">{bill.paymentMethod}</span>
+                                                                <span className="capitalize font-medium">{bill.paymentMethod || '---'}</span>
                                                             </div>
                                                         </TableCell>
                                                         <TableCell className="text-gray-500 text-sm">
                                                             {format(new Date(bill.createdAt), 'dd MMM yyyy')}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            {!bill.isDeleted ? (
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                                            <MoreHorizontal className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end" className="w-36">
+                                                                        <DropdownMenuItem onClick={() => handleEdit(bill)}>
+                                                                            <Edit className="mr-2 h-4 w-4" />
+                                                                            Edit Bill
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem
+                                                                            onClick={() => handleDelete(bill)}
+                                                                            className="text-red-600 focus:text-red-600"
+                                                                        >
+                                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                                            Delete
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            ) : (
+                                                                <Badge variant="outline" className="text-gray-400 border-gray-200">
+                                                                    Deleted
+                                                                </Badge>
+                                                            )}
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
@@ -800,7 +925,7 @@ export default function BillHistoryPage() {
                                             {filteredBills.map((bill, index) => (
                                                 <div
                                                     key={bill._id}
-                                                    className={`p-3 bg-white active:scale-[0.99] transition-all ${index !== filteredBills.length - 1 ? 'border-b-2 border-gray-200' : ''}`}
+                                                    className={`p-3 bg-white active:scale-[0.99] transition-all ${index !== filteredBills.length - 1 ? 'border-b-2 border-gray-200' : ''} ${bill.isDeleted ? 'opacity-50 grayscale-[0.5] bg-gray-50' : ''}`}
                                                 >
                                                     {/* Header Row - Icon, Name, Type Badge */}
                                                     <div className="flex items-center gap-3 mb-2">
@@ -819,7 +944,14 @@ export default function BillHistoryPage() {
                                                         {/* Name and Bill Number */}
                                                         <div className="flex-1 min-w-0">
                                                             <p className="font-semibold text-gray-900 text-sm truncate">{bill.entityName}</p>
-                                                            <p className="font-mono text-[11px] text-gray-400">{bill.billNumber}</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="font-mono text-[11px] text-gray-400">{bill.billNumber}</p>
+                                                                {bill.isEdited && (
+                                                                    <span className="text-[9px] text-blue-500 font-bold bg-blue-50 px-1 rounded flex items-center gap-0.5">
+                                                                        <History className="h-2 w-2" /> EDITED
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </div>
 
                                                         {/* Type Badge */}
@@ -829,6 +961,30 @@ export default function BillHistoryPage() {
                                                             } border-0`}>
                                                             {bill.billType === 'sale' ? 'Sale' : 'Purchase'}
                                                         </Badge>
+
+                                                        {/* Actions for mobile */}
+                                                        {!bill.isDeleted && (
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0">
+                                                                        <MoreHorizontal className="h-4 w-4 text-gray-400" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end" className="w-36">
+                                                                    <DropdownMenuItem onClick={() => handleEdit(bill)}>
+                                                                        <Edit className="mr-2 h-4 w-4" />
+                                                                        Edit Bill
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => handleDelete(bill)}
+                                                                        className="text-red-600 focus:text-red-600"
+                                                                    >
+                                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                                        Delete
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        )}
                                                     </div>
 
                                                     {/* Amount Row - Total, Paid, Due/Status */}
@@ -860,14 +1016,16 @@ export default function BillHistoryPage() {
 
                                                     {/* Footer Row - Payment Method and Date */}
                                                     <div className="flex items-center justify-between">
-                                                        <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium ${bill.paymentMethod === 'cash' ? 'bg-green-50 text-green-700' :
+                                                        <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium ${!bill.paymentMethod ? 'bg-gray-100 text-gray-600' :
+                                                            bill.paymentMethod === 'cash' ? 'bg-green-50 text-green-700' :
                                                                 bill.paymentMethod === 'card' ? 'bg-blue-50 text-blue-700' :
                                                                     'bg-purple-50 text-purple-700'
                                                             }`}>
+                                                            {!bill.paymentMethod && <Clock className="h-3.5 w-3.5" />}
                                                             {bill.paymentMethod === 'cash' && <Banknote className="h-3.5 w-3.5" />}
                                                             {bill.paymentMethod === 'card' && <CreditCard className="h-3.5 w-3.5" />}
                                                             {bill.paymentMethod === 'online' && <Smartphone className="h-3.5 w-3.5" />}
-                                                            <span className="capitalize">{bill.paymentMethod}</span>
+                                                            <span className="capitalize">{bill.paymentMethod || '---'}</span>
                                                         </div>
 
                                                         <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -904,9 +1062,25 @@ export default function BillHistoryPage() {
                             {pagination && pagination.totalPages > 1 && (
                                 <div className="p-3 md:p-4 border-t bg-gray-50/50">
                                     <div className="flex items-center justify-between gap-2 md:gap-4">
-                                        <p className="text-[10px] md:text-sm text-gray-500 hidden sm:block">
-                                            <span className="font-semibold">{((page - 1) * limit) + 1}</span>-<span className="font-semibold">{Math.min(page * limit, pagination.total)}</span> of <span className="font-semibold">{pagination.total}</span>
-                                        </p>
+                                        <div className="flex items-center gap-4 hidden sm:flex">
+                                            <p className="text-[10px] md:text-sm text-gray-500">
+                                                <span className="font-semibold">{((page - 1) * limit) + 1}</span>-<span className="font-semibold">{Math.min(page * limit, pagination.total)}</span> of <span className="font-semibold">{pagination.total}</span>
+                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs text-gray-400">Rows:</span>
+                                                <Select value={limit.toString()} onValueChange={(v) => { setLimit(parseInt(v)); setPage(1); }}>
+                                                    <SelectTrigger className="h-7 w-16 text-xs">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="10">10</SelectItem>
+                                                        <SelectItem value="25">25</SelectItem>
+                                                        <SelectItem value="50">50</SelectItem>
+                                                        <SelectItem value="100">100</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
                                         <div className="flex items-center gap-1 md:gap-2 mx-auto sm:mx-0">
                                             <Button
                                                 variant="outline"
@@ -963,6 +1137,21 @@ export default function BillHistoryPage() {
                     </>
                 )}
             </div>
+
+            {/* Modals & Dialogs */}
+            <EditBillModal
+                bill={editingBill}
+                open={isEditModalOpen}
+                onOpenChange={setIsEditModalOpen}
+                onSuccess={handleSuccess}
+            />
+
+            <DeleteBillDialog
+                bill={deletingBill}
+                open={isDeleteOpen}
+                onOpenChange={setIsDeleteOpen}
+                onSuccess={handleSuccess}
+            />
         </div>
     );
 }

@@ -9,8 +9,14 @@ export class WholesalerController {
             const validatedData = createWholesalerSchema.parse(req.body);
             const wholesaler = await wholesalerService.create(req.user!._id, validatedData);
             sendSuccess(res, wholesaler, 'Wholesaler created successfully', 201);
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            if (error.message === 'Phone number already exists for another wholesaler') {
+                sendError(res, error.message, 409);
+            } else if (error.message === 'WhatsApp number already exists for another wholesaler') {
+                sendError(res, error.message, 409);
+            } else {
+                next(error);
+            }
         }
     }
 
@@ -68,6 +74,10 @@ export class WholesalerController {
         } catch (error: any) {
             if (error.message === 'Wholesaler not found') {
                 sendError(res, error.message, 404);
+            } else if (error.message === 'Phone number already exists for another wholesaler') {
+                sendError(res, error.message, 409);
+            } else if (error.message === 'WhatsApp number already exists for another wholesaler') {
+                sendError(res, error.message, 409);
             } else {
                 next(error);
             }

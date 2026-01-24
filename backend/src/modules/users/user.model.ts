@@ -65,6 +65,12 @@ const userSchema = new Schema<IUser & Document>(
         refreshToken: {
             type: String,
         },
+        resetPasswordOTP: {
+            type: String,
+        },
+        resetPasswordOTPExpires: {
+            type: Date,
+        },
     },
     {
         timestamps: true,
@@ -75,5 +81,9 @@ const userSchema = new Schema<IUser & Document>(
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
+
+// Unique index for phone number (globally unique across all users)
+// sparse: true ensures uniqueness only for non-null values
+userSchema.index({ phone: 1 }, { unique: true, sparse: true, name: 'unique_phone' });
 
 export const User = mongoose.model<IUser & Document>('User', userSchema);

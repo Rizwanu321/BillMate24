@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from './auth.service';
-import { loginSchema, registerSchema, refreshTokenSchema, changePasswordSchema } from './auth.validation';
+import { loginSchema, registerSchema, refreshTokenSchema, changePasswordSchema, forgotPasswordSchema, verifyOTPSchema, resetPasswordSchema } from './auth.validation';
+import { updateShopkeeperSchema } from '../users/user.validation';
 import { sendSuccess, sendError } from '../../utils/helpers';
 
 export class AuthController {
@@ -88,6 +89,62 @@ export class AuthController {
             sendSuccess(res, profile, 'Profile retrieved successfully');
         } catch (error) {
             next(error);
+        }
+    }
+
+    async updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            if (!req.user) {
+                sendError(res, 'Authentication required', 401);
+                return;
+            }
+            const validatedData = updateShopkeeperSchema.parse(req.body);
+            const updatedUser = await authService.updateProfile(req.user._id, validatedData);
+            sendSuccess(res, updatedUser, 'Profile updated successfully');
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { email } = forgotPasswordSchema.parse(req.body);
+            await authService.forgotPassword(email);
+            sendSuccess(res, null, 'OTP sent to your email');
+        } catch (error: any) {
+            if (error.message === 'User with this email does not exist') {
+                sendError(res, error.message, 404);
+            } else {
+                next(error);
+            }
+        }
+    }
+
+    async verifyOTP(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { email, otp } = verifyOTPSchema.parse(req.body);
+            await authService.verifyOTP(email, otp);
+            sendSuccess(res, null, 'OTP verified successfully');
+        } catch (error: any) {
+            if (error.message === 'Invalid or expired OTP') {
+                sendError(res, error.message, 400);
+            } else {
+                next(error);
+            }
+        }
+    }
+
+    async resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const validatedData = resetPasswordSchema.parse(req.body);
+            await authService.resetPassword(validatedData);
+            sendSuccess(res, null, 'Password reset successfully');
+        } catch (error: any) {
+            if (error.message === 'Invalid or expired OTP') {
+                sendError(res, error.message, 400);
+            } else {
+                next(error);
+            }
         }
     }
 }

@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Revenue Management System",
-  description: "Full-stack Revenue & Ledger Management System for retail shops",
+  title: "BillMate24",
+  description: "Advanced Ledger & Smart Billing Solution",
 };
 
 export default function RootLayout({

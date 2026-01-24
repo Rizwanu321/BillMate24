@@ -5,12 +5,34 @@ type CustomerType = 'due' | 'normal';
 
 export class CustomerService {
     async create(shopkeeperId: string, input: CreateCustomerInput): Promise<any> {
+        const { initialSales, ...customerData } = input;
+
         const customer = new Customer({
-            ...input,
+            ...customerData,
             shopkeeperId,
+            // If there's an initial sales amount, it represents:
+            // - Total sales to this customer before using the app
+            // - This becomes the outstanding debt (totalPaid = 0 initially)
+            totalSales: initialSales || 0,
+            totalPaid: 0,
+            outstandingDue: initialSales || 0,  // Positive value = customer owes shopkeeper
         });
-        await customer.save();
-        return customer.toObject();
+
+        try {
+            await customer.save();
+            return customer.toObject();
+        } catch (error: any) {
+            // Handle duplicate key errors
+            if (error.code === 11000) {
+                const field = Object.keys(error.keyPattern || {})[1]; // Second key is phone/whatsappNumber
+                if (field === 'phone') {
+                    throw new Error('Phone number already exists for another customer');
+                } else if (field === 'whatsappNumber') {
+                    throw new Error('WhatsApp number already exists for another customer');
+                }
+            }
+            throw error;
+        }
     }
 
     async getAll(
@@ -93,15 +115,28 @@ export class CustomerService {
     }
 
     async update(shopkeeperId: string, id: string, input: UpdateCustomerInput): Promise<any> {
-        const customer = await Customer.findOneAndUpdate(
-            { _id: id, shopkeeperId },
-            { $set: input },
-            { new: true }
-        );
-        if (!customer) {
-            throw new Error('Customer not found');
+        try {
+            const customer = await Customer.findOneAndUpdate(
+                { _id: id, shopkeeperId },
+                { $set: input },
+                { new: true }
+            );
+            if (!customer) {
+                throw new Error('Customer not found');
+            }
+            return customer.toObject();
+        } catch (error: any) {
+            // Handle duplicate key errors
+            if (error.code === 11000) {
+                const field = Object.keys(error.keyPattern || {})[1]; // Second key is phone/whatsappNumber
+                if (field === 'phone') {
+                    throw new Error('Phone number already exists for another customer');
+                } else if (field === 'whatsappNumber') {
+                    throw new Error('WhatsApp number already exists for another customer');
+                }
+            }
+            throw error;
         }
-        return customer.toObject();
     }
 
     async delete(shopkeeperId: string, id: string): Promise<void> {

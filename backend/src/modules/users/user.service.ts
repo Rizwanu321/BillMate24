@@ -2,13 +2,25 @@ import { User } from './user.model';
 import { hashPassword } from '../../utils/auth';
 import { CreateShopkeeperInput, UpdateShopkeeperInput, UpdateFeaturesInput } from './user.validation';
 import { IUser, Features } from '../../types';
+import { Bill } from '../bills/bill.model';
+import { Customer } from '../customers/customer.model';
+import { Wholesaler } from '../wholesalers/wholesaler.model';
+import mongoose from 'mongoose';
 
 export class UserService {
     async createShopkeeper(input: CreateShopkeeperInput): Promise<Omit<IUser, 'password' | 'refreshToken'>> {
-        const existingUser = await User.findOne({ email: input.email.toLowerCase() });
-
-        if (existingUser) {
+        // Check if email already exists
+        const existingEmail = await User.findOne({ email: input.email.toLowerCase() });
+        if (existingEmail) {
             throw new Error('Email already registered');
+        }
+
+        // Check if phone number already exists (if provided)
+        if (input.phone) {
+            const existingPhone = await User.findOne({ phone: input.phone.trim() });
+            if (existingPhone) {
+                throw new Error('Phone number already registered');
+            }
         }
 
         const hashedPassword = await hashPassword(input.password);
@@ -67,6 +79,17 @@ export class UserService {
         id: string,
         input: UpdateShopkeeperInput
     ): Promise<Omit<IUser, 'password' | 'refreshToken'>> {
+        // Check if phone number is being updated and if it already exists
+        if (input.phone) {
+            const existingPhone = await User.findOne({
+                phone: input.phone.trim(),
+                _id: { $ne: id } // Exclude current user from check
+            });
+            if (existingPhone) {
+                throw new Error('Phone number already registered');
+            }
+        }
+
         const user = await User.findOneAndUpdate(
             { _id: id, role: 'shopkeeper' },
             { $set: input },
@@ -139,6 +162,113 @@ export class UserService {
             total,
             active,
             inactive: total - active,
+        };
+    }
+
+    async getShopkeeperStorageStats(shopkeeperId: string) {
+        const shopkeeperObjectId = new mongoose.Types.ObjectId(shopkeeperId);
+
+        const [
+            totalCustomers,
+            dueCustomers,
+            normalCustomers,
+            totalWholesalers,
+            totalBills,
+            purchaseBills,
+            saleBills,
+            totalRevenue,
+            totalExpenses,
+        ] = await Promise.all([
+            Customer.countDocuments({ shopkeeperId: shopkeeperObjectId }),
+            Customer.countDocuments({ shopkeeperId: shopkeeperObjectId, type: 'due' }),
+            Customer.countDocuments({ shopkeeperId: shopkeeperObjectId, type: 'normal' }),
+            Wholesaler.countDocuments({ shopkeeperId: shopkeeperObjectId, isDeleted: false }),
+            Bill.countDocuments({ shopkeeperId: shopkeeperObjectId }),
+            Bill.countDocuments({ shopkeeperId: shopkeeperObjectId, billType: 'purchase' }),
+            Bill.countDocuments({ shopkeeperId: shopkeeperObjectId, billType: 'sale' }),
+            Bill.aggregate([
+                { $match: { shopkeeperId: shopkeeperObjectId, billType: 'sale' } },
+                { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+            ]),
+            Bill.aggregate([
+                { $match: { shopkeeperId: shopkeeperObjectId, billType: 'purchase' } },
+                { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+            ]),
+        ]);
+
+        // Estimate storage size (approximate calculation)
+        // Average document sizes in MongoDB:
+        // - Customer: ~500 bytes
+        // - Wholesaler: ~500 bytes
+        // - Bill: ~1KB (1024 bytes) due to items array
+        const estimatedStorageBytes =
+            (totalCustomers * 500) +
+            (totalWholesalers * 500) +
+            (totalBills * 1024);
+
+        // Convert to human-readable format
+        const formatBytes = (bytes: number): string => {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        };
+
+        return {
+            shopkeeperId,
+            storage: {
+                totalBytes: estimatedStorageBytes,
+                formatted: formatBytes(estimatedStorageBytes),
+            },
+            customers: {
+                total: totalCustomers,
+                due: dueCustomers,
+                normal: normalCustomers,
+            },
+            wholesalers: {
+                total: totalWholesalers,
+            },
+            bills: {
+                total: totalBills,
+                purchase: purchaseBills,
+                sale: saleBills,
+            },
+            revenue: {
+                total: totalRevenue[0]?.total || 0,
+                expenses: totalExpenses[0]?.total || 0,
+                profit: (totalRevenue[0]?.total || 0) - (totalExpenses[0]?.total || 0),
+            },
+        };
+    }
+
+    async getAllShopkeepersWithStorage(page: number, limit: number) {
+        const skip = (page - 1) * limit;
+
+        const [users, total] = await Promise.all([
+            User.find({ role: 'shopkeeper' })
+                .select('-password -refreshToken')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit),
+            User.countDocuments({ role: 'shopkeeper' }),
+        ]);
+
+        // Get storage stats for all shopkeepers in parallel
+        const usersWithStorage = await Promise.all(
+            users.map(async (user) => {
+                const storageStats = await this.getShopkeeperStorageStats(user._id.toString());
+                return {
+                    ...user.toObject(),
+                    storageStats,
+                };
+            })
+        );
+
+        return {
+            users: usersWithStorage,
+            total,
+            totalPages: Math.ceil(total / limit),
         };
     }
 }

@@ -29,6 +29,12 @@ const customerSchema = new Schema(
         },
         phone: {
             type: String,
+            required: [
+                function (this: any) {
+                    return this.type === 'due';
+                },
+                'Phone number is required for due customers',
+            ],
             trim: true,
         },
         whatsappNumber: {
@@ -37,6 +43,12 @@ const customerSchema = new Schema(
         },
         address: {
             type: String,
+            required: [
+                function (this: any) {
+                    return this.type === 'due';
+                },
+                'Address is required for due customers',
+            ],
             trim: true,
         },
         type: {
@@ -77,6 +89,17 @@ customerSchema.index({ shopkeeperId: 1, type: 1 });
 customerSchema.index({ shopkeeperId: 1, name: 1 });
 customerSchema.index({ shopkeeperId: 1, isActive: 1 });
 customerSchema.index({ shopkeeperId: 1, outstandingDue: -1 });
+
+// Unique indexes for phone and whatsappNumber per shopkeeper
+// sparse: true ensures uniqueness only for non-null values
+customerSchema.index(
+    { shopkeeperId: 1, phone: 1 },
+    { unique: true, sparse: true, name: 'unique_phone_per_shopkeeper' }
+);
+customerSchema.index(
+    { shopkeeperId: 1, whatsappNumber: 1 },
+    { unique: true, sparse: true, name: 'unique_whatsapp_per_shopkeeper' }
+);
 
 export const Customer = mongoose.model<CustomerDocument>('Customer', customerSchema);
 

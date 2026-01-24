@@ -66,6 +66,8 @@ interface DashboardData {
     topCustomersDue: any[];
     topWholesalersDue: any[];
     alerts: { type: string; message: string; count: number }[];
+    totalLifetimeSales: number;
+    totalCollected: number;
 }
 
 function formatCurrency(amount: number): string {
@@ -78,11 +80,7 @@ function formatCurrency(amount: number): string {
 }
 
 function formatCompactCurrency(amount: number): string {
-    if (amount >= 100000) {
-        return `₹${(amount / 100000).toFixed(1)}L`;
-    } else if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}K`;
-    }
+    // User requested to see full amounts without K/L suffixes
     return formatCurrency(amount);
 }
 
@@ -100,6 +98,9 @@ export default function ShopkeeperDashboard() {
             return response.data.data;
         },
         refetchInterval: 60000, // Refresh every minute
+        refetchOnMount: 'always', // Always fetch fresh data when component mounts
+        refetchOnWindowFocus: true, // Refetch when window regains focus
+        staleTime: 0, // Data is always considered stale, will refetch on mount
     });
 
     const todaySalesChange = dashboard ? getPercentageChange(dashboard.todaySales, dashboard.yesterdaySales) : null;
@@ -222,7 +223,7 @@ export default function ShopkeeperDashboard() {
                                 <div className="absolute -bottom-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
                             </Card>
 
-                            {/* This Month */}
+                            {/* Total Sales (Lifetime) */}
                             <Card className="relative overflow-hidden border-0 shadow-lg md:shadow-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white">
                                 <CardContent className="p-3 md:p-6">
                                     <div className="flex items-center justify-between mb-2 md:mb-4">
@@ -230,19 +231,19 @@ export default function ShopkeeperDashboard() {
                                             <TrendingUp className="h-4 w-4 md:h-6 md:w-6" />
                                         </div>
                                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                                            {format(now, 'MMM')}
+                                            Lifetime
                                         </Badge>
                                     </div>
-                                    <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(dashboard?.monthSales || 0)}</h3>
-                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Month's Sales</p>
+                                    <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(dashboard?.totalLifetimeSales || 0)}</h3>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Total Sales</p>
                                     <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
                                         <div className="flex items-center justify-between text-[10px] md:text-sm">
-                                            <span className="text-white/70">Collected</span>
-                                            <span className="font-semibold">{formatCompactCurrency(dashboard?.monthCollected || 0)}</span>
+                                            <span className="text-white/70">This Month</span>
+                                            <span className="font-semibold">{formatCompactCurrency(dashboard?.monthSales || 0)}</span>
                                         </div>
                                         <p className="text-[10px] md:text-xs text-white/60 mt-1 flex items-center gap-1">
-                                            <Activity className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                            {dashboard?.monthBillCount || 0} bills
+                                            <Info className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                                            Includes opening balances
                                         </p>
                                     </div>
                                 </CardContent>
@@ -257,15 +258,18 @@ export default function ShopkeeperDashboard() {
                                             <Users className="h-4 w-4 md:h-6 md:w-6" />
                                         </div>
                                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                                            To Collect
+                                            Total Due
                                         </Badge>
                                     </div>
                                     <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(dashboard?.totalDueFromCustomers || 0)}</h3>
-                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Receivables</p>
-                                    <p className="text-[10px] md:text-xs text-white/60 mt-2 flex items-center gap-1">
-                                        <Target className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                        {dashboard?.customersWithDues || 0} with dues
-                                    </p>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">To Collect</p>
+                                    <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
+                                        <p className="text-[10px] md:text-xs text-white/70">From Customers (incl. opening)</p>
+                                        <p className="text-[10px] md:text-xs text-white/60 mt-1 flex items-center gap-1">
+                                            <Target className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                                            {dashboard?.customersWithDues || 0} customer{dashboard?.customersWithDues !== 1 ? 's' : ''} with dues
+                                        </p>
+                                    </div>
                                 </CardContent>
                                 <div className="absolute -bottom-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
                             </Card>
@@ -278,15 +282,18 @@ export default function ShopkeeperDashboard() {
                                             <Package className="h-4 w-4 md:h-6 md:w-6" />
                                         </div>
                                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                                            To Pay
+                                            Total Due
                                         </Badge>
                                     </div>
                                     <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(dashboard?.totalDueToWholesalers || 0)}</h3>
-                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Payables</p>
-                                    <p className="text-[10px] md:text-xs text-white/60 mt-2 flex items-center gap-1">
-                                        <Target className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                        {dashboard?.wholesalersWithDues || 0} pending
-                                    </p>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">To Pay</p>
+                                    <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
+                                        <p className="text-[10px] md:text-xs text-white/70">To Wholesalers (incl. opening)</p>
+                                        <p className="text-[10px] md:text-xs text-white/60 mt-1 flex items-center gap-1">
+                                            <Target className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                                            {dashboard?.wholesalersWithDues || 0} pending payment{dashboard?.wholesalersWithDues !== 1 ? 's' : ''}
+                                        </p>
+                                    </div>
                                 </CardContent>
                                 <div className="absolute -bottom-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
                             </Card>

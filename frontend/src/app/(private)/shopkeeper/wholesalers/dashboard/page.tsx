@@ -99,12 +99,17 @@ export default function WholesalerDashboardPage() {
     });
 
     // Fetch previous period data for comparison
+    // Fetch previous period data for comparison
+    const timeDiff = dateRange.endDate.getTime() - dateRange.startDate.getTime();
+    // For single days (today/yesterday), timeDiff is < 24h, so we just subtract 1 day
+    const subtractAmount = timeDiff < 86400000 ? 86400000 : (timeDiff + 86400000);
+
     const previousStartDate = format(
-        new Date(dateRange.startDate.getTime() - (dateRange.endDate.getTime() - dateRange.startDate.getTime() + 86400000)),
+        new Date(dateRange.startDate.getTime() - subtractAmount),
         'yyyy-MM-dd'
     );
     const previousEndDate = format(
-        new Date(dateRange.startDate.getTime() - 86400000),
+        new Date(dateRange.endDate.getTime() - subtractAmount),
         'yyyy-MM-dd'
     );
 
@@ -117,6 +122,32 @@ export default function WholesalerDashboardPage() {
         enabled: timeFilter !== 'all_time',
     });
 
+    // Fetch total dues data (includes opening balance) - needed for "All Time" view
+    const { data: duesData } = useQuery({
+        queryKey: ['wholesaler-dues'],
+        queryFn: async () => {
+            const response = await api.get('/wholesalers?limit=1000');
+            const data = response.data.data || [];
+
+            const totalWholesalerDue = data.reduce(
+                (sum: number, w: any) => sum + (w.outstandingDue || 0),
+                0
+            );
+
+            const totalWholesalerPurchased = data.reduce(
+                (sum: number, w: any) => sum + (w.totalPurchased || 0),
+                0
+            );
+
+            return {
+                totalWholesalerDue,
+                totalWholesalerPurchased
+            };
+        },
+        refetchOnMount: 'always',
+        staleTime: 0,
+    });
+
     const allWholesalers = (wholesalersData?.data || []) as Wholesaler[];
     const purchases = (purchasesData?.data || []) as Bill[];
     const payments = (paymentsData?.data || []) as Payment[];
@@ -124,6 +155,19 @@ export default function WholesalerDashboardPage() {
 
     // Calculate period-based wholesaler data from bills AND payments
     const periodWholesalers = useMemo(() => {
+        // For All Time, use the comprehensive wholesaler data which includes opening balances
+        if (timeFilter === 'all_time') {
+            return allWholesalers
+                .map(w => ({
+                    _id: w._id,
+                    name: w.name,
+                    totalPurchased: w.totalPurchased,
+                    totalPaid: w.totalPaid,
+                    outstandingDue: w.outstandingDue
+                }))
+                .sort((a, b) => b.totalPurchased - a.totalPurchased);
+        }
+
         const wholesalerMap: Record<string, WholesalerPeriodData> = {};
 
         // First add bill data
@@ -187,7 +231,7 @@ export default function WholesalerDashboardPage() {
         });
 
         return Object.values(wholesalerMap).sort((a, b) => b.totalPurchased - a.totalPurchased);
-    }, [purchases, payments]);
+    }, [purchases, payments, timeFilter, allWholesalers]);
 
     // Process purchases using pro-rata allocation based on wholesaler-level totals
     // This fixes the issue where payments aren't linked to specific bills
@@ -297,6 +341,8 @@ export default function WholesalerDashboardPage() {
                     thisMonthPurchases={periodPurchases}
                     lastMonthPurchases={previousPeriodPurchases}
                     billCount={purchases.length}
+                    timeFilter={timeFilter}
+                    duesData={duesData}
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6">

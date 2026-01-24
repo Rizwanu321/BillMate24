@@ -14,6 +14,11 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
+interface Wholesaler {
+    totalPurchased: number;
+    outstandingDue: number;
+}
+
 interface Bill {
     _id: string;
     billNumber: string;
@@ -26,6 +31,7 @@ interface Bill {
 
 interface TransactionsTableProps {
     bills: Bill[];
+    wholesaler?: Wholesaler;
     isLoading?: boolean;
 }
 
@@ -44,7 +50,11 @@ const paymentMethodColors: Record<string, string> = {
     upi: 'bg-indigo-100 text-indigo-700',
 };
 
-export function TransactionsTable({ bills, isLoading }: TransactionsTableProps) {
+export function TransactionsTable({ bills, wholesaler, isLoading }: TransactionsTableProps) {
+    // Calculate opening balance (total purchased that came from before using the app)
+    const billsTotal = bills.reduce((sum, bill) => sum + bill.totalAmount, 0);
+    const openingBalance = wholesaler ? Math.max(0, wholesaler.totalPurchased - billsTotal) : 0;
+
     if (isLoading) {
         return (
             <div className="p-8 md:p-12 text-center">
@@ -54,7 +64,8 @@ export function TransactionsTable({ bills, isLoading }: TransactionsTableProps) 
         );
     }
 
-    if (!bills || bills.length === 0) {
+    // Show empty state only if no bills AND no opening balance
+    if ((!bills || bills.length === 0) && openingBalance <= 0) {
         return (
             <div className="p-8 md:p-12 text-center">
                 <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 md:mb-4">
@@ -88,6 +99,41 @@ export function TransactionsTable({ bills, isLoading }: TransactionsTableProps) 
                         </TableRow>
                     </TableHeader>
                     <TableBody>
+                        {/* Opening Balance Row */}
+                        {openingBalance > 0 && (
+                            <TableRow className="bg-blue-50/50 border-b-2 border-blue-200">
+                                <TableCell className="text-gray-600 font-medium">
+                                    Before App
+                                </TableCell>
+                                <TableCell>
+                                    <Badge className="bg-blue-100 text-blue-700 border-0 font-mono text-sm">
+                                        Opening Balance
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="text-right font-bold text-gray-900">
+                                    {formatCurrency(openingBalance)}
+                                </TableCell>
+                                <TableCell className="text-right font-semibold text-gray-400">
+                                    ₹0
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <span className="font-semibold text-orange-600">
+                                        {formatCurrency(openingBalance)}
+                                    </span>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge className="bg-gray-100 text-gray-600 border-0 text-xs">
+                                        N/A
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge className="bg-orange-100 text-orange-700 border-0">
+                                        Pending
+                                    </Badge>
+                                </TableCell>
+                            </TableRow>
+                        )}
+
                         {bills.map((bill) => {
                             const due = bill.dueAmount ?? (bill.totalAmount - bill.paidAmount);
                             return (
@@ -112,8 +158,8 @@ export function TransactionsTable({ bills, isLoading }: TransactionsTableProps) 
                                         </span>
                                     </TableCell>
                                     <TableCell>
-                                        <Badge className={`capitalize border-0 ${paymentMethodColors[bill.paymentMethod] || 'bg-gray-100 text-gray-700'}`}>
-                                            {bill.paymentMethod}
+                                        <Badge className={`capitalize border-0 ${!bill.paymentMethod ? 'bg-gray-100 text-gray-600' : (paymentMethodColors[bill.paymentMethod] || 'bg-blue-100 text-blue-700')}`}>
+                                            {bill.paymentMethod || '---'}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
@@ -136,6 +182,49 @@ export function TransactionsTable({ bills, isLoading }: TransactionsTableProps) 
 
             {/* Mobile Cards - App-like with colored borders */}
             <div className="md:hidden p-2 space-y-2 bg-gray-50/50">
+                {/* Opening Balance Card */}
+                {openingBalance > 0 && (
+                    <div className="p-3 bg-blue-50 rounded-xl shadow-sm border-l-4 border-l-blue-500 border-2 border-blue-200">
+                        {/* Header Row */}
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <Badge className="bg-blue-100 text-blue-700 border-0 text-[10px] px-1.5 font-mono">
+                                    Opening Balance
+                                </Badge>
+                                <Badge className="bg-gray-100 text-gray-600 border-0 text-[10px] px-1.5">
+                                    N/A
+                                </Badge>
+                            </div>
+                            <Badge className="bg-orange-100 text-orange-700 border-0 text-[10px] px-1.5">
+                                Pending
+                            </Badge>
+                        </div>
+
+                        {/* Stats Row */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div>
+                                    <p className="text-[10px] text-gray-500">Amount</p>
+                                    <p className="text-xs font-bold text-gray-900">{formatCurrency(openingBalance)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-gray-500">Paid</p>
+                                    <p className="text-xs font-bold text-gray-400">₹0</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-gray-500">Due</p>
+                                    <p className="text-xs font-bold text-orange-600">{formatCurrency(openingBalance)}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Date */}
+                        <p className="text-[10px] text-gray-500 mt-2 font-medium">
+                            Before using app
+                        </p>
+                    </div>
+                )}
+
                 {bills.map((bill) => {
                     const due = bill.dueAmount ?? (bill.totalAmount - bill.paidAmount);
                     return (
@@ -150,8 +239,8 @@ export function TransactionsTable({ bills, isLoading }: TransactionsTableProps) 
                                     <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">
                                         {bill.billNumber}
                                     </span>
-                                    <Badge className={`capitalize border-0 text-[10px] px-1.5 ${paymentMethodColors[bill.paymentMethod] || 'bg-gray-100'}`}>
-                                        {bill.paymentMethod}
+                                    <Badge className={`capitalize border-0 text-[10px] px-1.5 ${!bill.paymentMethod ? 'bg-gray-100 text-gray-600' : (paymentMethodColors[bill.paymentMethod] || 'bg-blue-100')}`}>
+                                        {bill.paymentMethod || '---'}
                                     </Badge>
                                 </div>
                                 {(() => {
