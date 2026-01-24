@@ -4,8 +4,7 @@
     "description": "BillMate24 API",
     "main": "dist/server.js",
     "scripts": {
-        "dev": "nodemon",
-        "dev:tsx": "tsx watch src/server.ts",
+        "dev": "tsx watch src/server.ts",
         "build": "tsc",
         "start": "node dist/server.js",
         "lint": "eslint src --ext .ts",
