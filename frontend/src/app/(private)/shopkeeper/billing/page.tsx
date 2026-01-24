@@ -182,6 +182,8 @@ export default function BillingPage() {
             queryClient.invalidateQueries({ queryKey: ['wholesalers-list'] });
             queryClient.invalidateQueries({ queryKey: ['wholesaler-stats'] });
             queryClient.invalidateQueries({ queryKey: ['wholesaler-dashboard'] });
+            queryClient.invalidateQueries({ queryKey: ['wholesaler-dues'] });
+            queryClient.invalidateQueries({ queryKey: ['purchases-filtered'] });
 
             toast.success('Bill created successfully!');
 
@@ -495,7 +497,7 @@ export default function BillingPage() {
                                                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/20 flex items-center justify-center">
                                                         <IndianRupee className="h-4 w-4 md:h-5 md:w-5 text-white" />
                                                     </div>
-                                                    <span className="text-white font-bold text-sm md:text-base">Balance Due (Udhar)</span>
+                                                    <span className="text-white font-bold text-sm md:text-base">Balance Due</span>
                                                 </div>
                                                 <span className="text-2xl md:text-3xl font-bold text-white">₹{dueAmount.toLocaleString('en-IN')}</span>
                                             </div>

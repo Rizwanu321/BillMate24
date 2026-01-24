@@ -19,7 +19,7 @@ const updateAdmin = async () => {
         // Update admin credentials
         const adminPassword = await hashPassword('Rizwanu@2009');
 
-        existingAdmin.email = 'Rizwanurahman321@gmail.com';
+        existingAdmin.email = 'Rizwanurahmanop@gmail.com';
         existingAdmin.password = adminPassword;
         existingAdmin.name = 'System Admin';
         existingAdmin.isActive = true;
@@ -34,7 +34,7 @@ const updateAdmin = async () => {
         await existingAdmin.save();
 
         console.log('✅ Admin credentials updated successfully!');
-        console.log('   Email: Rizwanurahman321@gmail.com');
+        console.log('   Email: Rizwanurahmanop@gmail.com');
         console.log('   Password: Rizwanu@2009');
         console.log('🎉 Update completed!');
 

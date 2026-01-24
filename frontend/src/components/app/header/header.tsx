@@ -44,28 +44,28 @@ export function Header({ title, onMenuClick, className }: HeaderProps) {
         >
             <div className="flex items-center justify-between w-full">
                 {/* Left Section */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 min-w-0 flex-1 mr-4">
                     <button
                         onClick={onMenuClick || toggleMobileMenu}
-                        className="lg:hidden p-2 -ml-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                        className="lg:hidden p-2 -ml-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors flex-shrink-0"
                         aria-label="Toggle menu"
                     >
                         <Menu className="h-5 w-5" />
                     </button>
 
-                    <div className="lg:hidden">
+                    <div className="lg:hidden flex-shrink-0">
                         <Logo iconOnly size="sm" />
                     </div>
 
                     {title && (
-                        <h1 className="text-xl font-bold text-gray-900 truncate">
+                        <h1 className="text-lg md:text-xl font-bold text-gray-900 truncate">
                             {title}
                         </h1>
                     )}
                 </div>
 
                 {/* Right Section */}
-                <div className="flex items-center gap-2 md:gap-4">
+                <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
                     {/* Desktop Search */}
                     <div className="hidden lg:flex items-center relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />

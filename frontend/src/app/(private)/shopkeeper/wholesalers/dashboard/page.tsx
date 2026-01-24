@@ -233,48 +233,12 @@ export default function WholesalerDashboardPage() {
         return Object.values(wholesalerMap).sort((a, b) => b.totalPurchased - a.totalPurchased);
     }, [purchases, payments, timeFilter, allWholesalers]);
 
-    // Process purchases using pro-rata allocation based on wholesaler-level totals
-    // This fixes the issue where payments aren't linked to specific bills
-    const processedPurchases = useMemo(() => {
-        // First, calculate totals per wholesaler from bills
-        const billsByWholesaler: Record<string, Bill[]> = {};
-        purchases.forEach(bill => {
-            if (!billsByWholesaler[bill.entityId]) {
-                billsByWholesaler[bill.entityId] = [];
-            }
-            billsByWholesaler[bill.entityId].push(bill);
-        });
-
-        // Calculate total payments per wholesaler
-        const paymentsByWholesaler: Record<string, number> = {};
-        payments.forEach(p => {
-            paymentsByWholesaler[p.entityId] = (paymentsByWholesaler[p.entityId] || 0) + p.amount;
-        });
-
-        return purchases.map(bill => {
-            const wholesalerBills = billsByWholesaler[bill.entityId] || [];
-            const totalBilled = wholesalerBills.reduce((s, b) => s + b.totalAmount, 0);
-            const totalPaid = paymentsByWholesaler[bill.entityId] || 0;
-            const totalDue = Math.max(0, totalBilled - totalPaid);
-
-            // Pro-rata allocation: this bill's share of outstanding
-            const billPortion = totalBilled > 0 ? bill.totalAmount / totalBilled : 0;
-            const billDue = billPortion * totalDue;
-            const billPaid = bill.totalAmount - billDue;
-
-            return {
-                ...bill,
-                paidAmount: Math.max(0, billPaid),
-                dueAmount: Math.max(0, billDue)
-            };
-        });
-    }, [purchases, payments]);
-
     // Calculate stats for the selected period
     const periodPurchases = purchases.reduce((sum, b) => sum + b.totalAmount, 0);
-    // Use payment records as the source of truth for total paid
+    // Use payment records as the source of truth for total paid in this period
     const periodPaid = payments.reduce((sum, p) => sum + p.amount, 0);
-    const periodOutstanding = periodPurchases - periodPaid;
+    // Period outstanding is what's remaining from this period's purchases
+    const periodOutstanding = Math.max(0, periodPurchases - periodPaid);
     const previousPeriodPurchases = previousPurchases.reduce((sum, b) => sum + b.totalAmount, 0);
 
     // Calculate payment methods breakdown
@@ -317,17 +281,16 @@ export default function WholesalerDashboardPage() {
                     </div>
                     <div className="flex items-center gap-2 md:gap-3">
                         <TimeFilter value={timeFilter} onChange={handleTimeFilterChange} />
-                        {/* Desktop action buttons */}
-                        <Link href="/shopkeeper/wholesalers" className="hidden md:block">
-                            <Button variant="outline" className="shadow-sm">
-                                <Package className="h-4 w-4 mr-2" />
-                                All Wholesalers
+                        <Link href="/shopkeeper/wholesalers">
+                            <Button variant="outline" size="sm" className="shadow-sm px-2 sm:px-4">
+                                <Package className="h-4 w-4 sm:mr-2" />
+                                <span className="hidden sm:inline">All Wholesalers</span>
                             </Button>
                         </Link>
-                        <Link href="/shopkeeper/wholesalers/payments" className="hidden md:block">
-                            <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg shadow-purple-500/25">
-                                <CreditCard className="h-4 w-4 mr-2" />
-                                Make Payment
+                        <Link href="/shopkeeper/wholesalers/payments">
+                            <Button size="sm" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg shadow-purple-500/25 px-2 sm:px-4">
+                                <CreditCard className="h-4 w-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Make Payment</span>
                             </Button>
                         </Link>
                     </div>
@@ -360,7 +323,7 @@ export default function WholesalerDashboardPage() {
                 {/* Recent Purchases - Full Width */}
                 <div className="mt-3 md:mt-6">
                     <RecentPurchases
-                        purchases={processedPurchases}
+                        purchases={purchases}
                         isLoading={purchasesLoading}
                     />
                 </div>

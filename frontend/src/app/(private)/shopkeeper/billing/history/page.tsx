@@ -988,23 +988,23 @@ export default function BillHistoryPage() {
                                                     </div>
 
                                                     {/* Amount Row - Total, Paid, Due/Status */}
-                                                    <div className="bg-gray-50 rounded-lg p-2 mb-2">
-                                                        <div className="grid grid-cols-3 gap-2 text-center">
+                                                    <div className="bg-gray-50 rounded-lg p-3 mb-3 border border-gray-100">
+                                                        <div className="flex items-center divide-x divide-gray-200">
                                                             {/* Total Amount */}
-                                                            <div>
-                                                                <p className="text-[10px] text-gray-500 font-medium">Total</p>
+                                                            <div className="flex-1 text-center px-2">
+                                                                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">Total</p>
                                                                 <p className="font-bold text-gray-900 text-sm">{formatCurrency(bill.totalAmount)}</p>
                                                             </div>
 
                                                             {/* Paid Amount */}
-                                                            <div>
-                                                                <p className="text-[10px] text-gray-500 font-medium">Paid</p>
+                                                            <div className="flex-1 text-center px-2">
+                                                                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">Paid</p>
                                                                 <p className="font-bold text-green-600 text-sm">{formatCurrency(bill.paidAmount)}</p>
                                                             </div>
 
                                                             {/* Due/Status */}
-                                                            <div>
-                                                                <p className="text-[10px] text-gray-500 font-medium">Due</p>
+                                                            <div className="flex-1 text-center px-2">
+                                                                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">Due</p>
                                                                 {bill.dueAmount > 0 ? (
                                                                     <p className="font-bold text-red-600 text-sm">{formatCurrency(bill.dueAmount)}</p>
                                                                 ) : (

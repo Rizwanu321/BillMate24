@@ -255,22 +255,24 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                             </div>
 
                             {/* Stats Row */}
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div>
-                                        <p className="text-[10px] text-gray-400">Amount</p>
-                                        <p className="text-xs font-bold text-gray-900">{formatCurrency(bill.totalAmount)}</p>
+                            <div className="bg-gray-50 rounded-lg p-2.5 my-2 border border-gray-100">
+                                <div className="flex items-center divide-x divide-gray-200">
+                                    <div className="flex-1 text-center px-2">
+                                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">Amount</p>
+                                        <p className="font-bold text-gray-900 text-sm">{formatCurrency(bill.totalAmount)}</p>
                                     </div>
-                                    <div>
-                                        <p className="text-[10px] text-gray-400">Paid</p>
-                                        <p className="text-xs font-bold text-green-600">{formatCurrency(bill.paidAmount)}</p>
+                                    <div className="flex-1 text-center px-2">
+                                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">Paid</p>
+                                        <p className="font-bold text-green-600 text-sm">{formatCurrency(bill.paidAmount)}</p>
                                     </div>
-                                    {due > 0 && (
-                                        <div>
-                                            <p className="text-[10px] text-gray-400">Due</p>
-                                            <p className="text-xs font-bold text-red-600">{formatCurrency(due)}</p>
-                                        </div>
-                                    )}
+                                    <div className="flex-1 text-center px-2">
+                                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">Due</p>
+                                        {due > 0 ? (
+                                            <p className="font-bold text-red-600 text-sm">{formatCurrency(due)}</p>
+                                        ) : (
+                                            <p className="font-bold text-green-600 text-sm">✓ Nil</p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 

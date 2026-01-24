@@ -7,26 +7,48 @@ import {
     Receipt,
     Users,
     Package,
-    BarChart3
+    BarChart3,
+    Store,
+    Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 
-const navItems = [
+interface NavItem {
+    href: string;
+    label: string;
+    icon: any;
+    activePrefix?: string;
+}
+
+const shopkeeperItems: NavItem[] = [
     { href: '/shopkeeper/dashboard', label: 'Home', icon: LayoutDashboard },
     { href: '/shopkeeper/billing', label: 'Bill', icon: Receipt },
-    { href: '/shopkeeper/customers', label: 'Customers', icon: Users },
-    { href: '/shopkeeper/wholesalers', label: 'Wholesalers', icon: Package },
-    { href: '/shopkeeper/reports/daily', label: 'Reports', icon: BarChart3 },
+    { href: '/shopkeeper/customers/dashboard', label: 'Customers', icon: Users, activePrefix: '/shopkeeper/customers' },
+    { href: '/shopkeeper/wholesalers/dashboard', label: 'Wholesalers', icon: Package, activePrefix: '/shopkeeper/wholesalers' },
+    { href: '/shopkeeper/reports/daily', label: 'Reports', icon: BarChart3, activePrefix: '/shopkeeper/reports' },
+];
+
+const adminItems: NavItem[] = [
+    { href: '/admin/dashboard', label: 'Home', icon: LayoutDashboard },
+    { href: '/admin/shopkeepers', label: 'Shops', icon: Store },
+    { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
 export function BottomNav() {
     const pathname = usePathname();
+    const { user, isAdmin } = useAuth();
+
+    if (!user) return null;
+
+    const navItems = isAdmin ? adminItems : shopkeeperItems;
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white/95 backdrop-blur-xl border-t border-gray-200/60 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)] safe-area-bottom">
             <div className="flex items-center justify-around h-[64px] px-1">
                 {navItems.map((item) => {
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                    const activePrefix = item.activePrefix || item.href;
+                    const isActive = pathname === item.href || pathname.startsWith(activePrefix + '/');
                     const Icon = item.icon;
 
                     return (
@@ -71,4 +93,3 @@ export function BottomNav() {
         </nav>
     );
 }
-

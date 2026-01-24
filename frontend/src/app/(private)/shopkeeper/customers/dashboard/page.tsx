@@ -262,16 +262,16 @@ export default function CustomerDashboardPage() {
                             value={timeFilter}
                             onChange={handleTimeFilterChange}
                         />
-                        <Link href="/shopkeeper/customers/due" className="hidden lg:block">
-                            <Button variant="outline" className="shadow-sm">
-                                <CreditCard className="h-4 w-4 mr-2" />
-                                Due Customers
+                        <Link href="/shopkeeper/customers/due">
+                            <Button variant="outline" size="sm" className="shadow-sm px-2 sm:px-4">
+                                <CreditCard className="h-4 w-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Due Customers</span>
                             </Button>
                         </Link>
-                        <Link href="/shopkeeper/customers/normal" className="hidden lg:block">
-                            <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25">
-                                <Users className="h-4 w-4 mr-2" />
-                                Normal Customers
+                        <Link href="/shopkeeper/customers/normal">
+                            <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25 px-2 sm:px-4">
+                                <Users className="h-4 w-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Normal Customers</span>
                             </Button>
                         </Link>
                     </div>

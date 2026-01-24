@@ -1,7 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { CreditCard, Wallet, Banknote, Smartphone } from 'lucide-react';
+import { CreditCard, Wallet, Banknote, Smartphone, Clock } from 'lucide-react';
 import {
     Table,
     TableBody,
@@ -33,24 +33,28 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-const paymentMethodConfig: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
+const paymentMethodConfig: Record<string, { color: string; gradient: string; icon: React.ReactNode; label: string }> = {
     cash: {
         color: 'bg-green-100 text-green-700',
+        gradient: 'from-green-400 to-emerald-500',
         icon: <Banknote className="h-4 w-4" />,
         label: 'Cash'
     },
     card: {
         color: 'bg-blue-100 text-blue-700',
+        gradient: 'from-blue-400 to-indigo-500',
         icon: <CreditCard className="h-4 w-4" />,
         label: 'Card'
     },
     online: {
         color: 'bg-purple-100 text-purple-700',
+        gradient: 'from-purple-400 to-fuchsia-500',
         icon: <Smartphone className="h-4 w-4" />,
         label: 'Online'
     },
     upi: {
         color: 'bg-indigo-100 text-indigo-700',
+        gradient: 'from-indigo-400 to-violet-500',
         icon: <Smartphone className="h-4 w-4" />,
         label: 'UPI'
     },
@@ -136,35 +140,79 @@ export function PaymentsTable({ payments, isLoading }: PaymentsTableProps) {
                 </Table>
             </div>
 
-            {/* Mobile Cards - App-like with colored borders */}
-            <div className="md:hidden p-2 space-y-2 bg-gray-50/50">
+            {/* Mobile Cards - Professional design inspired by Bill History */}
+            <div className="md:hidden space-y-3 p-3 bg-gray-50/50">
                 {payments.map((payment) => {
                     const config = paymentMethodConfig[payment.paymentMethod] || {
                         color: 'bg-gray-100 text-gray-700',
-                        icon: <Wallet className="h-3.5 w-3.5" />,
+                        gradient: 'from-gray-400 to-gray-500',
+                        icon: <Wallet className="h-4 w-4" />,
                         label: payment.paymentMethod
                     };
+
+                    const Icon =
+                        payment.paymentMethod === 'cash' ? Banknote :
+                            payment.paymentMethod === 'card' ? CreditCard :
+                                ['online', 'upi'].includes(payment.paymentMethod) ? Smartphone : Wallet;
 
                     return (
                         <div
                             key={payment._id}
-                            className="p-3 bg-white rounded-xl shadow-sm border-l-4 border-l-green-500 active:scale-[0.99] transition-all"
+                            className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden active:scale-[0.99] transition-all"
                         >
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-base font-bold text-green-600">
-                                    {formatCurrency(payment.amount)}
-                                </span>
-                                <Badge className={`border-0 flex items-center gap-1 text-[10px] px-1.5 ${config.color}`}>
-                                    {config.icon}
-                                    {config.label}
-                                </Badge>
+                            <div className="p-3">
+                                {/* Header Row */}
+                                <div className="flex items-center gap-3 mb-3">
+                                    {/* Icon Box */}
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br shadow-sm ${config.gradient}`}>
+                                        <Icon className="h-5 w-5 text-white" />
+                                    </div>
+
+                                    {/* Title & Date */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-gray-900 text-sm">Payment Received</p>
+                                        <p className="text-xs text-gray-500 flex items-center gap-1">
+                                            <Clock className="h-3 w-3" />
+                                            {format(new Date(payment.createdAt), 'dd MMM yyyy')}
+                                        </p>
+                                    </div>
+
+                                    {/* Amount */}
+                                    <div className="text-right">
+                                        <p className="text-lg font-bold text-green-600 tracking-tight">
+                                            {formatCurrency(payment.amount)}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Details Box */}
+                                <div className="bg-gray-50 rounded-lg p-2.5 grid grid-cols-2 gap-2 border border-gray-100/50">
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Method</p>
+                                        <div className="flex items-center gap-1.5">
+                                            <Badge variant="secondary" className={`text-[10px] px-1.5 h-5 font-medium border-0 ${config.color.replace('bg-', 'bg-opacity-50 bg-')}`}>
+                                                {config.label}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">Time</p>
+                                        <p className="text-xs font-medium text-gray-700 flex items-center gap-1">
+                                            {format(new Date(payment.createdAt), 'hh:mm a')}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Notes */}
+                                {payment.notes && (
+                                    <div className="mt-2.5 pt-2.5 border-t border-dashed border-gray-200">
+                                        <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-1">Note</p>
+                                        <p className="text-xs text-gray-600 leading-relaxed bg-amber-50/50 p-2 rounded-lg border border-amber-100/50 text-amber-900">
+                                            {payment.notes}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
-                            {payment.notes && (
-                                <p className="text-xs text-gray-600 mb-2 line-clamp-2">{payment.notes}</p>
-                            )}
-                            <p className="text-[10px] text-gray-400">
-                                {format(new Date(payment.createdAt), 'dd MMM yyyy, hh:mm a')}
-                            </p>
                         </div>
                     );
                 })}

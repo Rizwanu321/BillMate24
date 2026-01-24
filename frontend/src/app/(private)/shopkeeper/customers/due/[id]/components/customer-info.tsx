@@ -2,7 +2,9 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Phone, MapPin, MessageCircle, TrendingUp, Wallet, AlertTriangle, CheckCircle2, Sparkles } from 'lucide-react';
+import { Phone, MapPin, MessageCircle, TrendingUp, Wallet, AlertTriangle, CheckCircle2, Sparkles, Calendar } from 'lucide-react';
+
+import { format } from 'date-fns';
 
 interface Customer {
     _id: string;
@@ -39,6 +41,7 @@ export function CustomerInfo({ customer }: CustomerInfoProps) {
     const collectionRate = customer.totalSales > 0
         ? Math.round((customer.totalPaid / customer.totalSales) * 100)
         : 0;
+
 
     return (
         <div className="mb-4 md:mb-6">
@@ -78,10 +81,17 @@ export function CustomerInfo({ customer }: CustomerInfoProps) {
                             <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight mb-1.5 truncate">
                                 {customer.name}
                             </h1>
-                            <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs md:text-sm px-2.5 py-0.5 font-medium">
-                                <Sparkles className="h-3 w-3 mr-1.5" />
-                                Credit Customer
-                            </Badge>
+                            <div className="flex items-center gap-2 mt-1.5 ">
+                                <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs md:text-sm px-2.5 py-0.5 font-medium">
+                                    <Sparkles className="h-3 w-3 mr-1.5" />
+                                    Credit Customer
+                                </Badge>
+                                <span className="text-slate-500 text-xs flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    <span className="md:hidden">Since {format(new Date(customer.createdAt), 'MMM yy')}</span>
+                                    <span className="hidden md:inline">Since {format(new Date(customer.createdAt), 'MMMM yyyy')}</span>
+                                </span>
+                            </div>
 
                             {/* Contact Buttons */}
                             <div className="flex flex-wrap gap-2 mt-3">
@@ -116,29 +126,33 @@ export function CustomerInfo({ customer }: CustomerInfoProps) {
                     )}
 
                     {/* Financial Summary Cards */}
-                    <div className="grid grid-cols-3 gap-2 md:gap-3 mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4">
                         {/* Total Sales */}
-                        <div className="bg-slate-700/40 rounded-xl md:rounded-2xl p-3 md:p-4 border border-slate-600/30 text-center">
+                        <div className="bg-slate-700/40 rounded-xl md:rounded-2xl p-3 md:p-4 border border-slate-600/30 text-center col-span-1">
                             <div className="flex items-center justify-center gap-1.5 mb-1.5">
                                 <TrendingUp className="h-3.5 w-3.5 md:h-4 md:w-4 text-sky-400" />
                                 <span className="text-[10px] md:text-xs text-slate-400 font-medium uppercase tracking-wide">Sales</span>
                             </div>
-                            <p className="text-lg md:text-xl font-bold text-white">{formatCompact(customer.totalSales)}</p>
+                            <p className="text-lg md:text-xl font-bold text-white break-words">
+                                {formatCurrency(customer.totalSales)}
+                            </p>
                         </div>
 
                         {/* Collected */}
-                        <div className="bg-emerald-500/10 rounded-xl md:rounded-2xl p-3 md:p-4 border border-emerald-500/20 text-center">
+                        <div className="bg-emerald-500/10 rounded-xl md:rounded-2xl p-3 md:p-4 border border-emerald-500/20 text-center col-span-1">
                             <div className="flex items-center justify-center gap-1.5 mb-1.5">
                                 <Wallet className="h-3.5 w-3.5 md:h-4 md:w-4 text-emerald-400" />
                                 <span className="text-[10px] md:text-xs text-emerald-400/80 font-medium uppercase tracking-wide">Paid</span>
                             </div>
-                            <p className="text-lg md:text-xl font-bold text-emerald-400">{formatCompact(customer.totalPaid)}</p>
+                            <p className="text-lg md:text-xl font-bold text-emerald-400 break-words">
+                                {formatCurrency(customer.totalPaid)}
+                            </p>
                         </div>
 
                         {/* Outstanding */}
-                        <div className={`rounded-xl md:rounded-2xl p-3 md:p-4 border text-center ${customer.outstandingDue > 0
-                                ? 'bg-rose-500/10 border-rose-500/20'
-                                : 'bg-emerald-500/10 border-emerald-500/20'
+                        <div className={`rounded-xl md:rounded-2xl p-3 md:p-4 border text-center col-span-1 sm:col-span-2 md:col-span-1 ${customer.outstandingDue > 0
+                            ? 'bg-rose-500/10 border-rose-500/20'
+                            : 'bg-emerald-500/10 border-emerald-500/20'
                             }`}>
                             <div className="flex items-center justify-center gap-1.5 mb-1.5">
                                 {customer.outstandingDue > 0 ? (
@@ -153,9 +167,9 @@ export function CustomerInfo({ customer }: CustomerInfoProps) {
                                     </>
                                 )}
                             </div>
-                            <p className={`text-lg md:text-xl font-bold ${customer.outstandingDue > 0 ? 'text-rose-400' : 'text-emerald-400'
+                            <p className={`text-lg md:text-xl font-bold break-words ${customer.outstandingDue > 0 ? 'text-rose-400' : 'text-emerald-400'
                                 }`}>
-                                {customer.outstandingDue > 0 ? formatCompact(customer.outstandingDue) : '✓ Nil'}
+                                {customer.outstandingDue > 0 ? formatCurrency(customer.outstandingDue) : '✓ Nil'}
                             </p>
                         </div>
                     </div>
@@ -172,17 +186,17 @@ export function CustomerInfo({ customer }: CustomerInfoProps) {
                         <div className="h-2.5 md:h-3 bg-slate-600/50 rounded-full overflow-hidden">
                             <div
                                 className={`h-full rounded-full transition-all duration-700 ease-out ${collectionRate >= 75
-                                        ? 'bg-gradient-to-r from-emerald-500 to-green-400'
-                                        : collectionRate >= 50
-                                            ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
-                                            : 'bg-gradient-to-r from-rose-500 to-orange-400'
+                                    ? 'bg-gradient-to-r from-emerald-500 to-green-400'
+                                    : collectionRate >= 50
+                                        ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
+                                        : 'bg-gradient-to-r from-rose-500 to-orange-400'
                                     }`}
                                 style={{ width: `${collectionRate}%` }}
                             />
                         </div>
                         <div className="flex justify-between mt-1.5 text-[10px] md:text-xs text-slate-500">
                             <span>₹0</span>
-                            <span>{formatCompact(customer.totalSales)}</span>
+                            <span>{formatCurrency(customer.totalSales)}</span>
                         </div>
                     </div>
                 </div>
