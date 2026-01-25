@@ -23,14 +23,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompact(amount: number): string {
-    if (amount >= 100000) {
-        return `₹${(amount / 100000).toFixed(1)}L`;
-    } else if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}K`;
-    }
-    return formatCurrency(amount);
-}
+
 
 export function PaymentMethodsBreakdown({ breakdown, totalCollected, isLoading }: PaymentMethodsBreakdownProps) {
     if (isLoading) {
@@ -110,7 +103,7 @@ export function PaymentMethodsBreakdown({ breakdown, totalCollected, isLoading }
                         <div>
                             <span className="block">Payment Methods</span>
                             <span className="text-[10px] md:text-sm font-normal text-violet-600">
-                                <span className="md:hidden">{formatCompact(totalCollected)}</span>
+                                <span className="md:hidden">{formatCurrency(totalCollected)}</span>
                                 <span className="hidden md:inline">Total: {formatCurrency(totalCollected)}</span>
                             </span>
                         </div>
@@ -154,7 +147,7 @@ export function PaymentMethodsBreakdown({ breakdown, totalCollected, isLoading }
                                         </div>
                                         <div className="text-right">
                                             <p className="text-base md:text-xl font-bold text-gray-900">
-                                                <span className="md:hidden">{formatCompact(method.amount)}</span>
+                                                <span className="md:hidden">{formatCurrency(method.amount)}</span>
                                                 <span className="hidden md:inline">{formatCurrency(method.amount)}</span>
                                             </p>
                                         </div>

@@ -20,14 +20,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompactCurrency(amount: number): string {
-    if (amount >= 100000) {
-        return `₹${(amount / 100000).toFixed(1)}L`;
-    } else if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}K`;
-    }
-    return formatCurrency(amount);
-}
+
 
 export function CustomerDashboardStats({
     totalCustomers,
@@ -74,8 +67,7 @@ export function CustomerDashboardStats({
                         </Badge>
                     </div>
                     <h3 className="text-lg md:text-2xl font-bold">
-                        <span className="md:hidden">{formatCompactCurrency(totalSales)}</span>
-                        <span className="hidden md:inline">{formatCurrency(totalSales)}</span>
+                        {formatCurrency(totalSales)}
                     </h3>
                     <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
                         Total Sales
@@ -96,8 +88,7 @@ export function CustomerDashboardStats({
                         </Badge>
                     </div>
                     <h3 className="text-lg md:text-2xl font-bold">
-                        <span className="md:hidden">{formatCompactCurrency(totalPaid)}</span>
-                        <span className="hidden md:inline">{formatCurrency(totalPaid)}</span>
+                        {formatCurrency(totalPaid)}
                     </h3>
                     <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
                         Amount Collected
@@ -108,8 +99,8 @@ export function CustomerDashboardStats({
 
             {/* Outstanding Due (Total) */}
             <Card className={`relative overflow-hidden border-0 shadow-lg md:shadow-xl text-white rounded-xl md:rounded-2xl ${totalOutstanding > 0
-                    ? 'bg-gradient-to-br from-rose-500 to-red-600'
-                    : 'bg-gradient-to-br from-green-500 to-emerald-600'
+                ? 'bg-gradient-to-br from-rose-500 to-red-600'
+                : 'bg-gradient-to-br from-green-500 to-emerald-600'
                 }`}>
                 <CardContent className="p-3 md:p-6">
                     <div className="flex items-center justify-between mb-2 md:mb-3">
@@ -122,8 +113,7 @@ export function CustomerDashboardStats({
                         </Badge>
                     </div>
                     <h3 className="text-lg md:text-2xl font-bold">
-                        <span className="md:hidden">{formatCompactCurrency(totalOutstanding)}</span>
-                        <span className="hidden md:inline">{formatCurrency(totalOutstanding)}</span>
+                        {formatCurrency(totalOutstanding)}
                     </h3>
                     <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
                         Total Outstanding

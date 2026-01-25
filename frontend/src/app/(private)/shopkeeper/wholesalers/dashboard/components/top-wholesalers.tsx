@@ -27,14 +27,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompactCurrency(amount: number): string {
-    if (amount >= 100000) {
-        return `₹${(amount / 100000).toFixed(1)}L`;
-    } else if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}K`;
-    }
-    return formatCurrency(amount);
-}
+
 
 const rankIcons = [
     { icon: Trophy, color: 'bg-gradient-to-br from-yellow-400 to-amber-500', textColor: 'text-yellow-600' },
@@ -121,7 +114,7 @@ export function TopWholesalers({ wholesalers, isLoading }: TopWholesalersProps) 
                                                     {w.name}
                                                 </p>
                                                 <p className="text-[10px] md:text-sm text-gray-500">
-                                                    <span className="font-medium text-gray-700">{formatCompactCurrency(w.totalPurchased)}</span>
+                                                    <span className="font-medium text-gray-700">{formatCurrency(w.totalPurchased)}</span>
                                                 </p>
                                             </div>
                                         </div>
@@ -129,7 +122,7 @@ export function TopWholesalers({ wholesalers, isLoading }: TopWholesalersProps) 
                                         <div className="flex items-center gap-1.5 md:gap-3">
                                             {w.outstandingDue > 0 ? (
                                                 <Badge variant="destructive" className="bg-red-100 text-red-700 border-0 font-mono text-[10px] md:text-xs px-1.5 md:px-2">
-                                                    {formatCompactCurrency(w.outstandingDue)}
+                                                    {formatCurrency(w.outstandingDue)}
                                                 </Badge>
                                             ) : (
                                                 <Badge className="bg-green-100 text-green-700 border-0 text-[10px] md:text-xs px-1.5 md:px-2">

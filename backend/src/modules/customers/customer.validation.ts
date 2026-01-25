@@ -6,6 +6,7 @@ export const createCustomerSchema = z.object({
     whatsappNumber: z.string().optional(),
     email: z.string().email('Invalid email').optional().or(z.literal('')),
     address: z.string().optional(),
+    place: z.string().optional(),
     type: z.enum(['due', 'normal']),
     initialSales: z.number().min(0, 'Amount must be positive').optional(),
 }).superRefine((data, ctx) => {
@@ -32,6 +33,7 @@ export const updateCustomerSchema = z.object({
     phone: z.string().optional(),
     email: z.string().email('Invalid email').optional().or(z.literal('')),
     address: z.string().optional(),
+    place: z.string().optional(),
     isActive: z.boolean().optional(),
 });
 

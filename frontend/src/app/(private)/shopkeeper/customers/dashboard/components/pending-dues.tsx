@@ -27,14 +27,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompact(amount: number): string {
-    if (amount >= 100000) {
-        return `₹${(amount / 100000).toFixed(1)}L`;
-    } else if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}K`;
-    }
-    return formatCurrency(amount);
-}
+
 
 function getDaysAgo(date: string): string {
     const days = differenceInDays(new Date(), new Date(date));
@@ -90,8 +83,7 @@ export function PendingDues({ customers, isLoading }: PendingDuesProps) {
                         <div>
                             <span className="block">Pending Dues</span>
                             <span className="text-[10px] md:text-sm font-normal text-rose-600">
-                                <span className="md:hidden">{sortedCustomers.length} • {formatCompact(totalDue)}</span>
-                                <span className="hidden md:inline">{sortedCustomers.length} customers • {formatCurrency(totalDue)} pending</span>
+                                <span className="text-rose-600">{sortedCustomers.length} customers • {formatCurrency(totalDue)} pending</span>
                             </span>
                         </div>
                     </CardTitle>
@@ -188,7 +180,7 @@ export function PendingDues({ customers, isLoading }: PendingDuesProps) {
                                         <div className="bg-red-50 rounded-lg p-2 border border-red-100">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-xs text-red-600 font-medium">Pending Due</span>
-                                                <span className="font-bold text-red-600 text-base">{formatCompact(customer.outstandingDue)}</span>
+                                                <span className="font-bold text-red-600 text-base">{formatCurrency(customer.outstandingDue)}</span>
                                             </div>
                                         </div>
                                     </div>

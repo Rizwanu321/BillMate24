@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, MoreHorizontal, Trash2, CreditCard } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Trash2, CreditCard, Edit } from 'lucide-react';
 import { Header } from '@/components/app/header';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,8 @@ import api from '@/config/axios';
 import { Customer, PaginatedResponse } from '@/types';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
+import { AddCustomerDialog, EditCustomerDialog } from './components';
+import { DeleteConfirmDialog } from '@/components/app';
 
 function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-IN', {
@@ -51,6 +53,10 @@ export default function CustomersPage() {
     const [search, setSearch] = useState('');
     const [customerType, setCustomerType] = useState<'due' | 'normal'>('due');
     const [page, setPage] = useState(1);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
     const { data, isLoading } = useQuery({
         queryKey: ['customers', customerType, page],
@@ -62,20 +68,32 @@ export default function CustomersPage() {
         },
     });
 
-    const createMutation = useMutation({
-        mutationFn: async (data: any) => {
-            const response = await api.post('/customers', { ...data, type: 'due' });
+    const updateMutation = useMutation({
+        mutationFn: async ({ id, data }: { id: string; data: any }) => {
+            const response = await api.patch(`/customers/${id}`, data);
             return response.data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['customers'] });
-            setIsCreateOpen(false);
-            toast.success('Customer created successfully');
+            setEditDialogOpen(false);
+            setEditingCustomer(null);
+            toast.success('Customer updated successfully');
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Failed to create customer');
+            toast.error(error.response?.data?.message || 'Failed to update customer');
         },
     });
+
+    const handleEditClick = (customer: Customer) => {
+        setEditingCustomer(customer);
+        setEditDialogOpen(true);
+    };
+
+    const handleEditSave = (data: any) => {
+        if (editingCustomer) {
+            updateMutation.mutate({ id: editingCustomer._id, data });
+        }
+    };
 
     const deleteMutation = useMutation({
         mutationFn: async (id: string) => {
@@ -83,9 +101,22 @@ export default function CustomersPage() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['customers'] });
+            setDeleteDialogOpen(false);
+            setSelectedCustomer(null);
             toast.success('Customer deleted');
         },
     });
+
+    const handleDeleteClick = (customer: Customer) => {
+        setSelectedCustomer(customer);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleDeleteConfirm = () => {
+        if (selectedCustomer) {
+            deleteMutation.mutate(selectedCustomer._id);
+        }
+    };
 
     const handleCreate = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -115,40 +146,7 @@ export default function CustomersPage() {
                     </div>
 
                     {hasFeature('dueCustomers') && customerType === 'due' && (
-                        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                            <DialogTrigger asChild>
-                                <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add Due Customer
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Add Due Customer</DialogTitle>
-                                </DialogHeader>
-                                <form onSubmit={handleCreate} className="space-y-4 mt-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="name">Name *</Label>
-                                        <Input id="name" name="name" required />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="phone">Phone</Label>
-                                        <Input id="phone" name="phone" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
-                                        <Input id="whatsappNumber" name="whatsappNumber" placeholder="+91 XXXXX XXXXX" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="address">Address</Label>
-                                        <Input id="address" name="address" />
-                                    </div>
-                                    <Button type="submit" className="w-full" disabled={createMutation.isPending}>
-                                        {createMutation.isPending ? 'Creating...' : 'Add Customer'}
-                                    </Button>
-                                </form>
-                            </DialogContent>
-                        </Dialog>
+                        <AddCustomerDialog customerType="due" />
                     )}
                 </div>
 
@@ -214,14 +212,20 @@ export default function CustomersPage() {
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end">
                                                             {customerType === 'due' && (
-                                                                <DropdownMenuItem>
-                                                                    <CreditCard className="mr-2 h-4 w-4" />
-                                                                    Record Payment
-                                                                </DropdownMenuItem>
+                                                                <>
+                                                                    <DropdownMenuItem>
+                                                                        <CreditCard className="mr-2 h-4 w-4" />
+                                                                        Record Payment
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem onClick={() => handleEditClick(c)}>
+                                                                        <Edit className="mr-2 h-4 w-4 text-purple-600" />
+                                                                        Edit Customer
+                                                                    </DropdownMenuItem>
+                                                                </>
                                                             )}
                                                             <DropdownMenuItem
-                                                                className="text-red-600"
-                                                                onClick={() => deleteMutation.mutate(c._id)}
+                                                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                                                onClick={() => handleDeleteClick(c)}
                                                             >
                                                                 <Trash2 className="mr-2 h-4 w-4" />
                                                                 Delete
@@ -238,6 +242,28 @@ export default function CustomersPage() {
                     </Card>
                 </Tabs>
             </div>
+
+            <EditCustomerDialog
+                isOpen={editDialogOpen}
+                onClose={() => {
+                    setEditDialogOpen(false);
+                    setEditingCustomer(null);
+                }}
+                onSave={handleEditSave}
+                customer={editingCustomer}
+                isSaving={updateMutation.isPending}
+            />
+
+            <DeleteConfirmDialog
+                isOpen={deleteDialogOpen}
+                onClose={() => {
+                    setDeleteDialogOpen(false);
+                    setSelectedCustomer(null);
+                }}
+                onConfirm={handleDeleteConfirm}
+                itemName={selectedCustomer?.name}
+                isLoading={deleteMutation.isPending}
+            />
         </div>
     );
 }

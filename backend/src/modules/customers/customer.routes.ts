@@ -12,6 +12,7 @@ router.get('/stats', customerController.getStats.bind(customerController));
 router.get('/due-dashboard', requireDueCustomers, customerController.getDueDashboard.bind(customerController));
 router.get('/:id', customerController.getById.bind(customerController));
 router.patch('/:id', customerController.update.bind(customerController));
+router.patch('/:id/restore', customerController.restore.bind(customerController));
 router.delete('/:id', customerController.delete.bind(customerController));
 
 export const customerRoutes = router;

@@ -119,14 +119,7 @@ const paymentMethodConfig: Record<string, { color: string; bgColor: string; icon
 };
 
 // Format compact currency for mobile
-function formatCompact(amount: number): string {
-    if (amount >= 100000) {
-        return `₹${(amount / 100000).toFixed(1)}L`;
-    } else if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}K`;
-    }
-    return formatCurrency(amount);
-}
+
 
 function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-IN', {
@@ -500,7 +493,7 @@ export default function WholesalerPaymentsPage() {
                                 <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5">Due</Badge>
                             </div>
                             <h3 className="text-lg md:text-2xl lg:text-3xl font-bold">
-                                <span className="md:hidden">{formatCompact(totalOutstanding)}</span>
+                                <span className="md:hidden">{formatCurrency(totalOutstanding)}</span>
                                 <span className="hidden md:inline">{formatCurrency(totalOutstanding)}</span>
                             </h3>
                             <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Outstanding</p>
@@ -537,7 +530,7 @@ export default function WholesalerPaymentsPage() {
                                 <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5">Page</Badge>
                             </div>
                             <h3 className="text-lg md:text-2xl lg:text-3xl font-bold">
-                                <span className="md:hidden">{formatCompact(totalPaidInPeriod)}</span>
+                                <span className="md:hidden">{formatCurrency(totalPaidInPeriod)}</span>
                                 <span className="hidden md:inline">{formatCurrency(totalPaidInPeriod)}</span>
                             </h3>
                             <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Paid</p>

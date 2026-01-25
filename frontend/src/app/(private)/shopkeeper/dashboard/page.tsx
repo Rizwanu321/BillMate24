@@ -79,10 +79,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompactCurrency(amount: number): string {
-    // User requested to see full amounts without K/L suffixes
-    return formatCurrency(amount);
-}
+
 
 function getPercentageChange(current: number, previous: number): { value: number; isPositive: boolean } {
     if (previous === 0) return { value: current > 0 ? 100 : 0, isPositive: current >= 0 };
@@ -207,12 +204,12 @@ export default function ShopkeeperDashboard() {
                                             </Badge>
                                         )}
                                     </div>
-                                    <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(dashboard?.todaySales || 0)}</h3>
+                                    <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(dashboard?.todaySales || 0)}</h3>
                                     <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Today's Sales</p>
                                     <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
                                         <div className="flex items-center justify-between text-[10px] md:text-sm">
                                             <span className="text-white/70">Collected</span>
-                                            <span className="font-semibold">{formatCompactCurrency(dashboard?.todayCollected || 0)}</span>
+                                            <span className="font-semibold">{formatCurrency(dashboard?.todayCollected || 0)}</span>
                                         </div>
                                         <p className="text-[10px] md:text-xs text-white/60 mt-1 flex items-center gap-1">
                                             <Clock className="h-2.5 w-2.5 md:h-3 md:w-3" />
@@ -234,12 +231,12 @@ export default function ShopkeeperDashboard() {
                                             Lifetime
                                         </Badge>
                                     </div>
-                                    <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(dashboard?.totalLifetimeSales || 0)}</h3>
+                                    <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(dashboard?.totalLifetimeSales || 0)}</h3>
                                     <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Total Sales</p>
                                     <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
                                         <div className="flex items-center justify-between text-[10px] md:text-sm">
                                             <span className="text-white/70">This Month</span>
-                                            <span className="font-semibold">{formatCompactCurrency(dashboard?.monthSales || 0)}</span>
+                                            <span className="font-semibold">{formatCurrency(dashboard?.monthSales || 0)}</span>
                                         </div>
                                         <p className="text-[10px] md:text-xs text-white/60 mt-1 flex items-center gap-1">
                                             <Info className="h-2.5 w-2.5 md:h-3 md:w-3" />
@@ -261,7 +258,7 @@ export default function ShopkeeperDashboard() {
                                             Total Due
                                         </Badge>
                                     </div>
-                                    <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(dashboard?.totalDueFromCustomers || 0)}</h3>
+                                    <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(dashboard?.totalDueFromCustomers || 0)}</h3>
                                     <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">To Collect</p>
                                     <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
                                         <p className="text-[10px] md:text-xs text-white/70">From Customers (incl. opening)</p>
@@ -285,7 +282,7 @@ export default function ShopkeeperDashboard() {
                                             Total Due
                                         </Badge>
                                     </div>
-                                    <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(dashboard?.totalDueToWholesalers || 0)}</h3>
+                                    <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(dashboard?.totalDueToWholesalers || 0)}</h3>
                                     <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">To Pay</p>
                                     <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
                                         <p className="text-[10px] md:text-xs text-white/70">To Wholesalers (incl. opening)</p>
@@ -307,7 +304,7 @@ export default function ShopkeeperDashboard() {
                                         <Wallet className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                                     </div>
                                     <div>
-                                        <p className="text-base md:text-2xl font-bold text-gray-900">{formatCompactCurrency(dashboard?.weekSales || 0)}</p>
+                                        <p className="text-base md:text-2xl font-bold text-gray-900">{formatCurrency(dashboard?.weekSales || 0)}</p>
                                         <p className="text-xs md:text-sm text-gray-500">Week Sales</p>
                                     </div>
                                 </CardContent>
@@ -359,7 +356,7 @@ export default function ShopkeeperDashboard() {
                                                 </div>
                                                 <span className="font-medium text-xs md:text-sm">Cash</span>
                                             </div>
-                                            <span className="font-semibold text-xs md:text-sm">{formatCompactCurrency(dashboard?.paymentMethodSplit.cash || 0)}</span>
+                                            <span className="font-semibold text-xs md:text-sm">{formatCurrency(dashboard?.paymentMethodSplit.cash || 0)}</span>
                                         </div>
                                         <Progress
                                             value={totalPayments > 0 ? (dashboard?.paymentMethodSplit.cash || 0) / totalPayments * 100 : 0}
@@ -376,7 +373,7 @@ export default function ShopkeeperDashboard() {
                                                 </div>
                                                 <span className="font-medium text-xs md:text-sm">Card</span>
                                             </div>
-                                            <span className="font-semibold text-xs md:text-sm">{formatCompactCurrency(dashboard?.paymentMethodSplit.card || 0)}</span>
+                                            <span className="font-semibold text-xs md:text-sm">{formatCurrency(dashboard?.paymentMethodSplit.card || 0)}</span>
                                         </div>
                                         <Progress
                                             value={totalPayments > 0 ? (dashboard?.paymentMethodSplit.card || 0) / totalPayments * 100 : 0}
@@ -393,7 +390,7 @@ export default function ShopkeeperDashboard() {
                                                 </div>
                                                 <span className="font-medium text-xs md:text-sm">Online/UPI</span>
                                             </div>
-                                            <span className="font-semibold text-xs md:text-sm">{formatCompactCurrency(dashboard?.paymentMethodSplit.online || 0)}</span>
+                                            <span className="font-semibold text-xs md:text-sm">{formatCurrency(dashboard?.paymentMethodSplit.online || 0)}</span>
                                         </div>
                                         <Progress
                                             value={totalPayments > 0 ? (dashboard?.paymentMethodSplit.online || 0) / totalPayments * 100 : 0}
@@ -404,7 +401,7 @@ export default function ShopkeeperDashboard() {
                                     <div className="pt-3 md:pt-4 border-t">
                                         <div className="flex items-center justify-between">
                                             <span className="font-semibold text-gray-700 text-xs md:text-sm">Total</span>
-                                            <span className="font-bold text-sm md:text-lg">{formatCompactCurrency(totalPayments)}</span>
+                                            <span className="font-bold text-sm md:text-lg">{formatCurrency(totalPayments)}</span>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -436,7 +433,7 @@ export default function ShopkeeperDashboard() {
                                                             <span className="font-medium text-[11px] md:text-sm truncate max-w-[80px] md:max-w-none">{customer.name}</span>
                                                         </div>
                                                         <Badge variant="destructive" className="font-mono text-[10px] md:text-xs px-1.5 md:px-2">
-                                                            {formatCompactCurrency(customer.outstandingDue)}
+                                                            {formatCurrency(customer.outstandingDue)}
                                                         </Badge>
                                                     </div>
                                                 ))}
@@ -460,7 +457,7 @@ export default function ShopkeeperDashboard() {
                                                             <span className="font-medium text-[11px] md:text-sm truncate max-w-[80px] md:max-w-none">{wholesaler.name}</span>
                                                         </div>
                                                         <Badge className="bg-orange-100 text-orange-700 font-mono text-[10px] md:text-xs px-1.5 md:px-2">
-                                                            {formatCompactCurrency(wholesaler.outstandingDue)}
+                                                            {formatCurrency(wholesaler.outstandingDue)}
                                                         </Badge>
                                                     </div>
                                                 ))}
@@ -505,10 +502,10 @@ export default function ShopkeeperDashboard() {
                                                     </div>
                                                     <div className="text-right">
                                                         <p className={`font-semibold text-xs md:text-sm ${bill.billType === 'sale' ? 'text-green-600' : 'text-orange-600'}`}>
-                                                            {formatCompactCurrency(bill.totalAmount)}
+                                                            {formatCurrency(bill.totalAmount)}
                                                         </p>
                                                         {bill.dueAmount > 0 && (
-                                                            <p className="text-[10px] md:text-xs text-red-500">Due: {formatCompactCurrency(bill.dueAmount)}</p>
+                                                            <p className="text-[10px] md:text-xs text-red-500">Due: {formatCurrency(bill.dueAmount)}</p>
                                                         )}
                                                     </div>
                                                 </div>

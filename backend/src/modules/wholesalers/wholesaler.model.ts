@@ -6,6 +6,7 @@ interface WholesalerDocument extends Document {
     phone?: string;
     whatsappNumber?: string;
     address?: string;
+    place?: string;
     totalPurchased: number;
     totalPaid: number;
     outstandingDue: number;
@@ -39,6 +40,10 @@ const wholesalerSchema = new Schema(
         address: {
             type: String,
             required: [true, 'Address is required'],
+            trim: true,
+        },
+        place: {
+            type: String,
             trim: true,
         },
         gstNumber: {

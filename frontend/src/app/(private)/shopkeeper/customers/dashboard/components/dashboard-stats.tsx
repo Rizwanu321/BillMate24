@@ -29,16 +29,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompact(amount: number): string {
-    if (amount >= 10000000) { // 1 Crore
-        return `₹${(amount / 10000000).toFixed(2)}Cr`;
-    } else if (amount >= 100000) { // 1 Lakh
-        return `₹${(amount / 100000).toFixed(2)}L`;
-    } else if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}k`;
-    }
-    return formatCurrency(amount);
-}
+
 
 export function CustomerDashboardStats({
     totalCustomers,
@@ -126,12 +117,7 @@ export function CustomerDashboardStats({
             {/* Sales */}
             <StatCard
                 title="Sales"
-                value={
-                    <>
-                        <span className="lg:hidden">{formatCompact(displaySales)}</span>
-                        <span className="hidden lg:inline">{formatCurrency(displaySales)}</span>
-                    </>
-                }
+                value={formatCurrency(displaySales)}
                 subtext={isAllTime ? 'Incl. Opening Bal' : 'Total sales'}
                 icon={IndianRupee}
                 gradient="bg-gradient-to-br from-emerald-500 to-green-600"
@@ -141,12 +127,7 @@ export function CustomerDashboardStats({
             {/* Collected */}
             <StatCard
                 title="Collected"
-                value={
-                    <>
-                        <span className="lg:hidden">{formatCompact(totalCollected)}</span>
-                        <span className="hidden lg:inline">{formatCurrency(totalCollected)}</span>
-                    </>
-                }
+                value={formatCurrency(totalCollected)}
                 subtext={`${collectionRate}% Collection Rate`}
                 icon={CreditCard}
                 gradient="bg-gradient-to-br from-cyan-500 to-blue-600"
@@ -164,12 +145,7 @@ export function CustomerDashboardStats({
             {/* Outstanding */}
             <StatCard
                 title="Outstanding"
-                value={
-                    <>
-                        <span className="lg:hidden">{formatCompact(displayOutstanding)}</span>
-                        <span className="hidden lg:inline">{formatCurrency(displayOutstanding)}</span>
-                    </>
-                }
+                value={formatCurrency(displayOutstanding)}
                 subtext={displayOutstanding > 0 ? 'Pending collection' : 'All cleared!'}
                 icon={AlertCircle}
                 gradient={displayOutstanding > 0 ? 'bg-gradient-to-br from-rose-500 to-red-600' : 'bg-gradient-to-br from-green-500 to-emerald-600'}

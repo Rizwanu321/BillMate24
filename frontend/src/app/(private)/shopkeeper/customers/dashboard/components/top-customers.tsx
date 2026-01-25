@@ -28,14 +28,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompact(amount: number): string {
-    if (amount >= 100000) {
-        return `₹${(amount / 100000).toFixed(1)}L`;
-    } else if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}K`;
-    }
-    return formatCurrency(amount);
-}
+
 
 const rankIcons = [
     { icon: Crown, color: 'text-yellow-500', bg: 'bg-gradient-to-br from-yellow-400 to-amber-500' },
@@ -176,20 +169,20 @@ export function TopCustomers({ customers, isLoading }: TopCustomersProps) {
                                                     {/* Purchased */}
                                                     <div>
                                                         <p className="text-[10px] text-gray-500 font-medium">Purchased</p>
-                                                        <p className="font-bold text-gray-900 text-sm">{formatCompact(customer.totalPurchased)}</p>
+                                                        <p className="font-bold text-gray-900 text-sm">{formatCurrency(customer.totalPurchased)}</p>
                                                     </div>
 
                                                     {/* Paid */}
                                                     <div>
                                                         <p className="text-[10px] text-gray-500 font-medium">Paid</p>
-                                                        <p className="font-bold text-green-600 text-sm">{formatCompact(customer.totalPaid)}</p>
+                                                        <p className="font-bold text-green-600 text-sm">{formatCurrency(customer.totalPaid)}</p>
                                                     </div>
 
                                                     {/* Due */}
                                                     <div>
                                                         <p className="text-[10px] text-gray-500 font-medium">Due</p>
                                                         {customer.outstandingDue > 0 ? (
-                                                            <p className="font-bold text-red-600 text-sm">{formatCompact(customer.outstandingDue)}</p>
+                                                            <p className="font-bold text-red-600 text-sm">{formatCurrency(customer.outstandingDue)}</p>
                                                         ) : (
                                                             <p className="font-bold text-green-600 text-sm">✓ Nil</p>
                                                         )}

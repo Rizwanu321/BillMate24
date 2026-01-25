@@ -141,3 +141,27 @@
 .safe-area-top {
   padding-top: env(safe-area-inset-top, 0px);
 }
+
+@keyframes shake {
+  0%, 100% { transform: rotate(-6deg); }
+  25% { transform: rotate(-9deg); }
+  75% { transform: rotate(-3deg); }
+}
+
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* Custom Animation Utilities for Radix Dialogs */
+[data-state='open'] .animate-in {
+  animation-duration: 400ms;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}

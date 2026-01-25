@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, IndianRupee } from "lucide-react";
+import { Plus, IndianRupee, User, Phone, MapPin, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,12 +33,15 @@ interface WholesalerFormProps {
 }
 
 function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
+    const queryClient = useQueryClient();
     const createMutation = useMutation({
         mutationFn: async (data: any) => {
             const response = await api.post("/wholesalers", data);
             return response.data;
         },
         onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["wholesalers"] });
+            queryClient.invalidateQueries({ queryKey: ["wholesaler-stats"] });
             onSuccess();
             toast.success("Wholesaler created successfully");
         },
@@ -60,6 +63,7 @@ function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
             phone: formData.get("phone"),
             whatsappNumber: formData.get("whatsappNumber"),
             address: formData.get("address"),
+            place: formData.get("place"),
         };
 
         // Handle number conversion
@@ -83,13 +87,17 @@ function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
                 <Label htmlFor="name" className="text-sm md:text-base">
                     Wholesaler Name <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                    id="name"
-                    name="name"
-                    placeholder="Enter wholesaler name"
-                    required
-                    className="h-10 md:h-11 text-base md:text-sm"
-                />
+                <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                        id="name"
+                        name="name"
+                        placeholder="Enter wholesaler name"
+                        required
+                        autoComplete="organization"
+                        className="pl-10 h-10 md:h-11 text-base md:text-sm"
+                    />
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -97,24 +105,34 @@ function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
                     <Label htmlFor="phone" className="text-sm md:text-base">
                         Phone Number <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        placeholder="+91"
-                        required
-                        className="h-10 md:h-11 text-base md:text-sm"
-                    />
+                    <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                            id="phone"
+                            name="phone"
+                            type="tel"
+                            inputMode="tel"
+                            autoComplete="tel"
+                            placeholder="+91"
+                            required
+                            className="pl-10 h-10 md:h-11 text-base md:text-sm"
+                        />
+                    </div>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="whatsappNumber" className="text-sm md:text-base">WhatsApp</Label>
-                    <Input
-                        id="whatsappNumber"
-                        name="whatsappNumber"
-                        type="tel"
-                        placeholder="+91"
-                        className="h-10 md:h-11 text-base md:text-sm"
-                    />
+                    <div className="relative">
+                        <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                            id="whatsappNumber"
+                            name="whatsappNumber"
+                            type="tel"
+                            inputMode="tel"
+                            autoComplete="tel"
+                            placeholder="+91"
+                            className="pl-10 h-10 md:h-11 text-base md:text-sm"
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -122,13 +140,33 @@ function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
                 <Label htmlFor="address" className="text-sm md:text-base">
                     Address <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                    id="address"
-                    name="address"
-                    placeholder="Enter complete address"
-                    required
-                    className="h-10 md:h-11 text-base md:text-sm"
-                />
+                <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                        id="address"
+                        name="address"
+                        placeholder="Enter complete address"
+                        autoComplete="street-address"
+                        required
+                        className="pl-10 h-10 md:h-11 text-base md:text-sm"
+                    />
+                </div>
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="place" className="text-sm md:text-base">
+                    Place / City
+                </Label>
+                <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                        id="place"
+                        name="place"
+                        placeholder="Enter place or city"
+                        autoComplete="address-level2"
+                        className="pl-10 h-10 md:h-11 text-base md:text-sm"
+                    />
+                </div>
             </div>
 
             <div className="border-t pt-4">
@@ -148,6 +186,7 @@ function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
                             id="initialPurchased"
                             name="initialPurchased"
                             type="number"
+                            inputMode="decimal"
                             step="0.01"
                             min="0"
                             placeholder="0.00"
@@ -178,24 +217,31 @@ function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
     );
 }
 
-export function AddWholesalerDialog() {
+interface AddWholesalerDialogProps {
+    trigger?: React.ReactNode;
+}
+
+export function AddWholesalerDialog({ trigger }: AddWholesalerDialogProps) {
     const queryClient = useQueryClient();
     const [isOpen, setIsOpen] = useState(false);
     const isDesktop = useMediaQuery("(min-width: 768px)");
 
     const onSuccess = () => {
-        queryClient.invalidateQueries({ queryKey: ["wholesalers"] });
         setIsOpen(false);
     };
+
+    const defaultTrigger = (
+        <Button className="bg-gradient-to-r from-purple-600 to-pink-600 shadow-md hover:shadow-lg transition-all">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Wholesaler
+        </Button>
+    );
 
     if (isDesktop) {
         return (
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogTrigger asChild>
-                    <Button className="bg-gradient-to-r from-purple-600 to-pink-600 shadow-md hover:shadow-lg transition-all">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Wholesaler
-                    </Button>
+                    {trigger || defaultTrigger}
                 </DialogTrigger>
                 <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
@@ -213,16 +259,13 @@ export function AddWholesalerDialog() {
     return (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 shadow-md hover:shadow-lg transition-all">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Wholesaler
-                </Button>
+                {trigger || defaultTrigger}
             </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-[20px] max-h-[90vh] overflow-y-auto px-4 md:px-6">
+            <SheetContent side="bottom" className="rounded-t-[20px] max-h-[90vh] overflow-y-auto px-4 md:px-6 pb-6">
                 <SheetHeader className="text-left md:text-center mt-2">
                     <SheetTitle>Add New Wholesaler</SheetTitle>
                     <SheetDescription>
-                        Create a new account and record initial balance.
+                        Create a new wholesaler account and record initial balance.
                     </SheetDescription>
                 </SheetHeader>
                 <WholesalerForm onSuccess={onSuccess} onCancel={() => setIsOpen(false)} />

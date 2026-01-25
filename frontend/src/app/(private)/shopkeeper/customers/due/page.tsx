@@ -8,10 +8,10 @@ import {
     Search, MoreHorizontal, Trash2, Edit, Eye, Users, Calendar,
     LayoutDashboard, Phone, MapPin, CreditCard, Filter, X, ChevronLeft,
     ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, UserCheck, IndianRupee,
-    Receipt, Banknote, Smartphone
+    Receipt, Banknote, Smartphone, RefreshCw
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Header } from '@/components/app/header';
+import { Header, DeleteConfirmDialog } from '@/components/app';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +44,7 @@ import { Customer, PaginatedResponse } from '@/types';
 import { toast } from 'sonner';
 import {
     AddCustomerDialog,
+    EditCustomerDialog,
     CustomerDashboardStats
 } from '../components';
 
@@ -97,14 +98,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompact(amount: number): string {
-    if (amount >= 100000) {
-        return `₹${(amount / 100000).toFixed(1)}L`;
-    } else if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}K`;
-    }
-    return formatCurrency(amount);
-}
+
 
 // Debounce hook for search
 function useDebounce<T>(value: T, delay: number): T {
@@ -141,6 +135,14 @@ export default function DueCustomersPage() {
     const [txnPage, setTxnPage] = useState(1);
     const [paymentPage, setPaymentPage] = useState(1);
 
+    // Edit dialog state
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+
+    // Delete dialog state
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
     // Debounce search
     const debouncedSearch = useDebounce(searchInput, 500);
 
@@ -157,6 +159,7 @@ export default function DueCustomersPage() {
         params.set('limit', ITEMS_PER_PAGE.toString());
         if (debouncedSearch) params.set('search', debouncedSearch);
         if (statusFilter !== 'all') params.set('status', statusFilter);
+        if (statusFilter === 'deleted') params.set('includeDeleted', 'true');
         if (duesFilter !== 'all') params.set('duesFilter', duesFilter);
         if (sortBy) params.set('sortBy', sortBy);
         return params.toString();
@@ -224,12 +227,67 @@ export default function DueCustomersPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['due-customers'] });
             queryClient.invalidateQueries({ queryKey: ['due-customers-stats'] });
-            toast.success('Customer deleted successfully');
+            setDeleteDialogOpen(false);
+            setSelectedCustomer(null);
+            toast.success('Customer deleted (soft delete)');
         },
         onError: () => {
             toast.error('Failed to delete customer');
         },
     });
+
+    const restoreMutation = useMutation({
+        mutationFn: async (id: string) => {
+            await api.patch(`/customers/${id}/restore`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['due-customers'] });
+            queryClient.invalidateQueries({ queryKey: ['due-customers-stats'] });
+            toast.success('Customer restored successfully');
+        },
+        onError: () => {
+            toast.error('Failed to restore customer');
+        },
+    });
+
+    const updateMutation = useMutation({
+        mutationFn: async ({ id, data }: { id: string; data: any }) => {
+            const response = await api.patch(`/customers/${id}`, data);
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['due-customers'] });
+            queryClient.invalidateQueries({ queryKey: ['due-customers-stats'] });
+            setEditDialogOpen(false);
+            setEditingCustomer(null);
+            toast.success('Customer updated successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || 'Failed to update customer');
+        },
+    });
+
+    const handleEditClick = (customer: Customer) => {
+        setEditingCustomer(customer);
+        setEditDialogOpen(true);
+    };
+
+    const handleEditSave = (data: any) => {
+        if (editingCustomer) {
+            updateMutation.mutate({ id: editingCustomer._id, data });
+        }
+    };
+
+    const handleDeleteClick = (customer: Customer) => {
+        setSelectedCustomer(customer);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleDeleteConfirm = () => {
+        if (selectedCustomer) {
+            deleteMutation.mutate(selectedCustomer._id);
+        }
+    };
 
     const customers = data?.data || [];
     const pagination = data?.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 };
@@ -402,6 +460,7 @@ export default function DueCustomersPage() {
                                                     <SelectItem value="all">All Status</SelectItem>
                                                     <SelectItem value="active">Active</SelectItem>
                                                     <SelectItem value="inactive">Inactive</SelectItem>
+                                                    <SelectItem value="deleted">Recycle Bin</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                             <Select value={duesFilter} onValueChange={setDuesFilter}>
@@ -521,22 +580,30 @@ export default function DueCustomersPage() {
                                                                             <Eye className="h-4 w-4 mr-2" />
                                                                             View Details
                                                                         </DropdownMenuItem>
-                                                                        <DropdownMenuItem>
-                                                                            <Edit className="h-4 w-4 mr-2" />
-                                                                            Edit
-                                                                        </DropdownMenuItem>
-                                                                        <DropdownMenuSeparator />
-                                                                        <DropdownMenuItem
-                                                                            className="text-red-600"
-                                                                            onClick={() => {
-                                                                                if (confirm('Are you sure you want to delete this customer?')) {
-                                                                                    deleteMutation.mutate(customer._id);
-                                                                                }
-                                                                            }}
-                                                                        >
-                                                                            <Trash2 className="h-4 w-4 mr-2" />
-                                                                            Delete
-                                                                        </DropdownMenuItem>
+                                                                        {!customer.isDeleted ? (
+                                                                            <>
+                                                                                <DropdownMenuItem onClick={() => handleEditClick(customer)}>
+                                                                                    <Edit className="h-4 w-4 mr-2" />
+                                                                                    Edit
+                                                                                </DropdownMenuItem>
+                                                                                <DropdownMenuSeparator />
+                                                                                <DropdownMenuItem
+                                                                                    className="text-red-600"
+                                                                                    onClick={() => handleDeleteClick(customer)}
+                                                                                >
+                                                                                    <Trash2 className="h-4 w-4 mr-2" />
+                                                                                    Delete
+                                                                                </DropdownMenuItem>
+                                                                            </>
+                                                                        ) : (
+                                                                            <DropdownMenuItem
+                                                                                className="text-emerald-600 focus:text-emerald-600 focus:bg-emerald-50 cursor-pointer"
+                                                                                onClick={() => restoreMutation.mutate(customer._id)}
+                                                                            >
+                                                                                <RefreshCw className="mr-2 h-4 w-4" />
+                                                                                Restore Customer
+                                                                            </DropdownMenuItem>
+                                                                        )}
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>
                                                             </TableCell>
@@ -569,26 +636,68 @@ export default function DueCustomersPage() {
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <Badge className={`text-[10px] px-1.5 ${customer.isActive !== false
-                                                            ? 'bg-green-100 text-green-700 border-0'
-                                                            : 'bg-gray-100 text-gray-600 border-0'
-                                                            }`}>
-                                                            {customer.isActive !== false ? 'Active' : 'Inactive'}
-                                                        </Badge>
+                                                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                                                            <Badge className={`text-[10px] px-1.5 ${customer.isActive !== false
+                                                                ? 'bg-green-100 text-green-700 border-0'
+                                                                : 'bg-gray-100 text-gray-600 border-0'
+                                                                }`}>
+                                                                {customer.isActive !== false ? 'Active' : 'Inactive'}
+                                                            </Badge>
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                                                                        <MoreHorizontal className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end" className="w-48">
+                                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/shopkeeper/customers/due/${customer._id}`); }}>
+                                                                        <Eye className="mr-2 h-4 w-4 text-blue-600" />
+                                                                        View Details
+                                                                    </DropdownMenuItem>
+                                                                    {!customer.isDeleted ? (
+                                                                        <>
+                                                                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(customer); }}>
+                                                                                <Edit className="mr-2 h-4 w-4 text-purple-600" />
+                                                                                Edit
+                                                                            </DropdownMenuItem>
+                                                                            <DropdownMenuSeparator />
+                                                                            <DropdownMenuItem
+                                                                                className="text-red-600"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    handleDeleteClick(customer);
+                                                                                }}
+                                                                            >
+                                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                                Delete
+                                                                            </DropdownMenuItem>
+                                                                        </>
+                                                                    ) : (
+                                                                        <DropdownMenuItem
+                                                                            className="text-emerald-600 focus:text-emerald-600 focus:bg-emerald-50 cursor-pointer"
+                                                                            onClick={(e) => { e.stopPropagation(); restoreMutation.mutate(customer._id); }}
+                                                                        >
+                                                                            <RefreshCw className="mr-2 h-4 w-4" />
+                                                                            Restore Customer
+                                                                        </DropdownMenuItem>
+                                                                    )}
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </div>
                                                     </div>
                                                     <div className="grid grid-cols-3 gap-2 text-xs">
                                                         <div>
                                                             <p className="text-gray-500 text-[10px]">Sales</p>
-                                                            <p className="font-semibold">{formatCompact(customer.totalSales)}</p>
+                                                            <p className="font-semibold">{formatCurrency(customer.totalSales)}</p>
                                                         </div>
                                                         <div>
                                                             <p className="text-gray-500 text-[10px]">Paid</p>
-                                                            <p className="font-semibold text-green-600">{formatCompact(customer.totalPaid)}</p>
+                                                            <p className="font-semibold text-green-600">{formatCurrency(customer.totalPaid)}</p>
                                                         </div>
                                                         <div>
                                                             <p className="text-gray-500 text-[10px]">Due</p>
                                                             <p className={`font-bold ${customer.outstandingDue > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                                                {customer.outstandingDue > 0 ? formatCompact(customer.outstandingDue) : '✓'}
+                                                                {customer.outstandingDue > 0 ? formatCurrency(customer.outstandingDue) : '✓'}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -787,6 +896,28 @@ export default function DueCustomersPage() {
                     </TabsContent>
                 </Tabs>
             </div>
+
+            <EditCustomerDialog
+                isOpen={editDialogOpen}
+                onClose={() => {
+                    setEditDialogOpen(false);
+                    setEditingCustomer(null);
+                }}
+                onSave={handleEditSave}
+                customer={editingCustomer}
+                isSaving={updateMutation.isPending}
+            />
+
+            <DeleteConfirmDialog
+                isOpen={deleteDialogOpen}
+                onClose={() => {
+                    setDeleteDialogOpen(false);
+                    setSelectedCustomer(null);
+                }}
+                onConfirm={handleDeleteConfirm}
+                itemName={selectedCustomer?.name}
+                isLoading={deleteMutation.isPending}
+            />
         </div>
     );
 }

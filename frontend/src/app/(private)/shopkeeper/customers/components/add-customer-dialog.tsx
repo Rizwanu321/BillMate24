@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, IndianRupee } from 'lucide-react';
+import { Plus, IndianRupee, User, Phone, MapPin, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -86,6 +86,7 @@ function CustomerForm({
             phone: formData.get('phone'),
             whatsappNumber: formData.get('whatsappNumber'),
             address: formData.get('address'),
+            place: formData.get('place'),
             type: customerType,
         };
 
@@ -114,13 +115,17 @@ function CustomerForm({
                 <Label htmlFor="name" className="text-sm md:text-base">
                     Customer Name <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                    id="name"
-                    name="name"
-                    placeholder="Enter customer name"
-                    required
-                    className="h-10 md:h-11 text-base md:text-sm"
-                />
+                <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                        id="name"
+                        name="name"
+                        placeholder="Enter customer name"
+                        required
+                        autoComplete="name"
+                        className="pl-10 h-10 md:h-11 text-base md:text-sm"
+                    />
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -128,24 +133,34 @@ function CustomerForm({
                     <Label htmlFor="phone" className="text-sm md:text-base">
                         Phone Number {customerType === 'due' && <span className="text-red-500">*</span>}
                     </Label>
-                    <Input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        placeholder="+91"
-                        required={customerType === 'due'}
-                        className="h-10 md:h-11 text-base md:text-sm"
-                    />
+                    <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                            id="phone"
+                            name="phone"
+                            type="tel"
+                            inputMode="tel"
+                            autoComplete="tel"
+                            placeholder="+91"
+                            required={customerType === 'due'}
+                            className="pl-10 h-10 md:h-11 text-base md:text-sm"
+                        />
+                    </div>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="whatsappNumber" className="text-sm md:text-base">WhatsApp</Label>
-                    <Input
-                        id="whatsappNumber"
-                        name="whatsappNumber"
-                        type="tel"
-                        placeholder="+91"
-                        className="h-10 md:h-11 text-base md:text-sm"
-                    />
+                    <div className="relative">
+                        <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                            id="whatsappNumber"
+                            name="whatsappNumber"
+                            type="tel"
+                            inputMode="tel"
+                            autoComplete="tel"
+                            placeholder="+91"
+                            className="pl-10 h-10 md:h-11 text-base md:text-sm"
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -153,13 +168,33 @@ function CustomerForm({
                 <Label htmlFor="address" className="text-sm md:text-base">
                     Address {customerType === 'due' && <span className="text-red-500">*</span>}
                 </Label>
-                <Input
-                    id="address"
-                    name="address"
-                    placeholder="Enter complete address"
-                    required={customerType === 'due'}
-                    className="h-10 md:h-11 text-base md:text-sm"
-                />
+                <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                        id="address"
+                        name="address"
+                        placeholder="Enter complete address"
+                        autoComplete="street-address"
+                        required={customerType === 'due'}
+                        className="pl-10 h-10 md:h-11 text-base md:text-sm"
+                    />
+                </div>
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="place" className="text-sm md:text-base">
+                    Place / City
+                </Label>
+                <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                        id="place"
+                        name="place"
+                        placeholder="Enter place or city"
+                        autoComplete="address-level2"
+                        className="pl-10 h-10 md:h-11 text-base md:text-sm"
+                    />
+                </div>
             </div>
 
             {/* Opening Balance - Only for Due Customers */}
@@ -181,6 +216,7 @@ function CustomerForm({
                                 id="initialSales"
                                 name="initialSales"
                                 type="number"
+                                inputMode="decimal"
                                 step="0.01"
                                 min="0"
                                 placeholder="0.00"

@@ -15,6 +15,7 @@ export const createShopkeeperSchema = z.object({
     phone: z.string().optional(),
     businessName: z.string().optional(),
     address: z.string().optional(),
+    place: z.string().optional(),
     features: featuresSchema.optional(),
 });
 
@@ -23,6 +24,7 @@ export const updateShopkeeperSchema = z.object({
     phone: z.string().optional(),
     businessName: z.string().optional(),
     address: z.string().optional(),
+    place: z.string().optional(),
     isActive: z.boolean().optional(),
 });
 

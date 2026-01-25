@@ -41,12 +41,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompact(amount: number): string {
-    if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(1)}Cr`;
-    if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)}L`;
-    if (amount >= 1000) return `₹${(amount / 1000).toFixed(1)}K`;
-    return `₹${amount.toFixed(0)}`;
-}
+
 
 const paymentMethodConfig: Record<string, { label: string; icon: React.ReactNode; bgColor: string; color: string }> = {
     cash: { label: 'Cash', icon: <Banknote className="h-3 w-3" />, bgColor: 'bg-green-100', color: 'text-green-700' },
@@ -198,7 +193,7 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
                             <div className="grid grid-cols-3 gap-2 text-center">
                                 <div>
                                     <p className="text-[10px] text-gray-500 font-medium">Total</p>
-                                    <p className="font-bold text-gray-900 text-sm">{formatCompact(openingBalance)}</p>
+                                    <p className="font-bold text-gray-900 text-sm">{formatCurrency(openingBalance)}</p>
                                 </div>
                                 <div>
                                     <p className="text-[10px] text-gray-500 font-medium">Paid</p>
@@ -206,7 +201,7 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
                                 </div>
                                 <div>
                                     <p className="text-[10px] text-gray-500 font-medium">Due</p>
-                                    <p className="font-bold text-orange-600 text-sm">{formatCompact(openingBalance)}</p>
+                                    <p className="font-bold text-orange-600 text-sm">{formatCurrency(openingBalance)}</p>
                                 </div>
                             </div>
                         </div>
@@ -255,20 +250,20 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
                                     {/* Total */}
                                     <div>
                                         <p className="text-[10px] text-gray-500 font-medium">Total</p>
-                                        <p className="font-bold text-gray-900 text-sm">{formatCompact(bill.totalAmount)}</p>
+                                        <p className="font-bold text-gray-900 text-sm">{formatCurrency(bill.totalAmount)}</p>
                                     </div>
 
                                     {/* Paid */}
                                     <div>
                                         <p className="text-[10px] text-gray-500 font-medium">Paid</p>
-                                        <p className="font-bold text-green-600 text-sm">{formatCompact(bill.paidAmount)}</p>
+                                        <p className="font-bold text-green-600 text-sm">{formatCurrency(bill.paidAmount)}</p>
                                     </div>
 
                                     {/* Due */}
                                     <div>
                                         <p className="text-[10px] text-gray-500 font-medium">Due</p>
                                         {due > 0 ? (
-                                            <p className="font-bold text-red-600 text-sm">{formatCompact(due)}</p>
+                                            <p className="font-bold text-red-600 text-sm">{formatCurrency(due)}</p>
                                         ) : (
                                             <p className="font-bold text-green-600 text-sm">✓ Nil</p>
                                         )}

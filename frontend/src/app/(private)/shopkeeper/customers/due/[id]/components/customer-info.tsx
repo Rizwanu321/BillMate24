@@ -12,6 +12,7 @@ interface Customer {
     phone?: string;
     whatsappNumber?: string;
     address?: string;
+    place?: string;
     totalSales: number;
     totalPaid: number;
     outstandingDue: number;
@@ -30,12 +31,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompact(amount: number): string {
-    if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(1)}Cr`;
-    if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)}L`;
-    if (amount >= 1000) return `₹${(amount / 1000).toFixed(1)}K`;
-    return `₹${amount.toFixed(0)}`;
-}
+
 
 export function CustomerInfo({ customer }: CustomerInfoProps) {
     const collectionRate = customer.totalSales > 0
@@ -121,7 +117,9 @@ export function CustomerInfo({ customer }: CustomerInfoProps) {
                     {customer.address && (
                         <div className="flex items-center gap-2.5 px-3 py-2.5 bg-slate-700/30 rounded-xl border border-slate-600/30 mb-4 text-slate-300">
                             <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0" />
-                            <span className="text-sm truncate">{customer.address}</span>
+                            <span className="text-sm truncate">
+                                {customer.address}{customer.place ? `, ${customer.place}` : ''}
+                            </span>
                         </div>
                     )}
 

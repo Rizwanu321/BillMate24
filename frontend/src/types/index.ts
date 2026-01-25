@@ -19,6 +19,7 @@ export interface User {
     phone?: string;
     businessName?: string;
     address?: string;
+    place?: string;
     features: Features;
     isActive: boolean;
     createdAt: string;
@@ -65,11 +66,14 @@ export interface Wholesaler {
     phone?: string;
     email?: string;
     address?: string;
+    place?: string;
     gstNumber?: string;
     totalPurchased: number;
     totalPaid: number;
     outstandingDue: number;
     isActive: boolean;
+    isDeleted?: boolean;
+    deletedAt?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -84,12 +88,15 @@ export interface Customer {
     phone?: string;
     email?: string;
     address?: string;
+    place?: string;
     type: CustomerType;
     totalSales: number;
     totalPaid: number;
     outstandingDue: number;
     lastPaymentDate?: string;
     isActive: boolean;
+    isDeleted?: boolean;
+    deletedAt?: string;
     createdAt: string;
     updatedAt: string;
 }

@@ -7,10 +7,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Plus, Search, MoreHorizontal, Trash2, Edit, Eye, Package, Calendar,
     LayoutDashboard, Phone, MapPin, CreditCard, Filter, X, ChevronLeft,
-    ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, CheckCircle, Users, IndianRupee
+    ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, CheckCircle, Users, IndianRupee, RefreshCw
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Header } from '@/components/app/header';
+import { Header, DeleteConfirmDialog } from '@/components/app';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,7 +49,7 @@ import api from '@/config/axios';
 import { Wholesaler, PaginatedResponse } from '@/types';
 import { toast } from 'sonner';
 import { wholesalerSchema } from '@/schemas/wholesaler.schema';
-import { WholesalerStats, DeleteConfirmDialog, EditWholesalerDialog } from './components';
+import { WholesalerStats, EditWholesalerDialog, AddWholesalerDialog } from './components';
 
 interface WholesalerStatsData {
     total: number;
@@ -108,12 +108,11 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function WholesalersPage() {
     const queryClient = useQueryClient();
     const router = useRouter();
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     // Search and filter state
     const [search, setSearch] = useState('');
     const [searchInput, setSearchInput] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'deleted'>('all');
     const [duesFilter, setDuesFilter] = useState<'all' | 'with_dues' | 'clear'>('all');
     const [sortBy, setSortBy] = useState<'name' | 'purchases' | 'outstanding' | 'createdAt'>('createdAt');
 
@@ -135,6 +134,7 @@ export default function WholesalersPage() {
         params.set('limit', ITEMS_PER_PAGE.toString());
         if (search) params.set('search', search);
         if (statusFilter !== 'all') params.set('status', statusFilter);
+        if (statusFilter === 'deleted') params.set('includeDeleted', 'true');
         if (duesFilter !== 'all') params.set('duesFilter', duesFilter);
         if (sortBy !== 'createdAt') params.set('sortBy', sortBy);
         return params.toString();
@@ -188,22 +188,6 @@ export default function WholesalersPage() {
         setCurrentPage(1);
     };
 
-    const createMutation = useMutation({
-        mutationFn: async (data: any) => {
-            const response = await api.post('/wholesalers', data);
-            return response.data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['wholesalers'] });
-            queryClient.invalidateQueries({ queryKey: ['wholesaler-stats'] });
-            setIsCreateOpen(false);
-            toast.success('Wholesaler created successfully');
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Failed to create wholesaler');
-        },
-    });
-
     const updateMutation = useMutation({
         mutationFn: async ({ id, data }: { id: string; data: any }) => {
             const response = await api.patch(`/wholesalers/${id}`, data);
@@ -230,40 +214,26 @@ export default function WholesalersPage() {
             queryClient.invalidateQueries({ queryKey: ['wholesaler-stats'] });
             setDeleteDialogOpen(false);
             setSelectedWholesaler(null);
-            toast.success('Wholesaler deleted successfully');
+            toast.success('Wholesaler deleted (soft delete)');
         },
         onError: () => {
             toast.error('Failed to delete wholesaler');
         },
     });
 
-    const handleCreate = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-
-        const initialPurchasedValue = formData.get('initialPurchased') as string;
-
-        const rawData: any = {
-            name: formData.get('name'),
-            phone: formData.get('phone'),
-            whatsappNumber: formData.get('whatsappNumber'),
-            address: formData.get('address'),
-        };
-
-        // Handle number conversion
-        if (initialPurchasedValue && !isNaN(parseFloat(initialPurchasedValue))) {
-            rawData.initialPurchased = parseFloat(initialPurchasedValue);
-        }
-
-        const validation = wholesalerSchema.safeParse(rawData);
-
-        if (!validation.success) {
-            toast.error(validation.error.issues[0].message);
-            return;
-        }
-
-        createMutation.mutate(validation.data);
-    };
+    const restoreMutation = useMutation({
+        mutationFn: async (id: string) => {
+            await api.patch(`/wholesalers/${id}/restore`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['wholesalers'] });
+            queryClient.invalidateQueries({ queryKey: ['wholesaler-stats'] });
+            toast.success('Wholesaler restored successfully');
+        },
+        onError: () => {
+            toast.error('Failed to restore wholesaler');
+        },
+    });
 
     const handleEditClick = (wholesaler: Wholesaler) => {
         setEditingWholesaler(wholesaler);
@@ -352,120 +322,7 @@ export default function WholesalersPage() {
                                 Payments
                             </Button>
                         </Link>
-                        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                            <DialogTrigger asChild>
-                                <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg shadow-purple-500/25 h-9 md:h-10 text-sm md:text-base px-3 md:px-4">
-                                    <Plus className="mr-1.5 md:mr-2 h-4 w-4" />
-                                    <span className="hidden sm:inline">Add Wholesaler</span>
-                                    <span className="sm:hidden">Add New</span>
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-                                <DialogHeader>
-                                    <DialogTitle className="flex items-center gap-2">
-                                        <div className="p-2 rounded-lg bg-purple-100">
-                                            <Package className="h-5 w-5 text-purple-600" />
-                                        </div>
-                                        Add New Wholesaler
-                                    </DialogTitle>
-                                    <p className="text-sm text-gray-600 mt-2">Create a new wholesaler account. You can optionally record any advance payment made.</p>
-                                </DialogHeader>
-                                <form onSubmit={handleCreate} className="space-y-4 mt-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="name">
-                                            Wholesaler Name <span className="text-red-500">*</span>
-                                        </Label>
-                                        <Input
-                                            id="name"
-                                            name="name"
-                                            required
-                                            placeholder="Enter wholesaler name"
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="phone">
-                                                Phone Number <span className="text-red-500">*</span>
-                                            </Label>
-                                            <Input
-                                                id="phone"
-                                                name="phone"
-                                                type="tel"
-                                                placeholder="+91"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="whatsappNumber">WhatsApp</Label>
-                                            <Input
-                                                id="whatsappNumber"
-                                                name="whatsappNumber"
-                                                type="tel"
-                                                placeholder="+91"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="address">
-                                            Address <span className="text-red-500">*</span>
-                                        </Label>
-                                        <Input
-                                            id="address"
-                                            name="address"
-                                            placeholder="Enter complete address"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="border-t pt-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="initialPurchased" className="flex items-center gap-2">
-                                                Opening Balance (Optional)
-                                                <span className="text-xs text-gray-500 font-normal">
-                                                    - Total purchased before using app
-                                                </span>
-                                            </Label>
-                                            <div className="relative">
-                                                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                                                <Input
-                                                    id="initialPurchased"
-                                                    name="initialPurchased"
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    placeholder="0.00"
-                                                    className="pl-10"
-                                                />
-                                            </div>
-                                            <p className="text-xs text-gray-500">
-                                                Enter the total amount purchased from this wholesaler before using this app.
-                                                This will be recorded as outstanding debt to be paid.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-3 pt-2">
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => setIsCreateOpen(false)}
-                                            className="flex-1"
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            type="submit"
-                                            className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600"
-                                            disabled={createMutation.isPending}
-                                        >
-                                            {createMutation.isPending ? 'Creating...' : 'Add Wholesaler'}
-                                        </Button>
-                                    </div>
-                                </form>
-                            </DialogContent>
-                        </Dialog>
+                        <AddWholesalerDialog />
                     </div>
                 </div>
 
@@ -513,7 +370,7 @@ export default function WholesalersPage() {
                                 {/* Status Filter */}
                                 <Select
                                     value={statusFilter}
-                                    onValueChange={(value: 'all' | 'active' | 'inactive') => handleFilterChange(setStatusFilter, value)}
+                                    onValueChange={(value: 'all' | 'active' | 'inactive' | 'deleted') => handleFilterChange(setStatusFilter, value)}
                                 >
                                     <SelectTrigger className="w-[100px] md:w-[130px] h-8 md:h-9 bg-white text-xs md:text-sm flex-shrink-0">
                                         <SelectValue placeholder="Status" />
@@ -530,6 +387,12 @@ export default function WholesalersPage() {
                                             <span className="flex items-center gap-2">
                                                 <X className="h-3 w-3 text-gray-500" />
                                                 Inactive
+                                            </span>
+                                        </SelectItem>
+                                        <SelectItem value="deleted">
+                                            <span className="flex items-center gap-2">
+                                                <Trash2 className="h-3 w-3 text-red-500" />
+                                                Recycle Bin
                                             </span>
                                         </SelectItem>
                                     </SelectContent>
@@ -694,21 +557,33 @@ export default function WholesalersPage() {
                                                                         <Eye className="mr-2 h-4 w-4 text-blue-600" />
                                                                         View Details
                                                                     </DropdownMenuItem>
-                                                                    <DropdownMenuItem
-                                                                        onClick={() => handleEditClick(w)}
-                                                                        className="cursor-pointer"
-                                                                    >
-                                                                        <Edit className="mr-2 h-4 w-4 text-purple-600" />
-                                                                        Edit Wholesaler
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuSeparator />
-                                                                    <DropdownMenuItem
-                                                                        className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
-                                                                        onClick={() => handleDeleteClick(w)}
-                                                                    >
-                                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                                        Delete
-                                                                    </DropdownMenuItem>
+                                                                    {!w.isDeleted ? (
+                                                                        <>
+                                                                            <DropdownMenuItem
+                                                                                onClick={() => handleEditClick(w)}
+                                                                                className="cursor-pointer"
+                                                                            >
+                                                                                <Edit className="mr-2 h-4 w-4 text-purple-600" />
+                                                                                Edit Wholesaler
+                                                                            </DropdownMenuItem>
+                                                                            <DropdownMenuSeparator />
+                                                                            <DropdownMenuItem
+                                                                                className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                                                                                onClick={() => handleDeleteClick(w)}
+                                                                            >
+                                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                                Delete
+                                                                            </DropdownMenuItem>
+                                                                        </>
+                                                                    ) : (
+                                                                        <DropdownMenuItem
+                                                                            className="text-emerald-600 focus:text-emerald-600 focus:bg-emerald-50 cursor-pointer"
+                                                                            onClick={() => restoreMutation.mutate(w._id)}
+                                                                        >
+                                                                            <RefreshCw className="mr-2 h-4 w-4" />
+                                                                            Restore Wholesaler
+                                                                        </DropdownMenuItem>
+                                                                    )}
                                                                 </DropdownMenuContent>
                                                             </DropdownMenu>
                                                         </div>
@@ -764,18 +639,30 @@ export default function WholesalersPage() {
                                                                 <Eye className="mr-2 h-4 w-4 text-blue-600" />
                                                                 View Details
                                                             </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(w); }}>
-                                                                <Edit className="mr-2 h-4 w-4 text-purple-600" />
-                                                                Edit
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem
-                                                                className="text-red-600"
-                                                                onClick={(e) => { e.stopPropagation(); handleDeleteClick(w); }}
-                                                            >
-                                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                                Delete
-                                                            </DropdownMenuItem>
+                                                            {!w.isDeleted ? (
+                                                                <>
+                                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(w); }}>
+                                                                        <Edit className="mr-2 h-4 w-4 text-purple-600" />
+                                                                        Edit
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem
+                                                                        className="text-red-600"
+                                                                        onClick={(e) => { e.stopPropagation(); handleDeleteClick(w); }}
+                                                                    >
+                                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                                        Delete
+                                                                    </DropdownMenuItem>
+                                                                </>
+                                                            ) : (
+                                                                <DropdownMenuItem
+                                                                    className="text-emerald-600"
+                                                                    onClick={(e) => { e.stopPropagation(); restoreMutation.mutate(w._id); }}
+                                                                >
+                                                                    <RefreshCw className="mr-2 h-4 w-4" />
+                                                                    Restore
+                                                                </DropdownMenuItem>
+                                                            )}
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </div>
@@ -929,14 +816,17 @@ export default function WholesalersPage() {
                                         Clear Filters
                                     </Button>
                                 ) : (
-                                    <Button
-                                        onClick={() => setIsCreateOpen(true)}
-                                        className="bg-gradient-to-r from-purple-600 to-indigo-600 h-9"
-                                        size="sm"
-                                    >
-                                        <Plus className="mr-1.5 h-4 w-4" />
-                                        Add Wholesaler
-                                    </Button>
+                                    <AddWholesalerDialog
+                                        trigger={
+                                            <Button
+                                                className="bg-gradient-to-r from-purple-600 to-indigo-600 h-9"
+                                                size="sm"
+                                            >
+                                                <Plus className="mr-1.5 h-4 w-4" />
+                                                Add Wholesaler
+                                            </Button>
+                                        }
+                                    />
                                 )}
                             </div>
                         )}
@@ -964,8 +854,8 @@ export default function WholesalersPage() {
                     setSelectedWholesaler(null);
                 }}
                 onConfirm={handleDeleteConfirm}
-                wholesalerName={selectedWholesaler?.name || ''}
-                isDeleting={deleteMutation.isPending}
+                itemName={selectedWholesaler?.name}
+                isLoading={deleteMutation.isPending}
             />
         </div>
     );

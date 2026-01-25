@@ -73,10 +73,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompactCurrency(amount: number): string {
-    // User requested to see full amounts without K/L suffixes
-    return formatCurrency(amount);
-}
+
 
 type SortField = 'name' | 'outstandingDue' | 'lastTransactionDate';
 type SortOrder = 'asc' | 'desc';
@@ -552,7 +549,7 @@ export default function DuesReportPage() {
                                                                 </div>
                                                             </div>
                                                             <div className="text-right">
-                                                                <span className="block font-bold text-red-600 text-base">{formatCompactCurrency(customer.outstandingDue)}</span>
+                                                                <span className="block font-bold text-red-600 text-base">{formatCurrency(customer.outstandingDue)}</span>
                                                                 <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Due Amount</span>
                                                             </div>
                                                         </div>
@@ -858,7 +855,7 @@ export default function DuesReportPage() {
                                                                 </div>
                                                             </div>
                                                             <div className="text-right">
-                                                                <span className="block font-bold text-orange-600 text-base">{formatCompactCurrency(wholesaler.outstandingDue)}</span>
+                                                                <span className="block font-bold text-orange-600 text-base">{formatCurrency(wholesaler.outstandingDue)}</span>
                                                                 <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Due Amount</span>
                                                             </div>
                                                         </div>

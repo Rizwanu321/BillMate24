@@ -41,12 +41,20 @@ export class CustomerService {
         page: number,
         limit: number,
         search?: string,
+        includeDeleted?: boolean,
         status?: string,
         duesFilter?: string,
         sortBy?: string
     ): Promise<{ customers: any[]; total: number; totalPages: number }> {
         const skip = (page - 1) * limit;
         const query: any = { shopkeeperId };
+
+        if (!includeDeleted) {
+            query.isDeleted = { $ne: true };
+        } else {
+            // If includeDeleted is true, we might want to only show deleted ones or all.
+            // Let's stick to the same logic as wholesalers: if status is 'deleted', we handle it below.
+        }
 
         // Filter by customer type
         if (customerType) {
@@ -65,8 +73,12 @@ export class CustomerService {
         // Status filter
         if (status === 'active') {
             query.isActive = { $ne: false };
+            query.isDeleted = { $ne: true };
         } else if (status === 'inactive') {
             query.isActive = false;
+            query.isDeleted = { $ne: true };
+        } else if (status === 'deleted') {
+            query.isDeleted = true;
         }
 
         // Dues filter
@@ -140,10 +152,37 @@ export class CustomerService {
     }
 
     async delete(shopkeeperId: string, id: string): Promise<void> {
-        const result = await Customer.deleteOne({ _id: id, shopkeeperId });
-        if (result.deletedCount === 0) {
+        const result = await Customer.findOneAndUpdate(
+            { _id: id, shopkeeperId },
+            {
+                $set: {
+                    isDeleted: true,
+                    isActive: false,
+                    deletedAt: new Date()
+                }
+            }
+        );
+        if (!result) {
             throw new Error('Customer not found');
         }
+    }
+
+    async restore(shopkeeperId: string, id: string): Promise<any> {
+        const customer = await Customer.findOneAndUpdate(
+            { _id: id, shopkeeperId, isDeleted: true },
+            {
+                $set: {
+                    isDeleted: false,
+                    isActive: true
+                },
+                $unset: { deletedAt: 1 }
+            },
+            { new: true }
+        );
+        if (!customer) {
+            throw new Error('Customer not found or not deleted');
+        }
+        return customer.toObject();
     }
 
     async getDashboardStats(shopkeeperId: string, type: CustomerType): Promise<{
@@ -153,7 +192,7 @@ export class CustomerService {
         totalOutstanding: number;
     }> {
         const result = await Customer.aggregate([
-            { $match: { shopkeeperId: shopkeeperId, type } },
+            { $match: { shopkeeperId: shopkeeperId, type, isDeleted: { $ne: true } } },
             {
                 $group: {
                     _id: null,
@@ -221,23 +260,26 @@ export class CustomerService {
         total: number;
         active: number;
         inactive: number;
+        deleted: number;
         withDues: number;
         totalOutstanding: number;
         totalSales: number;
         totalPaid: number;
     }> {
-        const baseQuery: any = { shopkeeperId };
+        const baseQuery: any = { shopkeeperId, isDeleted: { $ne: true } };
         if (customerType) {
             baseQuery.type = customerType;
         }
 
-        const [totalResult, activeResult, inactiveResult, duesResult, financialResult] = await Promise.all([
-            // Total count
+        const [totalResult, activeResult, inactiveResult, deletedResult, duesResult, financialResult] = await Promise.all([
+            // Total count (not deleted)
             Customer.countDocuments(baseQuery),
             // Active count
             Customer.countDocuments({ ...baseQuery, isActive: { $ne: false } }),
             // Inactive count
             Customer.countDocuments({ ...baseQuery, isActive: false }),
+            // Deleted count
+            Customer.countDocuments({ shopkeeperId, isDeleted: true, ...(customerType ? { type: customerType } : {}) }),
             // With dues count
             Customer.countDocuments({ ...baseQuery, outstandingDue: { $gt: 0 } }),
             // Financial aggregation
@@ -260,6 +302,7 @@ export class CustomerService {
             total: totalResult,
             active: activeResult,
             inactive: inactiveResult,
+            deleted: deletedResult,
             withDues: duesResult,
             totalOutstanding: financial.totalOutstanding,
             totalSales: financial.totalSales,

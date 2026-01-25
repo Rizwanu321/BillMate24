@@ -33,12 +33,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompact(amount: number): string {
-    if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(1)}Cr`;
-    if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)}L`;
-    if (amount >= 1000) return `₹${(amount / 1000).toFixed(1)}K`;
-    return `₹${amount.toFixed(0)}`;
-}
+
 
 const paymentMethodConfig: Record<string, { label: string; icon: React.ReactNode; bgColor: string; color: string }> = {
     cash: { label: 'Cash', icon: <Banknote className="h-3 w-3" />, bgColor: 'bg-green-100', color: 'text-green-700' },
@@ -135,7 +130,7 @@ export function PaymentsTable({ payments, isLoading }: PaymentsTableProps) {
                             <div className="bg-green-50 rounded-lg p-2 border border-green-100">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs text-green-600 font-medium">Amount</span>
-                                    <span className="font-bold text-green-600 text-base">{formatCompact(payment.amount)}</span>
+                                    <span className="font-bold text-green-600 text-base">{formatCurrency(payment.amount)}</span>
                                 </div>
                                 {payment.notes && (
                                     <p className="text-[10px] text-gray-500 mt-1 truncate">Note: {payment.notes}</p>

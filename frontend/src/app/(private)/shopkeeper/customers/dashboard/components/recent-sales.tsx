@@ -31,14 +31,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompact(amount: number): string {
-    if (amount >= 100000) {
-        return `₹${(amount / 100000).toFixed(1)}L`;
-    } else if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}K`;
-    }
-    return formatCurrency(amount);
-}
+
 
 export function RecentSales({ sales, isLoading }: RecentSalesProps) {
     if (isLoading) {
@@ -164,20 +157,20 @@ export function RecentSales({ sales, isLoading }: RecentSalesProps) {
                                                 {/* Total */}
                                                 <div>
                                                     <p className="text-[10px] text-gray-500 font-medium">Total</p>
-                                                    <p className="font-bold text-gray-900 text-sm">{formatCompact(sale.totalAmount)}</p>
+                                                    <p className="font-bold text-gray-900 text-sm">{formatCurrency(sale.totalAmount)}</p>
                                                 </div>
 
                                                 {/* Paid */}
                                                 <div>
                                                     <p className="text-[10px] text-gray-500 font-medium">Paid</p>
-                                                    <p className="font-bold text-green-600 text-sm">{formatCompact(sale.paidAmount)}</p>
+                                                    <p className="font-bold text-green-600 text-sm">{formatCurrency(sale.paidAmount)}</p>
                                                 </div>
 
                                                 {/* Due */}
                                                 <div>
                                                     <p className="text-[10px] text-gray-500 font-medium">Due</p>
                                                     {dueAmount > 0 ? (
-                                                        <p className="font-bold text-red-600 text-sm">{formatCompact(dueAmount)}</p>
+                                                        <p className="font-bold text-red-600 text-sm">{formatCurrency(dueAmount)}</p>
                                                     ) : (
                                                         <p className="font-bold text-green-600 text-sm">✓ Nil</p>
                                                     )}

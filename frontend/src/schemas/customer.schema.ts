@@ -5,6 +5,7 @@ export const customerSchema = z.object({
     phone: z.string().optional(),
     whatsappNumber: z.string().optional(),
     address: z.string().optional(),
+    place: z.string().optional(),
     type: z.enum(['due', 'normal']),
     initialSales: z.number().min(0, 'Amount must be positive').optional(),
 }).superRefine((data, ctx) => {

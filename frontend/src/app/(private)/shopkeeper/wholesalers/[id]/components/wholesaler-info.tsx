@@ -10,6 +10,7 @@ interface Wholesaler {
     phone?: string;
     whatsappNumber?: string;
     address?: string;
+    place?: string;
     totalPurchased: number;
     totalPaid: number;
     outstandingDue: number;
@@ -123,7 +124,9 @@ export function WholesalerInfo({ wholesaler }: WholesalerInfoProps) {
                     {wholesaler.address && (
                         <div className="flex items-center gap-2.5 px-3 py-2.5 bg-slate-700/30 rounded-xl border border-slate-600/30 mb-4 text-slate-300">
                             <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0" />
-                            <span className="text-sm truncate">{wholesaler.address}</span>
+                            <span className="text-sm truncate">
+                                {wholesaler.address}{wholesaler.place ? `, ${wholesaler.place}` : ''}
+                            </span>
                         </div>
                     )}
 

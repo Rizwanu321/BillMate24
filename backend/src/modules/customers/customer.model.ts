@@ -6,12 +6,15 @@ interface CustomerDocument extends Document {
     phone?: string;
     whatsappNumber?: string;
     address?: string;
+    place?: string;
     type: 'due' | 'normal';
     totalSales: number;
     totalPaid: number;
     outstandingDue: number;
     lastPaymentDate?: Date;
     isActive: boolean;
+    isDeleted: boolean;
+    deletedAt?: Date;
 }
 
 const customerSchema = new Schema(
@@ -51,6 +54,10 @@ const customerSchema = new Schema(
             ],
             trim: true,
         },
+        place: {
+            type: String,
+            trim: true,
+        },
         type: {
             type: String,
             enum: ['due', 'normal'],
@@ -77,6 +84,14 @@ const customerSchema = new Schema(
         isActive: {
             type: Boolean,
             default: true,
+        },
+        isDeleted: {
+            type: Boolean,
+            default: false,
+            index: true,
+        },
+        deletedAt: {
+            type: Date,
         },
     },
     {

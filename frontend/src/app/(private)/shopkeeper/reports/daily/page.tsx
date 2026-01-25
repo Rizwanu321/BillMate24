@@ -91,14 +91,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompact(amount: number): string {
-    if (amount >= 100000) {
-        return `₹${(amount / 100000).toFixed(1)}L`;
-    } else if (amount >= 1000) {
-        return `₹${(amount / 1000).toFixed(1)}K`;
-    }
-    return formatCurrency(amount);
-}
+
 
 function getDateRange(option: TimeFilterOption): { startDate: string; endDate: string } {
     const now = new Date();
@@ -499,7 +492,7 @@ export default function RevenueReportPage() {
                                 </Badge>
                             </div>
                             <h3 className="text-lg md:text-3xl font-bold">
-                                <span className="md:hidden">{formatCompact(
+                                <span className="md:hidden">{formatCurrency(
                                     timeFilter === 'all'
                                         ? (duesData?.totalCustomerDue || 0) + stats.totalSalesCollected
                                         : stats.totalSalesAmount
@@ -519,8 +512,8 @@ export default function RevenueReportPage() {
                                 </span>
                                 <span className="font-semibold">
                                     {timeFilter === 'all'
-                                        ? formatCompact(duesData?.totalCustomerDue || 0)
-                                        : formatCompact(stats.totalSalesCollected)
+                                        ? formatCurrency(duesData?.totalCustomerDue || 0)
+                                        : formatCurrency(stats.totalSalesCollected)
                                     }
                                 </span>
                             </div>
@@ -540,7 +533,7 @@ export default function RevenueReportPage() {
                                 </Badge>
                             </div>
                             <h3 className="text-lg md:text-3xl font-bold">
-                                <span className="md:hidden">{formatCompact(
+                                <span className="md:hidden">{formatCurrency(
                                     timeFilter === 'all'
                                         ? (duesData?.totalWholesalerDue || 0) + stats.totalPurchasesPaid
                                         : stats.totalPurchasesAmount
@@ -560,8 +553,8 @@ export default function RevenueReportPage() {
                                 </span>
                                 <span className="font-semibold">
                                     {timeFilter === 'all'
-                                        ? formatCompact(duesData?.totalWholesalerDue || 0)
-                                        : formatCompact(stats.totalPurchasesPaid)
+                                        ? formatCurrency(duesData?.totalWholesalerDue || 0)
+                                        : formatCurrency(stats.totalPurchasesPaid)
                                     }
                                 </span>
                             </div>
@@ -616,7 +609,7 @@ export default function RevenueReportPage() {
                                 </Badge>
                             </div>
                             <h3 className="text-lg md:text-3xl font-bold">
-                                <span className="md:hidden">{formatCompact(Math.abs(
+                                <span className="md:hidden">{formatCurrency(Math.abs(
                                     timeFilter === 'all'
                                         ? (
                                             stats.grossProfit +
@@ -679,7 +672,7 @@ export default function RevenueReportPage() {
                                 </Badge>
                             </div>
                             <h3 className="text-lg md:text-3xl font-bold">
-                                <span className="md:hidden">{formatCompact(Math.abs(stats.netCashFlow))}</span>
+                                <span className="md:hidden">{formatCurrency(Math.abs(stats.netCashFlow))}</span>
                                 <span className="hidden md:inline">{formatCurrency(Math.abs(stats.netCashFlow))}</span>
                             </h3>
                             <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Net Cash Flow</p>

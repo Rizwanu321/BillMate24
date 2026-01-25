@@ -31,12 +31,14 @@ export class WholesalerController {
             const duesFilter = req.query.duesFilter as 'all' | 'with_dues' | 'clear' | undefined;
             const sortBy = req.query.sortBy as 'name' | 'purchases' | 'outstanding' | 'createdAt' | undefined;
 
+            const includeDeleted = req.query.includeDeleted === 'true';
+
             const result = await wholesalerService.getAll(
                 req.user!._id,
                 page,
                 limit,
                 search,
-                false, // includeDeleted
+                includeDeleted,
                 status,
                 duesFilter,
                 sortBy

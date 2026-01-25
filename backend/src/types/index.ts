@@ -20,6 +20,7 @@ export interface IUser {
     phone?: string;
     businessName?: string;
     address?: string;
+    place?: string;
     features: Features;
     isActive: boolean;
     refreshToken?: string;
@@ -37,6 +38,7 @@ export interface IWholesaler {
     phone?: string;
     email?: string;
     address?: string;
+    place?: string;
     gstNumber?: string;
     totalPurchased: number;
     totalPaid: number;
@@ -56,6 +58,7 @@ export interface ICustomer {
     phone?: string;
     email?: string;
     address?: string;
+    place?: string;
     type: CustomerType;
     totalSales: number;
     totalPaid: number;

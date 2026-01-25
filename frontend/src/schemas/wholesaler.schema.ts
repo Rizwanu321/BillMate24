@@ -5,6 +5,7 @@ export const wholesalerSchema = z.object({
     phone: z.string().min(1, 'Phone number is required'),
     whatsappNumber: z.string().optional(),
     address: z.string().min(1, 'Address is required'),
+    place: z.string().optional(),
     initialPurchased: z.number().min(0, 'Amount must be positive').optional(),
 });
 

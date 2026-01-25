@@ -41,15 +41,7 @@ export function WholesalerStats({ stats, isLoading }: WholesalerStatsProps) {
 
     const activePercentage = stats.total > 0 ? ((stats.active / stats.total) * 100).toFixed(0) : 0;
 
-    // Format compact currency for mobile
-    const formatCompact = (amount: number): string => {
-        if (amount >= 100000) {
-            return `₹${(amount / 100000).toFixed(1)}L`;
-        } else if (amount >= 1000) {
-            return `₹${(amount / 1000).toFixed(1)}K`;
-        }
-        return formatCurrency(amount);
-    };
+
 
     return (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6 mb-4 md:mb-6">
@@ -127,9 +119,8 @@ export function WholesalerStats({ stats, isLoading }: WholesalerStatsProps) {
                             Due
                         </Badge>
                     </div>
-                    <h3 className="text-lg md:text-3xl font-bold">
-                        <span className="md:hidden">{formatCompact(stats.totalOutstanding)}</span>
-                        <span className="hidden md:inline">{formatCurrency(stats.totalOutstanding)}</span>
+                    <h3 className="text-xl md:text-3xl font-bold">
+                        {formatCurrency(stats.totalOutstanding)}
                     </h3>
                     <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">Outstanding</p>
                     <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">

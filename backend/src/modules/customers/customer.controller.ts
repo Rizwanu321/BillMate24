@@ -33,12 +33,15 @@ export class CustomerController {
             const duesFilter = req.query.duesFilter as string | undefined;
             const sortBy = req.query.sortBy as string | undefined;
 
+            const includeDeleted = req.query.includeDeleted === 'true' || status === 'deleted';
+
             const result = await customerService.getAll(
                 req.user!._id,
                 type,
                 page,
                 limit,
                 search,
+                includeDeleted,
                 status,
                 duesFilter,
                 sortBy
@@ -114,6 +117,19 @@ export class CustomerController {
             sendSuccess(res, stats, 'Customer stats retrieved successfully');
         } catch (error) {
             next(error);
+        }
+    }
+
+    async restore(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const customer = await customerService.restore(req.user!._id, req.params.id);
+            sendSuccess(res, customer, 'Customer restored successfully');
+        } catch (error: any) {
+            if (error.message.includes('not found')) {
+                sendError(res, error.message, 404);
+            } else {
+                next(error);
+            }
         }
     }
 }

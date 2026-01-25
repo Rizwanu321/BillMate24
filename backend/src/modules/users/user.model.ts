@@ -48,6 +48,10 @@ const userSchema = new Schema<IUser & Document>(
             type: String,
             trim: true,
         },
+        place: {
+            type: String,
+            trim: true,
+        },
         features: {
             type: featuresSchema,
             default: () => ({
