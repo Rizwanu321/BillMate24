@@ -445,41 +445,44 @@ export default function BillHistoryPage() {
                             {/* Filter Bar - Mobile optimized */}
                             <CardHeader className="border-b bg-gray-50/80 p-3 md:py-4 md:px-6">
                                 <div className="flex flex-col gap-3 md:gap-4">
-                                    {/* Title and Search Row */}
-                                    <div className="flex items-center justify-between gap-3">
-                                        <CardTitle className="text-base md:text-lg flex items-center gap-2">
-                                            <Receipt className="h-4 w-4 md:h-5 md:w-5 text-blue-500" />
-                                            <span className="hidden sm:inline">All Transactions</span>
-                                            <span className="sm:hidden">Bills</span>
-                                            {hasActiveFilters && (
-                                                <Badge variant="secondary" className="ml-1 bg-blue-100 text-blue-700 text-[10px] md:text-xs px-1.5 md:px-2">
-                                                    Filtered
-                                                </Badge>
-                                            )}
+                                    {/* Header and Search Row */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                        <CardTitle className="text-lg md:text-xl flex items-center gap-2.5">
+                                            <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
+                                                <Receipt className="h-5 w-5" />
+                                            </div>
+                                            <div>
+                                                <span className="font-bold tracking-tight">All Transactions</span>
+                                                {hasActiveFilters && (
+                                                    <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-700 text-[10px] md:text-xs">
+                                                        Filtered
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </CardTitle>
 
-                                        {/* Search - Compact on mobile */}
-                                        <div className="relative flex-1 max-w-[180px] md:max-w-[250px]">
-                                            <Search className="absolute left-2.5 md:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
+                                        {/* Search Bar */}
+                                        <div className="relative w-full sm:max-w-xs">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                             <Input
-                                                placeholder="Search..."
+                                                placeholder="Search by bill # or name..."
                                                 value={search}
                                                 onChange={(e) => setSearch(e.target.value)}
-                                                className="pl-8 md:pl-10 h-9 md:h-10 text-sm bg-white"
+                                                className="pl-10 h-10 md:h-11 bg-white border-gray-200 focus:border-blue-500 focus:ring-blue-500 transition-all rounded-xl"
                                             />
                                         </div>
                                     </div>
 
-                                    {/* Filter Row - Horizontal scroll on mobile */}
-                                    <div className="flex gap-2 overflow-x-auto pb-1 -mx-3 px-3 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible scrollbar-hide">
-                                        {/* Time Filter - Primary */}
-                                        <div className="flex items-center gap-2 flex-shrink-0">
+                                    {/* Filters Grid/Row */}
+                                    <div className="grid grid-cols-2 lg:flex lg:flex-wrap items-center gap-2 md:gap-3">
+                                        {/* Time Filter */}
+                                        <div className="col-span-1">
                                             <Popover open={isCustomDateOpen && timeFilter === 'custom'} onOpenChange={setIsCustomDateOpen}>
                                                 <PopoverTrigger asChild>
                                                     <div className="flex">
                                                         <Select value={timeFilter} onValueChange={handleTimeFilterChange}>
-                                                            <SelectTrigger className="w-[110px] md:w-40 h-8 md:h-10 text-xs md:text-sm bg-white border-blue-200 focus:ring-blue-500">
-                                                                <CalendarDays className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2 text-blue-500" />
+                                                            <SelectTrigger className="w-full lg:w-44 h-10 bg-white border-gray-200">
+                                                                <CalendarDays className="h-4 w-4 mr-2 text-blue-500" />
                                                                 <SelectValue />
                                                             </SelectTrigger>
                                                             <SelectContent>
@@ -666,20 +669,23 @@ export default function BillHistoryPage() {
                                             </Popover>
                                         </div>
 
-                                        {/* Show selected custom date range */}
+                                        {/* Show selected custom date range - Full width on mobile if present */}
                                         {timeFilter === 'custom' && customStartDate && customEndDate && (
-                                            <Badge variant="secondary" className="bg-blue-50 text-blue-700 px-2 py-0.5 text-xs flex-shrink-0 whitespace-nowrap">
-                                                {format(new Date(customStartDate), 'dd MMM')} - {format(new Date(customEndDate), 'dd MMM')}
-                                            </Badge>
+                                            <div className="col-span-2 lg:col-span-1 flex items-center">
+                                                <Badge variant="secondary" className="bg-blue-50 text-blue-700 px-3 py-1 text-xs whitespace-nowrap border-blue-100">
+                                                    <Calendar className="h-3 w-3 mr-1.5" />
+                                                    {format(new Date(customStartDate), 'dd MMM')} - {format(new Date(customEndDate), 'dd MMM')}
+                                                </Badge>
+                                            </div>
                                         )}
 
                                         <div className="h-6 w-px bg-gray-300 hidden md:block flex-shrink-0" />
 
                                         {/* Bill Type Filter */}
-                                        <div className="flex-shrink-0">
+                                        <div className="col-span-1">
                                             <Select value={billType} onValueChange={(v) => { setBillType(v); setPage(1); }}>
-                                                <SelectTrigger className="w-[90px] md:w-32 h-8 md:h-10 text-xs md:text-sm bg-white">
-                                                    <SelectValue placeholder="Type" />
+                                                <SelectTrigger className="w-full lg:w-36 h-10 bg-white border-gray-200">
+                                                    <SelectValue placeholder="All Types" />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="all">All Types</SelectItem>
@@ -700,7 +706,7 @@ export default function BillHistoryPage() {
                                         </div>
 
                                         {/* Status Filter */}
-                                        <div className="flex-shrink-0">
+                                        <div className="col-span-1">
                                             <Select
                                                 value={includeDeleted ? 'deleted' : showOnlyEdited ? 'edited' : 'active'}
                                                 onValueChange={(v) => {
@@ -709,8 +715,8 @@ export default function BillHistoryPage() {
                                                     setPage(1);
                                                 }}
                                             >
-                                                <SelectTrigger className="w-[100px] md:w-36 h-8 md:h-10 text-xs md:text-sm bg-white">
-                                                    <SelectValue placeholder="Status" />
+                                                <SelectTrigger className="w-full lg:w-40 h-10 bg-white border-gray-200">
+                                                    <SelectValue placeholder="Active" />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="active">
@@ -736,10 +742,10 @@ export default function BillHistoryPage() {
                                         </div>
 
                                         {/* Payment Method Filter */}
-                                        <div className="flex-shrink-0">
+                                        <div className="col-span-1">
                                             <Select value={paymentMethod} onValueChange={(v) => { setPaymentMethod(v); setPage(1); }}>
-                                                <SelectTrigger className="w-[90px] md:w-36 h-8 md:h-10 text-xs md:text-sm bg-white">
-                                                    <SelectValue placeholder="Pay" />
+                                                <SelectTrigger className="w-full lg:w-40 h-10 bg-white border-gray-200">
+                                                    <SelectValue placeholder="All Methods" />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="all">All Methods</SelectItem>
@@ -767,15 +773,17 @@ export default function BillHistoryPage() {
 
                                         {/* Clear Filters Button */}
                                         {hasActiveFilters && (
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={clearFilters}
-                                                className="text-gray-500 hover:text-gray-700 h-8 md:h-10 px-2 md:px-3 text-xs md:text-sm flex-shrink-0"
-                                            >
-                                                <X className="h-3.5 w-3.5 md:h-4 md:w-4 mr-0.5 md:mr-1" />
-                                                <span className="hidden md:inline">Clear</span>
-                                            </Button>
+                                            <div className="col-span-2 lg:col-span-1 pt-1 lg:pt-0">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={clearFilters}
+                                                    className="w-full lg:w-auto text-gray-500 hover:text-red-600 hover:bg-red-50 h-10 px-4 transition-colors font-medium border border-dashed border-gray-200 lg:border-none"
+                                                >
+                                                    <X className="h-4 w-4 mr-2" />
+                                                    Clear All Filters
+                                                </Button>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
