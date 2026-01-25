@@ -1246,15 +1246,15 @@ export default function RevenueReportPage() {
                                                         <div className="grid grid-cols-3 gap-2 text-center">
                                                             <div className="bg-green-50 rounded-lg p-1.5 border border-green-100">
                                                                 <p className="text-[10px] text-green-600 font-medium">Sales</p>
-                                                                <p className="font-bold text-green-700 text-sm">{formatCompact(day.sales)}</p>
+                                                                <p className="font-bold text-green-700 text-sm">{formatCurrency(day.sales)}</p>
                                                             </div>
                                                             <div className="bg-green-50/50 rounded-lg p-1.5 border border-green-100/50">
                                                                 <p className="text-[10px] text-green-600/80 font-medium">Collected</p>
-                                                                <p className="font-semibold text-green-700/80 text-sm">{formatCompact(day.salesCollected)}</p>
+                                                                <p className="font-semibold text-green-700/80 text-sm">{formatCurrency(day.salesCollected)}</p>
                                                             </div>
                                                             <div className={`rounded-lg p-1.5 border ${day.profit >= 0 ? 'bg-purple-50 border-purple-100' : 'bg-red-50 border-red-100'}`}>
                                                                 <p className={`text-[10px] font-medium ${day.profit >= 0 ? 'text-purple-600' : 'text-red-600'}`}>Profit</p>
-                                                                <p className={`font-bold text-sm ${day.profit >= 0 ? 'text-purple-700' : 'text-red-700'}`}>{formatCompact(day.profit)}</p>
+                                                                <p className={`font-bold text-sm ${day.profit >= 0 ? 'text-purple-700' : 'text-red-700'}`}>{formatCurrency(day.profit)}</p>
                                                             </div>
                                                         </div>
 
@@ -1262,15 +1262,15 @@ export default function RevenueReportPage() {
                                                         <div className="grid grid-cols-3 gap-2 text-center">
                                                             <div className="bg-orange-50 rounded-lg p-1.5 border border-orange-100">
                                                                 <p className="text-[10px] text-orange-600 font-medium">Purchases</p>
-                                                                <p className="font-bold text-orange-700 text-sm">{formatCompact(day.purchases)}</p>
+                                                                <p className="font-bold text-orange-700 text-sm">{formatCurrency(day.purchases)}</p>
                                                             </div>
                                                             <div className="bg-orange-50/50 rounded-lg p-1.5 border border-orange-100/50">
                                                                 <p className="text-[10px] text-orange-600/80 font-medium">Paid</p>
-                                                                <p className="font-semibold text-orange-700/80 text-sm">{formatCompact(day.purchasesPaid)}</p>
+                                                                <p className="font-semibold text-orange-700/80 text-sm">{formatCurrency(day.purchasesPaid)}</p>
                                                             </div>
                                                             <div className={`rounded-lg p-1.5 border ${day.cashFlow >= 0 ? 'bg-blue-50 border-blue-100' : 'bg-red-50 border-red-100'}`}>
                                                                 <p className={`text-[10px] font-medium ${day.cashFlow >= 0 ? 'text-blue-600' : 'text-red-600'}`}>Net Cash</p>
-                                                                <p className={`font-bold text-sm ${day.cashFlow >= 0 ? 'text-blue-700' : 'text-red-700'}`}>{formatCompact(day.cashFlow)}</p>
+                                                                <p className={`font-bold text-sm ${day.cashFlow >= 0 ? 'text-blue-700' : 'text-red-700'}`}>{formatCurrency(day.cashFlow)}</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1506,16 +1506,16 @@ export default function RevenueReportPage() {
                                                         <div className="grid grid-cols-3 gap-2 mb-2 bg-gray-50/50 p-1.5 rounded-lg border border-gray-100">
                                                             <div>
                                                                 <p className="text-[9px] text-gray-500">Total</p>
-                                                                <p className={`font-bold text-xs ${bill.billType === 'sale' ? 'text-green-700' : 'text-orange-700'}`}>{formatCompact(bill.totalAmount)}</p>
+                                                                <p className={`font-bold text-xs ${bill.billType === 'sale' ? 'text-green-700' : 'text-orange-700'}`}>{formatCurrency(bill.totalAmount)}</p>
                                                             </div>
                                                             <div>
                                                                 <p className="text-[9px] text-gray-500">Paid</p>
-                                                                <p className="font-semibold text-xs text-green-600">{formatCompact(bill.paidAmount)}</p>
+                                                                <p className="font-semibold text-xs text-green-600">{formatCurrency(bill.paidAmount)}</p>
                                                             </div>
                                                             <div>
                                                                 <p className="text-[9px] text-gray-500">Due</p>
                                                                 <p className={`font-semibold text-xs ${due > 0 ? 'text-red-500' : 'text-gray-400'}`}>
-                                                                    {due > 0 ? formatCompact(due) : '-'}
+                                                                    {due > 0 ? formatCurrency(due) : '-'}
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -1665,21 +1665,21 @@ export default function RevenueReportPage() {
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-600 text-xs md:text-sm">Received</span>
                                                     <span className="font-medium text-green-600">
-                                                        <span className="md:hidden">{formatCompact(stats.paymentBreakdown.cash.sales)}</span>
+                                                        <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.cash.sales)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.cash.sales)}</span>
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-600 text-xs md:text-sm">Paid</span>
                                                     <span className="font-medium text-orange-600">
-                                                        <span className="md:hidden">{formatCompact(stats.paymentBreakdown.cash.purchases)}</span>
+                                                        <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.cash.purchases)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.cash.purchases)}</span>
                                                     </span>
                                                 </div>
                                                 <div className="border-t pt-1.5 md:pt-2 flex justify-between">
                                                     <span className="font-medium text-xs md:text-sm">Net</span>
                                                     <span className={`font-bold ${stats.paymentBreakdown.cash.sales - stats.paymentBreakdown.cash.purchases >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                        <span className="md:hidden">{formatCompact(stats.paymentBreakdown.cash.sales - stats.paymentBreakdown.cash.purchases)}</span>
+                                                        <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.cash.sales - stats.paymentBreakdown.cash.purchases)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.cash.sales - stats.paymentBreakdown.cash.purchases)}</span>
                                                     </span>
                                                 </div>
@@ -1700,21 +1700,21 @@ export default function RevenueReportPage() {
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-600 text-xs md:text-sm">Received</span>
                                                     <span className="font-medium text-green-600">
-                                                        <span className="md:hidden">{formatCompact(stats.paymentBreakdown.card.sales)}</span>
+                                                        <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.card.sales)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.card.sales)}</span>
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-600 text-xs md:text-sm">Paid</span>
                                                     <span className="font-medium text-orange-600">
-                                                        <span className="md:hidden">{formatCompact(stats.paymentBreakdown.card.purchases)}</span>
+                                                        <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.card.purchases)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.card.purchases)}</span>
                                                     </span>
                                                 </div>
                                                 <div className="border-t pt-1.5 md:pt-2 flex justify-between">
                                                     <span className="font-medium text-xs md:text-sm">Net</span>
                                                     <span className={`font-bold ${stats.paymentBreakdown.card.sales - stats.paymentBreakdown.card.purchases >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                        <span className="md:hidden">{formatCompact(stats.paymentBreakdown.card.sales - stats.paymentBreakdown.card.purchases)}</span>
+                                                        <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.card.sales - stats.paymentBreakdown.card.purchases)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.card.sales - stats.paymentBreakdown.card.purchases)}</span>
                                                     </span>
                                                 </div>
@@ -1735,21 +1735,21 @@ export default function RevenueReportPage() {
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-600 text-xs md:text-sm">Received</span>
                                                     <span className="font-medium text-green-600">
-                                                        <span className="md:hidden">{formatCompact(stats.paymentBreakdown.online.sales)}</span>
+                                                        <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.online.sales)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.online.sales)}</span>
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-600 text-xs md:text-sm">Paid</span>
                                                     <span className="font-medium text-orange-600">
-                                                        <span className="md:hidden">{formatCompact(stats.paymentBreakdown.online.purchases)}</span>
+                                                        <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.online.purchases)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.online.purchases)}</span>
                                                     </span>
                                                 </div>
                                                 <div className="border-t pt-1.5 md:pt-2 flex justify-between">
                                                     <span className="font-medium text-xs md:text-sm">Net</span>
                                                     <span className={`font-bold ${stats.paymentBreakdown.online.sales - stats.paymentBreakdown.online.purchases >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                        <span className="md:hidden">{formatCompact(stats.paymentBreakdown.online.sales - stats.paymentBreakdown.online.purchases)}</span>
+                                                        <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.online.sales - stats.paymentBreakdown.online.purchases)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.online.sales - stats.paymentBreakdown.online.purchases)}</span>
                                                     </span>
                                                 </div>

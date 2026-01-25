@@ -349,8 +349,7 @@ export default function NormalCustomersPage() {
                                 <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">Revenue</Badge>
                             </div>
                             <h3 className="text-lg md:text-2xl font-bold">
-                                <span className="md:hidden">{formatCompact(totalRevenue)}</span>
-                                <span className="hidden md:inline">{formatCurrency(totalRevenue)}</span>
+                                {formatCurrency(totalRevenue)}
                             </h3>
                             <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Total Revenue</p>
                         </CardContent>
@@ -380,8 +379,7 @@ export default function NormalCustomersPage() {
                                 <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">Today</Badge>
                             </div>
                             <h3 className="text-lg md:text-2xl font-bold">
-                                <span className="md:hidden">{formatCompact(todayRevenue)}</span>
-                                <span className="hidden md:inline">{formatCurrency(todayRevenue)}</span>
+                                {formatCurrency(todayRevenue)}
                             </h3>
                             <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Today's Revenue</p>
                         </CardContent>
@@ -585,7 +583,7 @@ export default function NormalCustomersPage() {
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="font-bold text-green-600 text-base">{formatCompact(bill.totalAmount)}</p>
+                                                        <p className="font-bold text-green-600 text-base">{formatCurrency(bill.totalAmount)}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex justify-between items-center">

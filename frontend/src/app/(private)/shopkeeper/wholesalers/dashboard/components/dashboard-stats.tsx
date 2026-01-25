@@ -31,10 +31,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompactCurrency(amount: number): string {
-    // User requested to see full amounts without K/L suffixes
-    return formatCurrency(amount);
-}
+
 
 export function WholesalerDashboardStats({
     totalWholesalers,
@@ -77,7 +74,7 @@ export function WholesalerDashboardStats({
                             {billCount} bills
                         </Badge>
                     </div>
-                    <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(displayPurchases)}</h3>
+                    <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(displayPurchases)}</h3>
                     <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">
                         Total Purchases{isAllTime ? '' : ''}
                     </p>
@@ -86,7 +83,7 @@ export function WholesalerDashboardStats({
                             {isAllTime ? 'All Time' : 'Previous'}
                         </span>
                         <span className="font-semibold">
-                            {isAllTime ? '(incl. opening)' : formatCompactCurrency(lastMonthPurchases)}
+                            {isAllTime ? '(incl. opening)' : formatCurrency(lastMonthPurchases)}
                         </span>
                     </div>
                 </CardContent>
@@ -104,7 +101,7 @@ export function WholesalerDashboardStats({
                             {paymentPercentage}%
                         </Badge>
                     </div>
-                    <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(totalPaid)}</h3>
+                    <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(totalPaid)}</h3>
                     <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">
                         Amount Paid{isAllTime ? ' (bills)' : ''}
                     </p>
@@ -127,7 +124,7 @@ export function WholesalerDashboardStats({
                             Due
                         </Badge>
                     </div>
-                    <h3 className="text-lg md:text-3xl font-bold">{formatCompactCurrency(Math.max(0, displayOutstanding))}</h3>
+                    <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(Math.max(0, displayOutstanding))}</h3>
                     <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">
                         Outstanding{isAllTime ? ' (All Time)' : ''}
                     </p>

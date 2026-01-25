@@ -797,7 +797,7 @@ export default function DueCustomersPage() {
                                                     </div>
                                                     {sale.dueAmount > 0 && (
                                                         <div className="text-right">
-                                                            <span className="text-red-600 text-xs font-bold">Due: {formatCompact(sale.dueAmount)}</span>
+                                                            <span className="text-red-600 text-xs font-bold">Due: {formatCurrency(sale.dueAmount)}</span>
                                                         </div>
                                                     )}
                                                 </div>

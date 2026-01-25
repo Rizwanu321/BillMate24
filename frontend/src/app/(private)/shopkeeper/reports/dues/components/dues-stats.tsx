@@ -30,10 +30,7 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
-function formatCompactCurrency(amount: number): string {
-    // User requested to see full amounts without K/L suffixes
-    return formatCurrency(amount);
-}
+
 
 export function DuesStats({
     totalOutstanding,
@@ -61,7 +58,7 @@ export function DuesStats({
                                 To Collect
                             </Badge>
                         </div>
-                        <h3 className="text-xl md:text-3xl font-bold">{formatCompactCurrency(customerDues)}</h3>
+                        <h3 className="text-xl md:text-3xl font-bold">{formatCurrency(customerDues)}</h3>
                         <p className="text-white/80 text-[10px] md:text-sm mt-1">From Customers</p>
                         <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 flex items-center justify-between">
                             <span className="text-[10px] md:text-xs text-white/70">
@@ -84,7 +81,7 @@ export function DuesStats({
                                 To Pay
                             </Badge>
                         </div>
-                        <h3 className="text-xl md:text-3xl font-bold">{formatCompactCurrency(wholesalerDues)}</h3>
+                        <h3 className="text-xl md:text-3xl font-bold">{formatCurrency(wholesalerDues)}</h3>
                         <p className="text-white/80 text-[10px] md:text-sm mt-1">To Wholesalers</p>
                         <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 flex items-center justify-between">
                             <span className="text-[10px] md:text-xs text-white/70">
@@ -114,7 +111,7 @@ export function DuesStats({
                                 {isNetPositive ? 'Net +ve' : 'Net -ve'}
                             </Badge>
                         </div>
-                        <h3 className="text-xl md:text-3xl font-bold">{formatCompactCurrency(Math.abs(netPosition))}</h3>
+                        <h3 className="text-xl md:text-3xl font-bold">{formatCurrency(Math.abs(netPosition))}</h3>
                         <p className="text-white/80 text-[10px] md:text-sm mt-1">
                             {isNetPositive ? 'Receivable' : 'Payable'}
                         </p>
@@ -175,11 +172,11 @@ export function DuesStats({
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs md:text-sm w-full md:w-auto">
                             <div className="flex items-center gap-1.5">
                                 <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
-                                <span className="text-gray-300">Receivables: {formatCompactCurrency(customerDues)}</span>
+                                <span className="text-gray-300">Receivables: {formatCurrency(customerDues)}</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <div className="w-2.5 h-2.5 rounded-full bg-orange-400"></div>
-                                <span className="text-gray-300">Payables: {formatCompactCurrency(wholesalerDues)}</span>
+                                <span className="text-gray-300">Payables: {formatCurrency(wholesalerDues)}</span>
                             </div>
                             {overdueCount > 0 && (
                                 <div className="flex items-center gap-1.5">

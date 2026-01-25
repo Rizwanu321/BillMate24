@@ -49,7 +49,7 @@ function formatCurrency(amount: number): string {
 export default function CustomersPage() {
     const queryClient = useQueryClient();
     const { hasFeature } = useAuth();
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
+
     const [search, setSearch] = useState('');
     const [customerType, setCustomerType] = useState<'due' | 'normal'>('due');
     const [page, setPage] = useState(1);
@@ -118,16 +118,7 @@ export default function CustomersPage() {
         }
     };
 
-    const handleCreate = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        createMutation.mutate({
-            name: formData.get('name'),
-            phone: formData.get('phone'),
-            whatsappNumber: formData.get('whatsappNumber'),
-            address: formData.get('address'),
-        });
-    };
+
 
     const filteredCustomers = data?.data?.filter((c) =>
         c.name.toLowerCase().includes(search.toLowerCase()) ||
