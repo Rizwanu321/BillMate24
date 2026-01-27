@@ -6,6 +6,9 @@ import routes from './routes';
 
 const app = express();
 
+// Trust proxy - Required for rate limiting behind reverse proxies (Render, Heroku, etc.)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors({
     origin: env.FRONTEND_URL,

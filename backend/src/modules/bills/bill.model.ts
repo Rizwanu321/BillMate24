@@ -130,7 +130,6 @@ billSchema.index({ shopkeeperId: 1, createdAt: -1 });
 billSchema.index({ shopkeeperId: 1, billType: 1 });
 billSchema.index({ shopkeeperId: 1, entityType: 1 });
 billSchema.index({ shopkeeperId: 1, entityId: 1 });
-billSchema.index({ billNumber: 1 });
 billSchema.index({ shopkeeperId: 1, isDeleted: 1 });
 
 export const Bill = mongoose.model<BillDocument>('Bill', billSchema);
