@@ -28,11 +28,11 @@ export function LanguageSwitcher() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="flex items-center gap-2 px-2 h-10 hover:bg-gray-100 rounded-lg">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2 px-2 h-10 max-h-10 hover:bg-gray-100 rounded-lg">
                     <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600">
                         <Languages className="h-4 w-4" />
                     </div>
-                    <span className="hidden md:inline font-medium text-sm text-gray-700">
+                    <span className="hidden md:inline font-medium text-sm text-gray-700 leading-none">
                         {currentLanguage.nativeName}
                     </span>
                 </Button>

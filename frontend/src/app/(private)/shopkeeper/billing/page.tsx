@@ -308,23 +308,23 @@ export default function BillingPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setCustomerType('due_customer')}
-                                                className={`flex-1 p-3 md:p-4 rounded-xl border-3 text-left transition-all ${customerType === 'due_customer'
+                                                className={`flex-1 min-w-[45%] md:min-w-0 p-3 md:p-4 rounded-xl border-3 text-left transition-all ${customerType === 'due_customer'
                                                     ? 'border-blue-500 bg-blue-50 shadow-lg shadow-blue-500/20 ring-2 ring-blue-500/20'
                                                     : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                                                     }`}
                                             >
-                                                <div className="flex items-center gap-2 md:gap-3">
-                                                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center ${customerType === 'due_customer'
+                                                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 md:gap-3 text-center sm:text-left h-full">
+                                                    <div className={`w-10 h-10 md:w-12 md:h-12 flex-shrink-0 rounded-xl flex items-center justify-center ${customerType === 'due_customer'
                                                         ? 'bg-blue-500 text-white shadow-lg'
                                                         : 'bg-slate-100 text-slate-400'
                                                         }`}>
                                                         <Users className="h-5 w-5 md:h-6 md:w-6" />
                                                     </div>
-                                                    <div>
-                                                        <p className={`font-bold text-sm md:text-base ${customerType === 'due_customer' ? 'text-blue-700' : 'text-slate-700'}`}>
+                                                    <div className="flex flex-col justify-center h-full">
+                                                        <p className={`font-bold text-sm md:text-base leading-tight break-words whitespace-normal ${customerType === 'due_customer' ? 'text-blue-700' : 'text-slate-700'}`}>
                                                             {t('billing.due_customer')}
                                                         </p>
-                                                        <p className={`text-[10px] md:text-xs ${customerType === 'due_customer' ? 'text-blue-600' : 'text-slate-500'}`}>
+                                                        <p className={`text-[10px] md:text-xs mt-1 leading-tight break-words whitespace-normal ${customerType === 'due_customer' ? 'text-blue-600' : 'text-slate-500'}`}>
                                                             {t('billing.credit_sale')}
                                                         </p>
                                                     </div>
@@ -335,23 +335,23 @@ export default function BillingPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setCustomerType('normal_customer')}
-                                                className={`flex-1 p-3 md:p-4 rounded-xl border-3 text-left transition-all ${customerType === 'normal_customer'
+                                                className={`flex-1 min-w-[45%] md:min-w-0 p-3 md:p-4 rounded-xl border-3 text-left transition-all ${customerType === 'normal_customer'
                                                     ? 'border-green-500 bg-green-50 shadow-lg shadow-green-500/20 ring-2 ring-green-500/20'
                                                     : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                                                     }`}
                                             >
-                                                <div className="flex items-center gap-2 md:gap-3">
-                                                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center ${customerType === 'normal_customer'
+                                                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 md:gap-3 text-center sm:text-left h-full">
+                                                    <div className={`w-10 h-10 md:w-12 md:h-12 flex-shrink-0 rounded-xl flex items-center justify-center ${customerType === 'normal_customer'
                                                         ? 'bg-green-500 text-white shadow-lg'
                                                         : 'bg-slate-100 text-slate-400'
                                                         }`}>
                                                         <IndianRupee className="h-5 w-5 md:h-6 md:w-6" />
                                                     </div>
-                                                    <div>
-                                                        <p className={`font-bold text-sm md:text-base ${customerType === 'normal_customer' ? 'text-green-700' : 'text-slate-700'}`}>
+                                                    <div className="flex flex-col justify-center h-full">
+                                                        <p className={`font-bold text-sm md:text-base leading-tight break-words whitespace-normal ${customerType === 'normal_customer' ? 'text-green-700' : 'text-slate-700'}`}>
                                                             {t('billing.normal_customer')}
                                                         </p>
-                                                        <p className={`text-[10px] md:text-xs ${customerType === 'normal_customer' ? 'text-green-600' : 'text-slate-500'}`}>
+                                                        <p className={`text-[10px] md:text-xs mt-1 leading-tight break-words whitespace-normal ${customerType === 'normal_customer' ? 'text-green-600' : 'text-slate-500'}`}>
                                                             {t('billing.cash_sale')}
                                                         </p>
                                                     </div>

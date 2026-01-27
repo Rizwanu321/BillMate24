@@ -309,7 +309,7 @@ export default function ShopkeeperDashboard() {
 
                         {/* Secondary Stats Row - Scrollable on mobile */}
                         <div className="flex md:grid md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-8 overflow-x-auto pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow flex-shrink-0 w-36 md:w-auto">
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow flex-shrink-0 w-auto min-w-[11rem] md:w-auto">
                                 <CardContent className="p-3 md:p-4 flex items-center gap-3 md:gap-4">
                                     <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-green-100">
                                         <Wallet className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
@@ -321,7 +321,7 @@ export default function ShopkeeperDashboard() {
                                 </CardContent>
                             </Card>
 
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow flex-shrink-0 w-36 md:w-auto">
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow flex-shrink-0 w-auto min-w-[11rem] md:w-auto">
                                 <CardContent className="p-3 md:p-4 flex items-center gap-3 md:gap-4">
                                     <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-purple-100">
                                         <Users className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
@@ -333,7 +333,7 @@ export default function ShopkeeperDashboard() {
                                 </CardContent>
                             </Card>
 
-                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow flex-shrink-0 w-36 md:w-auto">
+                            <Card className="border-0 shadow-md hover:shadow-lg transition-shadow flex-shrink-0 w-auto min-w-[11rem] md:w-auto">
                                 <CardContent className="p-3 md:p-4 flex items-center gap-3 md:gap-4">
                                     <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-blue-100">
                                         <Package className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />

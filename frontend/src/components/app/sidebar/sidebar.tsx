@@ -68,9 +68,10 @@ export function Sidebar() {
             <div
                 className={cn(
                     'fixed top-0 left-0 h-screen bg-slate-900 border-r border-white/5 transition-all duration-300 z-[200] overflow-hidden',
+                    'w-72', // Fixed width for mobile - wider to fit translated content
                     isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
                     'lg:translate-x-0',
-                    isCollapsed ? 'lg:w-20' : 'lg:w-64'
+                    isCollapsed ? 'lg:w-20' : 'lg:w-64' // Desktop stays w-64
                 )}
             >
                 <div className="h-full flex flex-col">
