@@ -96,10 +96,11 @@ export default function ShopkeeperDashboard() {
             const response = await api.get('/dashboard');
             return response.data.data;
         },
+        staleTime: 30000, // Consider data fresh for 30 seconds
+        gcTime: 300000, // Keep in cache for 5 minutes
         refetchInterval: 60000, // Refresh every minute
-        refetchOnMount: 'always', // Always fetch fresh data when component mounts
+        refetchOnMount: false, // Use cached data if available and not stale
         refetchOnWindowFocus: true, // Refetch when window regains focus
-        staleTime: 0, // Data is always considered stale, will refetch on mount
     });
 
     const todaySalesChange = dashboard ? getPercentageChange(dashboard.todaySales, dashboard.yesterdaySales) : null;
