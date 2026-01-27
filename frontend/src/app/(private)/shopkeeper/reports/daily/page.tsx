@@ -1253,15 +1253,15 @@ export default function RevenueReportPage() {
                                                         {/* Row 1: Sales & Profit */}
                                                         <div className="grid grid-cols-3 gap-2 text-center">
                                                             <div className="bg-green-50 rounded-lg p-1.5 border border-green-100">
-                                                                <p className="text-[10px] text-green-600 font-medium">Sales</p>
+                                                                <p className="text-[10px] text-green-600 font-medium">{t('reports.sales')}</p>
                                                                 <p className="font-bold text-green-700 text-sm">{formatCurrency(day.sales)}</p>
                                                             </div>
                                                             <div className="bg-green-50/50 rounded-lg p-1.5 border border-green-100/50">
-                                                                <p className="text-[10px] text-green-600/80 font-medium">Collected</p>
+                                                                <p className="text-[10px] text-green-600/80 font-medium">{t('reports.collected')}</p>
                                                                 <p className="font-semibold text-green-700/80 text-sm">{formatCurrency(day.salesCollected)}</p>
                                                             </div>
                                                             <div className={`rounded-lg p-1.5 border ${day.profit >= 0 ? 'bg-purple-50 border-purple-100' : 'bg-red-50 border-red-100'}`}>
-                                                                <p className={`text-[10px] font-medium ${day.profit >= 0 ? 'text-purple-600' : 'text-red-600'}`}>Profit</p>
+                                                                <p className={`text-[10px] font-medium ${day.profit >= 0 ? 'text-purple-600' : 'text-red-600'}`}>{t('reports.profit')}</p>
                                                                 <p className={`font-bold text-sm ${day.profit >= 0 ? 'text-purple-700' : 'text-red-700'}`}>{formatCurrency(day.profit)}</p>
                                                             </div>
                                                         </div>
@@ -1269,15 +1269,15 @@ export default function RevenueReportPage() {
                                                         {/* Row 2: Purchases & Cash Flow */}
                                                         <div className="grid grid-cols-3 gap-2 text-center">
                                                             <div className="bg-orange-50 rounded-lg p-1.5 border border-orange-100">
-                                                                <p className="text-[10px] text-orange-600 font-medium">Purchases</p>
+                                                                <p className="text-[10px] text-orange-600 font-medium">{t('reports.purchases')}</p>
                                                                 <p className="font-bold text-orange-700 text-sm">{formatCurrency(day.purchases)}</p>
                                                             </div>
                                                             <div className="bg-orange-50/50 rounded-lg p-1.5 border border-orange-100/50">
-                                                                <p className="text-[10px] text-orange-600/80 font-medium">Paid</p>
+                                                                <p className="text-[10px] text-orange-600/80 font-medium">{t('reports.paid')}</p>
                                                                 <p className="font-semibold text-orange-700/80 text-sm">{formatCurrency(day.purchasesPaid)}</p>
                                                             </div>
                                                             <div className={`rounded-lg p-1.5 border ${day.cashFlow >= 0 ? 'bg-blue-50 border-blue-100' : 'bg-red-50 border-red-100'}`}>
-                                                                <p className={`text-[10px] font-medium ${day.cashFlow >= 0 ? 'text-blue-600' : 'text-red-600'}`}>Net Cash</p>
+                                                                <p className={`text-[10px] font-medium ${day.cashFlow >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{t('reports.net_cash')}</p>
                                                                 <p className={`font-bold text-sm ${day.cashFlow >= 0 ? 'text-blue-700' : 'text-red-700'}`}>{formatCurrency(day.cashFlow)}</p>
                                                             </div>
                                                         </div>

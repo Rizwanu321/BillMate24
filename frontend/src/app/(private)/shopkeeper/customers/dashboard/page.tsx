@@ -244,7 +244,7 @@ export default function CustomerDashboardPage() {
 
             <div className="p-3 md:p-6">
                 {/* Header with Filter - Mobile-first responsive */}
-                <div className="mb-4 md:mb-8 flex flex-row items-center justify-between gap-3">
+                <div className="mb-4 md:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-3">
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 bg-clip-text text-transparent">
@@ -259,23 +259,25 @@ export default function CustomerDashboardPage() {
                             <span className="md:hidden">{format(new Date(), 'EEE, MMM d')}</span>
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                         <TimeFilter
                             value={timeFilter}
                             onChange={handleTimeFilterChange}
                         />
-                        <Link href="/shopkeeper/customers/due">
-                            <Button variant="outline" size="sm" className="shadow-sm px-2 sm:px-4">
-                                <CreditCard className="h-4 w-4 sm:mr-2" />
-                                <span className="hidden sm:inline">{t('customer_dashboard.due_customers')}</span>
-                            </Button>
-                        </Link>
-                        <Link href="/shopkeeper/customers/normal">
-                            <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25 px-2 sm:px-4">
-                                <Users className="h-4 w-4 sm:mr-2" />
-                                <span className="hidden sm:inline">{t('customer_dashboard.normal_customers')}</span>
-                            </Button>
-                        </Link>
+                        <div className="flex flex-wrap items-center gap-2 ml-auto sm:ml-0">
+                            <Link href="/shopkeeper/customers/due">
+                                <Button variant="outline" size="sm" className="shadow-sm px-3 md:px-4 h-auto py-2 whitespace-normal leading-tight">
+                                    <CreditCard className="h-4 w-4 mr-2 shrink-0" />
+                                    <span>{t('customer_dashboard.due_customers')}</span>
+                                </Button>
+                            </Link>
+                            <Link href="/shopkeeper/customers/normal">
+                                <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25 px-3 md:px-4 h-auto py-2 whitespace-normal leading-tight">
+                                    <Users className="h-4 w-4 mr-2 shrink-0" />
+                                    <span>{t('customer_dashboard.normal_customers')}</span>
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
                 </div>
 
