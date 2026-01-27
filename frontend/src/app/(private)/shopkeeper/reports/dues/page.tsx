@@ -46,6 +46,7 @@ import api from '@/config/axios';
 import { DuesStats } from './components';
 import { format, differenceInDays } from 'date-fns';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 interface Customer {
     _id: string;
@@ -79,6 +80,7 @@ type SortField = 'name' | 'outstandingDue' | 'lastTransactionDate';
 type SortOrder = 'asc' | 'desc';
 
 export default function DuesReportPage() {
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<'customers' | 'wholesalers'>('customers');
 
     // Customer filter state
@@ -269,22 +271,22 @@ export default function DuesReportPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-purple-50">
-            <Header title="Outstanding Dues" />
+            <Header title={t('reports.outstanding_dues_title')} />
 
             <div className="p-3 md:p-6">
                 {/* Page Header */}
                 <div className="mb-4 md:mb-6 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
                     <div>
                         <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-gray-900 bg-clip-text text-transparent">
-                            Outstanding Dues
+                            {t('reports.outstanding_dues_title')}
                         </h2>
-                        <p className="text-gray-600 mt-0.5 md:mt-1 text-xs md:text-base">Track payments and collections</p>
+                        <p className="text-gray-600 mt-0.5 md:mt-1 text-xs md:text-base">{t('reports.track_dues_desc')}</p>
                     </div>
                     <div className="flex gap-3">
                         <Link href="/shopkeeper/wholesalers/payments" className="w-full md:w-auto">
                             <Button className="w-full md:w-auto bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 shadow-lg shadow-orange-500/25 h-9 md:h-10 text-sm">
                                 <CreditCard className="h-4 w-4 mr-2" />
-                                Make Payment
+                                {t('reports.make_payment')}
                             </Button>
                         </Link>
                     </div>
@@ -309,7 +311,7 @@ export default function DuesReportPage() {
                                 className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-6 py-2 md:py-2.5 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white text-xs md:text-sm"
                             >
                                 <Users className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                <span className="whitespace-nowrap">Customer Dues</span>
+                                <span className="whitespace-nowrap">{t('reports.customer_dues')}</span>
                                 <Badge variant="secondary" className="ml-1 bg-white/20 text-[10px] md:text-xs">
                                     {customers.length}
                                 </Badge>
@@ -319,7 +321,7 @@ export default function DuesReportPage() {
                                 className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-6 py-2 md:py-2.5 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-amber-600 data-[state=active]:text-white text-xs md:text-sm"
                             >
                                 <Package className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                <span className="whitespace-nowrap">Wholesaler Dues</span>
+                                <span className="whitespace-nowrap">{t('reports.wholesaler_dues')}</span>
                                 <Badge variant="secondary" className="ml-1 bg-white/20 text-[10px] md:text-xs">
                                     {wholesalers.length}
                                 </Badge>
@@ -338,9 +340,9 @@ export default function DuesReportPage() {
                                                 <Users className="h-4 w-4 md:h-5 md:w-5" />
                                             </div>
                                             <div>
-                                                <CardTitle className="text-base md:text-lg">Amount to Collect</CardTitle>
+                                                <CardTitle className="text-base md:text-lg">{t('reports.amount_to_collect')}</CardTitle>
                                                 <p className="text-xs md:text-sm text-gray-500 mt-0.5">
-                                                    {filteredCustomers.length} customers
+                                                    {t('reports.customers_count', { count: filteredCustomers.length })}
                                                 </p>
                                             </div>
                                         </div>
@@ -351,7 +353,7 @@ export default function DuesReportPage() {
                                         <div className="relative flex-1">
                                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
                                             <Input
-                                                placeholder="Search customers..."
+                                                placeholder={t('reports.search_customers')}
                                                 value={custSearch}
                                                 onChange={(e) => {
                                                     setCustSearch(e.target.value);
@@ -371,19 +373,19 @@ export default function DuesReportPage() {
                                             >
                                                 <SelectTrigger className="w-1/2 md:w-[150px] bg-white h-9 md:h-10 text-sm">
                                                     <Filter className="h-3.5 w-3.5 mr-2 text-gray-400" />
-                                                    <SelectValue placeholder="Status" />
+                                                    <SelectValue placeholder={t('reports.status')} />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="all">All</SelectItem>
-                                                    <SelectItem value="overdue">Overdue</SelectItem>
-                                                    <SelectItem value="on_track">On Track</SelectItem>
+                                                    <SelectItem value="all">{t('reports.all')}</SelectItem>
+                                                    <SelectItem value="overdue">{t('reports.overdue')}</SelectItem>
+                                                    <SelectItem value="on_track">{t('reports.on_track')}</SelectItem>
                                                 </SelectContent>
                                             </Select>
 
                                             {hasCustFilters && (
                                                 <Button variant="ghost" size="sm" onClick={clearCustFilters} className="text-gray-500 h-9 md:h-10 px-2 md:px-4">
                                                     <RotateCcw className="h-3.5 w-3.5 md:mr-1" />
-                                                    <span className="hidden md:inline">Reset</span>
+                                                    <span className="hidden md:inline">{t('reports.reset')}</span>
                                                 </Button>
                                             )}
                                         </div>
@@ -395,7 +397,7 @@ export default function DuesReportPage() {
                                     <div className="mt-3 flex flex-wrap gap-2">
                                         {custSearch && (
                                             <Badge variant="secondary" className="flex items-center gap-1 bg-white text-[10px] md:text-xs">
-                                                Search: "{custSearch}"
+                                                {t('reports.search_label')}: "{custSearch}"
                                                 <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => { setCustSearch(''); setCustPage(1); }} />
                                             </Badge>
                                         )}
@@ -404,7 +406,7 @@ export default function DuesReportPage() {
                                                 className={`flex items-center gap-1 text-[10px] md:text-xs ${custStatusFilter === 'overdue' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
                                                     }`}
                                             >
-                                                {custStatusFilter === 'overdue' ? 'Overdue' : 'On Track'}
+                                                {custStatusFilter === 'overdue' ? t('reports.overdue') : t('reports.on_track')}
                                                 <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => { setCustStatusFilter('all'); setCustPage(1); }} />
                                             </Badge>
                                         )}
@@ -415,7 +417,7 @@ export default function DuesReportPage() {
                                 {customersLoading ? (
                                     <div className="p-8 md:p-12 text-center">
                                         <div className="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-4 border-green-500 border-t-transparent mx-auto" />
-                                        <p className="text-gray-500 mt-4 text-sm md:text-base">Loading customers...</p>
+                                        <p className="text-gray-500 mt-4 text-sm md:text-base">{t('reports.loading_customers')}</p>
                                     </div>
                                 ) : paginatedCustomers.length > 0 ? (
                                     <>
@@ -429,17 +431,17 @@ export default function DuesReportPage() {
                                                             onClick={() => toggleCustSort('name')}
                                                         >
                                                             <span className="flex items-center gap-2">
-                                                                Customer Name
+                                                                {t('reports.customer_name')}
                                                                 {renderSortIcon('name', custSortField, custSortOrder)}
                                                             </span>
                                                         </TableHead>
-                                                        <TableHead>Contact</TableHead>
+                                                        <TableHead>{t('reports.contact')}</TableHead>
                                                         <TableHead
                                                             className="cursor-pointer hover:text-purple-600 transition-colors"
                                                             onClick={() => toggleCustSort('outstandingDue')}
                                                         >
                                                             <span className="flex items-center gap-2">
-                                                                Outstanding Due
+                                                                {t('reports.outstanding_due')}
                                                                 {renderSortIcon('outstandingDue', custSortField, custSortOrder)}
                                                             </span>
                                                         </TableHead>
@@ -448,12 +450,12 @@ export default function DuesReportPage() {
                                                             onClick={() => toggleCustSort('lastTransactionDate')}
                                                         >
                                                             <span className="flex items-center gap-2">
-                                                                Last Activity
+                                                                {t('reports.last_activity')}
                                                                 {renderSortIcon('lastTransactionDate', custSortField, custSortOrder)}
                                                             </span>
                                                         </TableHead>
-                                                        <TableHead>Status</TableHead>
-                                                        <TableHead className="text-right">Action</TableHead>
+                                                        <TableHead>{t('reports.status')}</TableHead>
+                                                        <TableHead className="text-right">{t('reports.action')}</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
@@ -491,29 +493,29 @@ export default function DuesReportPage() {
                                                                         <div className="flex items-center gap-1 text-gray-600 text-sm">
                                                                             <Calendar className="h-3 w-3" />
                                                                             {format(new Date(customer.lastTransactionDate), 'dd MMM yyyy')}
-                                                                            <span className="text-gray-400">({daysSince}d ago)</span>
+                                                                            <span className="text-gray-400">({t('reports.days_ago', { days: daysSince })})</span>
                                                                         </div>
                                                                     ) : (
-                                                                        <span className="text-gray-400">No activity</span>
+                                                                        <span className="text-gray-400">{t('reports.no_activity')}</span>
                                                                     )}
                                                                 </TableCell>
                                                                 <TableCell>
                                                                     {overdue ? (
                                                                         <Badge className="bg-red-100 text-red-700 border-red-200">
                                                                             <AlertTriangle className="h-3 w-3 mr-1" />
-                                                                            Overdue
+                                                                            {t('reports.overdue')}
                                                                         </Badge>
                                                                     ) : (
                                                                         <Badge className="bg-green-100 text-green-700 border-green-200">
                                                                             <CheckCircle2 className="h-3 w-3 mr-1" />
-                                                                            On Track
+                                                                            {t('reports.on_track')}
                                                                         </Badge>
                                                                     )}
                                                                 </TableCell>
                                                                 <TableCell className="text-right">
                                                                     <Link href={`/shopkeeper/customers/due/${customer._id}`}>
                                                                         <Button size="sm" className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700">
-                                                                            View
+                                                                            {t('reports.view')}
                                                                             <ExternalLink className="h-3 w-3 ml-1" />
                                                                         </Button>
                                                                     </Link>
@@ -550,24 +552,24 @@ export default function DuesReportPage() {
                                                             </div>
                                                             <div className="text-right">
                                                                 <span className="block font-bold text-red-600 text-base">{formatCurrency(customer.outstandingDue)}</span>
-                                                                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Due Amount</span>
+                                                                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">{t('reports.outstanding_due')}</span>
                                                             </div>
                                                         </div>
 
                                                         <div className="flex items-center justify-between mt-3 pl-13">
                                                             <div className="flex items-center gap-2">
                                                                 <Badge className={`text-[10px] px-1.5 h-5 ${overdue ? 'bg-red-100 text-red-700 border-red-200' : 'bg-green-100 text-green-700 border-green-200'}`}>
-                                                                    {overdue ? 'Overdue' : 'On Track'}
+                                                                    {overdue ? t('reports.overdue') : t('reports.on_track')}
                                                                 </Badge>
                                                                 {customer.lastTransactionDate && (
                                                                     <span className="text-[10px] text-gray-400 flex items-center gap-1">
-                                                                        <Calendar className="h-3 w-3" /> {daysSince}d ago
+                                                                        <Calendar className="h-3 w-3" /> {t('reports.days_ago', { days: daysSince })}
                                                                     </span>
                                                                 )}
                                                             </div>
                                                             <Link href={`/shopkeeper/customers/due/${customer._id}`}>
                                                                 <Button size="sm" variant="outline" className="h-7 text-xs px-3 border-green-200 text-green-700 hover:bg-green-50">
-                                                                    View Details
+                                                                    {t('reports.view_details')}
                                                                 </Button>
                                                             </Link>
                                                         </div>
@@ -580,8 +582,12 @@ export default function DuesReportPage() {
                                         {custTotalPages > 1 && (
                                             <div className="flex flex-col sm:flex-row items-center justify-between px-3 md:px-4 py-3 md:py-4 border-t bg-gray-50 gap-3 md:gap-4">
                                                 <p className="text-xs md:text-sm text-gray-600 order-2 sm:order-1">
-                                                    Showing <span className="font-medium">{((custPage - 1) * ITEMS_PER_PAGE) + 1}</span> to{' '}
-                                                    <span className="font-medium">{Math.min(custPage * ITEMS_PER_PAGE, filteredCustomers.length)}</span>
+                                                    {t('reports.showing_range', {
+                                                        start: ((custPage - 1) * ITEMS_PER_PAGE) + 1,
+                                                        end: Math.min(custPage * ITEMS_PER_PAGE, filteredCustomers.length),
+                                                        total: filteredCustomers.length,
+                                                        type: t('common.customers')
+                                                    })}
                                                 </p>
                                                 <div className="flex items-center gap-1 order-1 sm:order-2">
                                                     <Button
@@ -615,16 +621,16 @@ export default function DuesReportPage() {
                                             <Users className="h-6 w-6 md:h-8 md:w-8 text-green-500" />
                                         </div>
                                         <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">
-                                            {hasCustFilters ? 'No customers found' : 'No outstanding dues'}
+                                            {hasCustFilters ? t('reports.no_customers_found') : t('reports.no_outstanding_dues')}
                                         </h3>
                                         <p className="text-sm md:text-base text-gray-500 mb-3 md:mb-4">
                                             {hasCustFilters
-                                                ? 'Try adjusting your filters'
-                                                : 'All customers are clear! 🎉'}
+                                                ? t('reports.try_adjusting_filters')
+                                                : t('reports.all_customers_clear')}
                                         </p>
                                         {hasCustFilters && (
                                             <Button variant="outline" size="sm" onClick={clearCustFilters}>
-                                                Clear filters
+                                                {t('reports.clear_filters')}
                                             </Button>
                                         )}
                                     </div>
@@ -644,9 +650,9 @@ export default function DuesReportPage() {
                                                 <Package className="h-4 w-4 md:h-5 md:w-5" />
                                             </div>
                                             <div>
-                                                <CardTitle className="text-base md:text-lg">Amount to Pay</CardTitle>
+                                                <CardTitle className="text-base md:text-lg">{t('reports.amount_to_pay')}</CardTitle>
                                                 <p className="text-xs md:text-sm text-gray-500 mt-0.5">
-                                                    {filteredWholesalers.length} wholesalers
+                                                    {t('reports.wholesalers_count', { count: filteredWholesalers.length })}
                                                 </p>
                                             </div>
                                         </div>
@@ -657,7 +663,7 @@ export default function DuesReportPage() {
                                         <div className="relative flex-1">
                                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
                                             <Input
-                                                placeholder="Search wholesalers..."
+                                                placeholder={t('reports.search_wholesalers')}
                                                 value={wholeSearch}
                                                 onChange={(e) => {
                                                     setWholeSearch(e.target.value);
@@ -677,19 +683,19 @@ export default function DuesReportPage() {
                                             >
                                                 <SelectTrigger className="w-1/2 md:w-[150px] bg-white h-9 md:h-10 text-sm">
                                                     <Filter className="h-3.5 w-3.5 mr-2 text-gray-400" />
-                                                    <SelectValue placeholder="Status" />
+                                                    <SelectValue placeholder={t('reports.status')} />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="all">All</SelectItem>
-                                                    <SelectItem value="overdue">Overdue</SelectItem>
-                                                    <SelectItem value="on_track">On Track</SelectItem>
+                                                    <SelectItem value="all">{t('reports.all')}</SelectItem>
+                                                    <SelectItem value="overdue">{t('reports.overdue')}</SelectItem>
+                                                    <SelectItem value="on_track">{t('reports.on_track')}</SelectItem>
                                                 </SelectContent>
                                             </Select>
 
                                             {hasWholeFilters && (
                                                 <Button variant="ghost" size="sm" onClick={clearWholeFilters} className="text-gray-500 h-9 md:h-10 px-2 md:px-4">
                                                     <RotateCcw className="h-3.5 w-3.5 md:mr-1" />
-                                                    <span className="hidden md:inline">Reset</span>
+                                                    <span className="hidden md:inline">{t('reports.reset')}</span>
                                                 </Button>
                                             )}
                                         </div>
@@ -701,7 +707,7 @@ export default function DuesReportPage() {
                                     <div className="mt-3 flex flex-wrap gap-2">
                                         {wholeSearch && (
                                             <Badge variant="secondary" className="flex items-center gap-1 bg-white text-[10px] md:text-xs">
-                                                Search: "{wholeSearch}"
+                                                {t('reports.search_label')}: "{wholeSearch}"
                                                 <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => { setWholeSearch(''); setWholePage(1); }} />
                                             </Badge>
                                         )}
@@ -710,7 +716,7 @@ export default function DuesReportPage() {
                                                 className={`flex items-center gap-1 text-[10px] md:text-xs ${wholeStatusFilter === 'overdue' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
                                                     }`}
                                             >
-                                                {wholeStatusFilter === 'overdue' ? 'Overdue' : 'On Track'}
+                                                {wholeStatusFilter === 'overdue' ? t('reports.overdue') : t('reports.on_track')}
                                                 <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => { setWholeStatusFilter('all'); setWholePage(1); }} />
                                             </Badge>
                                         )}
@@ -721,7 +727,7 @@ export default function DuesReportPage() {
                                 {wholesalersLoading ? (
                                     <div className="p-8 md:p-12 text-center">
                                         <div className="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-4 border-orange-500 border-t-transparent mx-auto" />
-                                        <p className="text-gray-500 mt-4 text-sm md:text-base">Loading wholesalers...</p>
+                                        <p className="text-gray-500 mt-4 text-sm md:text-base">{t('reports.loading_wholesalers')}</p>
                                     </div>
                                 ) : paginatedWholesalers.length > 0 ? (
                                     <>
@@ -735,17 +741,17 @@ export default function DuesReportPage() {
                                                             onClick={() => toggleWholeSort('name')}
                                                         >
                                                             <span className="flex items-center gap-2">
-                                                                Wholesaler Name
+                                                                {t('reports.wholesaler_name')}
                                                                 {renderSortIcon('name', wholeSortField, wholeSortOrder)}
                                                             </span>
                                                         </TableHead>
-                                                        <TableHead>Contact</TableHead>
+                                                        <TableHead>{t('reports.contact')}</TableHead>
                                                         <TableHead
                                                             className="cursor-pointer hover:text-purple-600 transition-colors"
                                                             onClick={() => toggleWholeSort('outstandingDue')}
                                                         >
                                                             <span className="flex items-center gap-2">
-                                                                Outstanding Due
+                                                                {t('reports.outstanding_due')}
                                                                 {renderSortIcon('outstandingDue', wholeSortField, wholeSortOrder)}
                                                             </span>
                                                         </TableHead>
@@ -754,12 +760,12 @@ export default function DuesReportPage() {
                                                             onClick={() => toggleWholeSort('lastTransactionDate')}
                                                         >
                                                             <span className="flex items-center gap-2">
-                                                                Last Activity
+                                                                {t('reports.last_activity')}
                                                                 {renderSortIcon('lastTransactionDate', wholeSortField, wholeSortOrder)}
                                                             </span>
                                                         </TableHead>
-                                                        <TableHead>Status</TableHead>
-                                                        <TableHead className="text-right">Action</TableHead>
+                                                        <TableHead>{t('reports.status')}</TableHead>
+                                                        <TableHead className="text-right">{t('reports.action')}</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
@@ -797,29 +803,29 @@ export default function DuesReportPage() {
                                                                         <div className="flex items-center gap-1 text-gray-600 text-sm">
                                                                             <Calendar className="h-3 w-3" />
                                                                             {format(new Date(wholesaler.lastTransactionDate), 'dd MMM yyyy')}
-                                                                            <span className="text-gray-400">({daysSince}d ago)</span>
+                                                                            <span className="text-gray-400">({t('reports.days_ago', { days: daysSince })})</span>
                                                                         </div>
                                                                     ) : (
-                                                                        <span className="text-gray-400">No activity</span>
+                                                                        <span className="text-gray-400">{t('reports.no_activity')}</span>
                                                                     )}
                                                                 </TableCell>
                                                                 <TableCell>
                                                                     {overdue ? (
                                                                         <Badge className="bg-red-100 text-red-700 border-red-200">
                                                                             <AlertTriangle className="h-3 w-3 mr-1" />
-                                                                            Overdue
+                                                                            {t('reports.overdue')}
                                                                         </Badge>
                                                                     ) : (
                                                                         <Badge className="bg-green-100 text-green-700 border-green-200">
                                                                             <CheckCircle2 className="h-3 w-3 mr-1" />
-                                                                            On Track
+                                                                            {t('reports.on_track')}
                                                                         </Badge>
                                                                     )}
                                                                 </TableCell>
                                                                 <TableCell className="text-right">
                                                                     <Link href={`/shopkeeper/wholesalers/${wholesaler._id}`}>
                                                                         <Button size="sm" className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700">
-                                                                            View
+                                                                            {t('reports.view')}
                                                                             <ExternalLink className="h-3 w-3 ml-1" />
                                                                         </Button>
                                                                     </Link>
@@ -856,24 +862,24 @@ export default function DuesReportPage() {
                                                             </div>
                                                             <div className="text-right">
                                                                 <span className="block font-bold text-orange-600 text-base">{formatCurrency(wholesaler.outstandingDue)}</span>
-                                                                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Due Amount</span>
+                                                                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">{t('reports.outstanding_due')}</span>
                                                             </div>
                                                         </div>
 
                                                         <div className="flex items-center justify-between mt-3 pl-13">
                                                             <div className="flex items-center gap-2">
                                                                 <Badge className={`text-[10px] px-1.5 h-5 ${overdue ? 'bg-red-100 text-red-700 border-red-200' : 'bg-green-100 text-green-700 border-green-200'}`}>
-                                                                    {overdue ? 'Overdue' : 'On Track'}
+                                                                    {overdue ? t('reports.overdue') : t('reports.on_track')}
                                                                 </Badge>
                                                                 {wholesaler.lastTransactionDate && (
                                                                     <span className="text-[10px] text-gray-400 flex items-center gap-1">
-                                                                        <Calendar className="h-3 w-3" /> {daysSince}d ago
+                                                                        <Calendar className="h-3 w-3" /> {t('reports.days_ago', { days: daysSince })}
                                                                     </span>
                                                                 )}
                                                             </div>
                                                             <Link href={`/shopkeeper/wholesalers/${wholesaler._id}`}>
                                                                 <Button size="sm" variant="outline" className="h-7 text-xs px-3 border-orange-200 text-orange-700 hover:bg-orange-50">
-                                                                    View Details
+                                                                    {t('reports.view_details')}
                                                                 </Button>
                                                             </Link>
                                                         </div>
@@ -886,8 +892,12 @@ export default function DuesReportPage() {
                                         {wholeTotalPages > 1 && (
                                             <div className="flex flex-col sm:flex-row items-center justify-between px-3 md:px-4 py-3 md:py-4 border-t bg-gray-50 gap-3 md:gap-4">
                                                 <p className="text-xs md:text-sm text-gray-600 order-2 sm:order-1">
-                                                    Showing <span className="font-medium">{((wholePage - 1) * ITEMS_PER_PAGE) + 1}</span> to{' '}
-                                                    <span className="font-medium">{Math.min(wholePage * ITEMS_PER_PAGE, filteredWholesalers.length)}</span>
+                                                    {t('reports.showing_range', {
+                                                        start: ((wholePage - 1) * ITEMS_PER_PAGE) + 1,
+                                                        end: Math.min(wholePage * ITEMS_PER_PAGE, filteredWholesalers.length),
+                                                        total: filteredWholesalers.length,
+                                                        type: t('common.wholesalers')
+                                                    })}
                                                 </p>
                                                 <div className="flex items-center gap-1 order-1 sm:order-2">
                                                     <Button
@@ -921,16 +931,16 @@ export default function DuesReportPage() {
                                             <Package className="h-6 w-6 md:h-8 md:w-8 text-orange-500" />
                                         </div>
                                         <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">
-                                            {hasWholeFilters ? 'No wholesalers found' : 'No outstanding dues'}
+                                            {hasWholeFilters ? t('reports.no_wholesalers_found') : t('reports.no_outstanding_dues')}
                                         </h3>
                                         <p className="text-sm md:text-base text-gray-500 mb-3 md:mb-4">
                                             {hasWholeFilters
-                                                ? 'Try adjusting your filters'
-                                                : 'All wholesalers are paid! 🎉'}
+                                                ? t('reports.try_adjusting_filters')
+                                                : t('reports.all_wholesalers_paid')}
                                         </p>
                                         {hasWholeFilters && (
                                             <Button variant="outline" size="sm" onClick={clearWholeFilters}>
-                                                Clear filters
+                                                {t('reports.clear_filters')}
                                             </Button>
                                         )}
                                     </div>

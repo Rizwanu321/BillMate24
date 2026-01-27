@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Dialog,
     DialogContent,
@@ -50,6 +51,7 @@ function EditWholesalerForm({
     onClose: () => void;
     isSaving: boolean;
 }) {
+    const { t } = useTranslation();
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
@@ -85,7 +87,7 @@ function EditWholesalerForm({
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 mt-4 pb-4 md:pb-0">
             <div className="space-y-2">
                 <Label htmlFor="edit-name" className="text-sm md:text-base">
-                    Wholesaler Name <span className="text-red-500">*</span>
+                    {t('wholesalers_list.dialogs.name')} <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -93,7 +95,7 @@ function EditWholesalerForm({
                         id="edit-name"
                         value={formData.name}
                         onChange={(e) => handleChange('name', e.target.value)}
-                        placeholder="Enter wholesaler name"
+                        placeholder={t('wholesalers_list.dialogs.name_placeholder')}
                         required
                         className="pl-10 h-10 md:h-11 text-base md:text-sm"
                     />
@@ -103,7 +105,7 @@ function EditWholesalerForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="edit-phone" className="text-sm md:text-base">
-                        Phone Number <span className="text-red-500">*</span>
+                        {t('wholesalers_list.dialogs.phone')} <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -119,7 +121,7 @@ function EditWholesalerForm({
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="edit-whatsapp" className="text-sm md:text-base">WhatsApp</Label>
+                    <Label htmlFor="edit-whatsapp" className="text-sm md:text-base">{t('wholesalers_list.dialogs.whatsapp')}</Label>
                     <div className="relative">
                         <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
@@ -136,7 +138,7 @@ function EditWholesalerForm({
 
             <div className="space-y-2">
                 <Label htmlFor="edit-address" className="text-sm md:text-base">
-                    Address <span className="text-red-500">*</span>
+                    {t('wholesalers_list.dialogs.address')} <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -144,7 +146,7 @@ function EditWholesalerForm({
                         id="edit-address"
                         value={formData.address}
                         onChange={(e) => handleChange('address', e.target.value)}
-                        placeholder="Enter complete address"
+                        placeholder={t('wholesalers_list.dialogs.address_placeholder')}
                         required
                         className="pl-10 h-10 md:h-11 text-base md:text-sm"
                     />
@@ -152,14 +154,14 @@ function EditWholesalerForm({
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="edit-place" className="text-sm md:text-base">Place / City</Label>
+                <Label htmlFor="edit-place" className="text-sm md:text-base">{t('wholesalers_list.dialogs.place')}</Label>
                 <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                         id="edit-place"
                         value={formData.place}
                         onChange={(e) => handleChange('place', e.target.value)}
-                        placeholder="Enter place or city"
+                        placeholder={t('wholesalers_list.dialogs.place_placeholder')}
                         className="pl-10 h-10 md:h-11 text-base md:text-sm"
                     />
                 </div>
@@ -167,7 +169,7 @@ function EditWholesalerForm({
 
             {/* Active Status */}
             <div className="space-y-2 pt-2">
-                <Label className="text-sm md:text-base">Status</Label>
+                <Label className="text-sm md:text-base">{t('wholesalers_list.filters.status')}</Label>
                 <div className="flex gap-3">
                     <Button
                         type="button"
@@ -176,7 +178,7 @@ function EditWholesalerForm({
                         onClick={() => handleChange('isActive', true)}
                     >
                         <CheckCircle className="h-4 w-4 mr-2" />
-                        Active
+                        {t('wholesalers_list.stats.active')}
                     </Button>
                     <Button
                         type="button"
@@ -185,7 +187,7 @@ function EditWholesalerForm({
                         onClick={() => handleChange('isActive', false)}
                     >
                         <XCircle className="h-4 w-4 mr-2" />
-                        Inactive
+                        {t('wholesalers_list.stats.inactive')}
                     </Button>
                 </div>
             </div>
@@ -198,7 +200,7 @@ function EditWholesalerForm({
                     disabled={isSaving}
                     className="flex-1 h-10 md:h-11 text-base md:text-sm"
                 >
-                    Cancel
+                    {t('wholesalers_list.dialogs.cancel')}
                 </Button>
                 <Button
                     type="submit"
@@ -208,12 +210,12 @@ function EditWholesalerForm({
                     {isSaving ? (
                         <span className="flex items-center gap-2">
                             <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                            Saving...
+                            {t('wholesalers_list.dialogs.saving')}
                         </span>
                     ) : (
                         <span className="flex items-center gap-2">
                             <Save className="h-4 w-4" />
-                            Save Changes
+                            {t('wholesalers_list.dialogs.save_button')}
                         </span>
                     )}
                 </Button>
@@ -229,6 +231,7 @@ export function EditWholesalerDialog({
     wholesaler,
     isSaving = false
 }: EditWholesalerDialogProps) {
+    const { t } = useTranslation();
     const isDesktop = useMediaQuery('(min-width: 768px)');
 
     if (isDesktop) {
@@ -241,9 +244,9 @@ export function EditWholesalerDialog({
                                 <Package className="h-6 w-6" />
                             </div>
                             <div>
-                                <DialogTitle className="text-xl">Edit Wholesaler</DialogTitle>
+                                <DialogTitle className="text-xl">{t('wholesalers_list.dialogs.edit_title')}</DialogTitle>
                                 <DialogDescription className="text-sm text-gray-500 mt-0.5">
-                                    Update wholesaler information
+                                    {t('wholesalers_list.dialogs.edit_desc')}
                                 </DialogDescription>
                             </div>
                         </div>
@@ -263,9 +266,9 @@ export function EditWholesalerDialog({
         <Sheet open={isOpen} onOpenChange={onClose}>
             <SheetContent side="bottom" className="rounded-t-[20px] max-h-[90vh] overflow-y-auto px-4 md:px-6 pb-6">
                 <SheetHeader className="text-left md:text-center mt-2">
-                    <SheetTitle>Edit Wholesaler</SheetTitle>
+                    <SheetTitle>{t('wholesalers_list.dialogs.edit_title')}</SheetTitle>
                     <SheetDescription>
-                        Update account details and status.
+                        {t('wholesalers_list.dialogs.edit_desc')}
                     </SheetDescription>
                 </SheetHeader>
                 <EditWholesalerForm

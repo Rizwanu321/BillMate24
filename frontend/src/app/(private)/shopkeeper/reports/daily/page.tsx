@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Calendar, ChevronDown, TrendingUp, TrendingDown, IndianRupee, Receipt, Wallet, CreditCard, AlertCircle, ArrowUpRight, ArrowDownRight, BarChart3, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter } from 'lucide-react';
 import { Header } from '@/components/app/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -71,15 +72,15 @@ interface PaginatedResponse<T> {
 
 type TimeFilterOption = 'all' | 'today' | 'yesterday' | 'this_week' | 'this_month' | 'this_year' | 'custom';
 
-const filterLabels: Record<TimeFilterOption, string> = {
-    all: 'All Time',
-    today: 'Today',
-    yesterday: 'Yesterday',
-    this_week: 'This Week',
-    this_month: 'This Month',
-    this_year: 'This Year',
-    custom: 'Custom Range',
-};
+const getFilterLabels = (t: any): Record<TimeFilterOption, string> => ({
+    all: t('history.time_filters.all'),
+    today: t('history.time_filters.today'),
+    yesterday: t('history.time_filters.yesterday'),
+    this_week: t('history.time_filters.this_week'),
+    this_month: t('history.time_filters.this_month'),
+    this_year: t('history.time_filters.this_year'),
+    custom: t('reports.custom_range'),
+});
 
 const ITEMS_PER_PAGE = 10;
 
@@ -115,6 +116,7 @@ function getDateRange(option: TimeFilterOption): { startDate: string; endDate: s
 }
 
 export default function RevenueReportPage() {
+    const { t, i18n } = useTranslation();
     // Date range filter state
     const [timeFilter, setTimeFilter] = useState<TimeFilterOption>('today');
     const [customStartDate, setCustomStartDate] = useState('');
@@ -427,7 +429,12 @@ export default function RevenueReportPage() {
     };
 
     const getFilterLabel = () => {
+        const filterLabels = getFilterLabels(t);
         if (timeFilter === 'custom') {
+            if (i18n.language === 'ml') {
+                const formatter = new Intl.DateTimeFormat('ml-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                return `${formatter.format(new Date(dateRange.startDate))} - ${formatter.format(new Date(dateRange.endDate))}`;
+            }
             return `${format(new Date(dateRange.startDate), 'dd MMM')} - ${format(new Date(dateRange.endDate), 'dd MMM yyyy')}`;
         }
         return filterLabels[timeFilter];
@@ -435,7 +442,7 @@ export default function RevenueReportPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-purple-50">
-            <Header title="Revenue Report" />
+            <Header title={t('reports.revenue_report')} />
 
             <div className="p-3 md:p-6">
                 {/* Header with Filter - Mobile First */}
@@ -443,12 +450,12 @@ export default function RevenueReportPage() {
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-gray-900 bg-clip-text text-transparent">
-                                <span className="hidden sm:inline">Revenue Report</span>
-                                <span className="sm:hidden">Report</span>
+                                <span className="hidden sm:inline">{t('reports.revenue_report')}</span>
+                                <span className="sm:hidden">{t('common.reports')}</span>
                             </h2>
                             <BarChart3 className="h-5 w-5 md:h-8 md:w-8 text-purple-900" />
                         </div>
-                        <p className="text-gray-600 mt-0.5 md:mt-1 text-xs md:text-base hidden sm:block">Comprehensive view of your business</p>
+                        <p className="text-gray-600 mt-0.5 md:mt-1 text-xs md:text-base hidden sm:block">{t('reports.comprehensive_view')}</p>
                     </div>
 
                     <DropdownMenu>
@@ -456,7 +463,7 @@ export default function RevenueReportPage() {
                             <Button className="flex items-center gap-1 md:gap-2 min-w-0 md:min-w-[200px] bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/25 h-9 md:h-10 px-2 md:px-4 text-xs md:text-sm">
                                 <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4" />
                                 <span className="font-medium hidden sm:inline">{getFilterLabel()}</span>
-                                <span className="font-medium sm:hidden">{timeFilter === 'today' ? 'Today' : timeFilter === 'custom' ? 'Custom' : '...'}</span>
+                                <span className="font-medium sm:hidden">{timeFilter === 'today' ? t('history.time_filters.today') : timeFilter === 'custom' ? t('reports.custom_range') : '...'}</span>
                                 <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4 opacity-70" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -467,12 +474,12 @@ export default function RevenueReportPage() {
                                     onClick={() => handleTimeFilterChange(option)}
                                     className={timeFilter === option ? 'bg-purple-50 text-purple-700' : ''}
                                 >
-                                    {filterLabels[option]}
+                                    {getFilterLabels(t)[option]}
                                 </DropdownMenuItem>
                             ))}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleTimeFilterChange('custom')}>
-                                Custom Range...
+                                {t('reports.custom_range')}...
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -504,11 +511,11 @@ export default function RevenueReportPage() {
                                 )}</span>
                             </h3>
                             <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
-                                Total Sales{timeFilter === 'all' ? ' (incl. opening)' : ''}
+                                {t('reports.total_sales')}{timeFilter === 'all' ? ` ${t('reports.incl_opening')}` : ''}
                             </p>
                             <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
                                 <span className="text-white/70">
-                                    {timeFilter === 'all' ? 'Outstanding' : 'Collected'}
+                                    {timeFilter === 'all' ? t('reports.outstanding') : t('reports.collected')}
                                 </span>
                                 <span className="font-semibold">
                                     {timeFilter === 'all'
@@ -545,11 +552,11 @@ export default function RevenueReportPage() {
                                 )}</span>
                             </h3>
                             <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
-                                Total Purchases{timeFilter === 'all' ? ' (incl. opening)' : ''}
+                                {t('reports.total_purchases')}{timeFilter === 'all' ? ` ${t('reports.incl_opening')}` : ''}
                             </p>
                             <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
                                 <span className="text-white/70">
-                                    {timeFilter === 'all' ? 'Outstanding' : 'Paid'}
+                                    {timeFilter === 'all' ? t('reports.outstanding') : t('reports.paid')}
                                 </span>
                                 <span className="font-semibold">
                                     {timeFilter === 'all'
@@ -634,21 +641,21 @@ export default function RevenueReportPage() {
                                         (stats.grossProfit +
                                             Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
                                             Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
-                                            ? 'Total Profit'
-                                            : 'Total Loss'
+                                            ? t('reports.total_profit')
+                                            : t('reports.total_loss')
                                     )
                                     : (
-                                        'Gross ' + (stats.grossProfit >= 0 ? 'Profit' : 'Loss')
+                                        stats.grossProfit >= 0 ? t('reports.gross_profit') : t('reports.gross_loss')
                                     )
                                 }
                             </p>
                             <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
                                 <span className="text-white/70">
-                                    {timeFilter === 'all' ? 'All Time' : 'Margin'}
+                                    {timeFilter === 'all' ? t('reports.all_time') : t('reports.margin')}
                                 </span>
                                 <span className="font-semibold">
                                     {timeFilter === 'all'
-                                        ? '(incl. opening)'
+                                        ? t('reports.incl_opening')
                                         : (stats.totalSalesAmount > 0 ? ((stats.grossProfit / stats.totalSalesAmount) * 100).toFixed(1) + '%' : '0%')
                                     }
                                 </span>
@@ -675,9 +682,9 @@ export default function RevenueReportPage() {
                                 <span className="md:hidden">{formatCurrency(Math.abs(stats.netCashFlow))}</span>
                                 <span className="hidden md:inline">{formatCurrency(Math.abs(stats.netCashFlow))}</span>
                             </h3>
-                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Net Cash Flow</p>
+                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">{t('reports.net_cash_flow')}</p>
                             <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
-                                <span className="text-white/70">Transactions</span>
+                                <span className="text-white/70">{t('reports.transactions')}</span>
                                 <span className="font-semibold">{stats.transactionCount}</span>
                             </div>
                         </CardContent>
@@ -694,7 +701,7 @@ export default function RevenueReportPage() {
                                     <ArrowUpRight className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] md:text-xs text-gray-500">Cash Received</p>
+                                    <p className="text-[10px] md:text-xs text-gray-500">{t('reports.cash_received')}</p>
                                     <p className="text-sm md:text-lg font-bold text-green-600">{formatCurrency(stats.totalSalesCollected)}</p>
                                 </div>
                             </div>
@@ -708,7 +715,7 @@ export default function RevenueReportPage() {
                                     <ArrowDownRight className="h-4 w-4 md:h-5 md:w-5 text-orange-600" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] md:text-xs text-gray-500">Cash Paid</p>
+                                    <p className="text-[10px] md:text-xs text-gray-500">{t('reports.cash_paid')}</p>
                                     <p className="text-sm md:text-lg font-bold text-orange-600">{formatCurrency(stats.totalPurchasesPaid)}</p>
                                 </div>
                             </div>
@@ -722,7 +729,7 @@ export default function RevenueReportPage() {
                                     <Wallet className={`h-4 w-4 md:h-5 md:w-5 ${stats.netCashFlow >= 0 ? 'text-purple-600' : 'text-red-600'}`} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] md:text-xs text-gray-500">Net Cash Flow</p>
+                                    <p className="text-[10px] md:text-xs text-gray-500">{t('reports.net_cash_flow')}</p>
                                     <p className={`text-sm md:text-lg font-bold ${stats.netCashFlow >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
                                         {formatCurrency(stats.netCashFlow)}
                                     </p>
@@ -738,9 +745,9 @@ export default function RevenueReportPage() {
                                     <AlertCircle className="h-4 w-4 md:h-5 md:w-5 text-yellow-600" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] md:text-xs text-gray-500">Total Receivables (All Time)</p>
+                                    <p className="text-[10px] md:text-xs text-gray-500">{t('reports.total_receivables')}</p>
                                     <p className="text-sm md:text-lg font-bold text-yellow-600">{formatCurrency(duesData?.totalCustomerDue || 0)}</p>
-                                    <p className="text-[8px] md:text-[10px] text-gray-400 mt-0.5">Including opening balance</p>
+                                    <p className="text-[8px] md:text-[10px] text-gray-400 mt-0.5">{t('reports.including_opening_balance')}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -753,9 +760,9 @@ export default function RevenueReportPage() {
                                     <AlertCircle className="h-4 w-4 md:h-5 md:w-5 text-red-600" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] md:text-xs text-gray-500">Total Payables (All Time)</p>
+                                    <p className="text-[10px] md:text-xs text-gray-500">{t('reports.total_payables')}</p>
                                     <p className="text-sm md:text-lg font-bold text-red-600">{formatCurrency(duesData?.totalWholesalerDue || 0)}</p>
-                                    <p className="text-[8px] md:text-[10px] text-gray-400 mt-0.5">Including opening balance</p>
+                                    <p className="text-[8px] md:text-[10px] text-gray-400 mt-0.5">{t('reports.including_opening_balance')}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -767,7 +774,7 @@ export default function RevenueReportPage() {
                     <CardHeader className="pb-3">
                         <CardTitle className="flex items-center gap-2 text-lg">
                             <BarChart3 className="h-5 w-5 text-purple-600" />
-                            Understanding Your Numbers
+                            {t('reports.understanding_numbers')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -776,7 +783,7 @@ export default function RevenueReportPage() {
                             <div className="p-4 bg-white rounded-xl shadow-sm border">
                                 <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                                    Profit Calculation
+                                    {t('reports.profit_calculation')}
                                 </h4>
                                 <div className="space-y-3">
                                     {timeFilter === 'all' ? (
@@ -785,20 +792,20 @@ export default function RevenueReportPage() {
                                             <div className="flex justify-between items-center py-2 border-b border-dashed">
                                                 <span className="text-gray-600 flex items-center gap-2">
                                                     <TrendingUp className="h-4 w-4 text-green-500" />
-                                                    Total Sales (in app)
+                                                    {t('reports.total_sales_in_app')}
                                                 </span>
                                                 <span className="font-semibold text-green-600">{formatCurrency(stats.totalSalesAmount)}</span>
                                             </div>
                                             <div className="flex justify-between items-center py-2 border-b border-dashed">
                                                 <span className="text-gray-600 flex items-center gap-2">
                                                     <TrendingDown className="h-4 w-4 text-orange-500" />
-                                                    Total Purchases (in app)
+                                                    {t('reports.total_purchases_in_app')}
                                                 </span>
                                                 <span className="font-semibold text-orange-600">- {formatCurrency(stats.totalPurchasesAmount)}</span>
                                             </div>
                                             <div className={`flex justify-between items-center py-2 px-3 rounded-lg ${stats.grossProfit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
                                                 <span className={`font-medium ${stats.grossProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                                                    = Profit from Bills {stats.grossProfit < 0 && '(Loss)'}
+                                                    = {stats.grossProfit >= 0 ? t('reports.profit_in_app') : t('reports.loss_in_app')}
                                                 </span>
                                                 <span className={`font-bold text-lg ${stats.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                     {formatCurrency(stats.grossProfit)}
@@ -807,7 +814,7 @@ export default function RevenueReportPage() {
                                             <div className="flex justify-between items-center py-2 border-t border-gray-200 pt-2">
                                                 <span className="text-sm text-gray-600 flex items-center gap-2">
                                                     <TrendingUp className="h-4 w-4 text-blue-500" />
-                                                    + Opening Balance (Sales)
+                                                    + {t('reports.opening_customer_dues')}
                                                 </span>
                                                 <span className="font-semibold text-sm text-blue-600">
                                                     + {formatCurrency(Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue))}
@@ -816,7 +823,7 @@ export default function RevenueReportPage() {
                                             <div className="flex justify-between items-center py-2">
                                                 <span className="text-sm text-gray-600 flex items-center gap-2">
                                                     <TrendingDown className="h-4 w-4 text-orange-500" />
-                                                    - Opening Balance (Purchases)
+                                                    - {t('reports.opening_wholesaler_dues')}
                                                 </span>
                                                 <span className="font-semibold text-sm text-orange-600">
                                                     - {formatCurrency(Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue))}
@@ -834,7 +841,7 @@ export default function RevenueReportPage() {
                                                     ? 'text-purple-700'
                                                     : 'text-red-700'
                                                     }`}>
-                                                    = Total Profit/Loss (All Time)
+                                                    = {t('reports.total_profit_loss_all_time')}
                                                 </span>
                                                 <span className={`font-bold text-xl ${(stats.grossProfit +
                                                     Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
@@ -856,20 +863,20 @@ export default function RevenueReportPage() {
                                             <div className="flex justify-between items-center py-2 border-b border-dashed">
                                                 <span className="text-gray-600 flex items-center gap-2">
                                                     <TrendingUp className="h-4 w-4 text-green-500" />
-                                                    Total Sales (what you sold)
+                                                    {t('reports.total_sales_parenthesis')}
                                                 </span>
                                                 <span className="font-semibold text-green-600">{formatCurrency(stats.totalSalesAmount)}</span>
                                             </div>
                                             <div className="flex justify-between items-center py-2 border-b border-dashed">
                                                 <span className="text-gray-600 flex items-center gap-2">
                                                     <TrendingDown className="h-4 w-4 text-orange-500" />
-                                                    Total Purchases (what you bought)
+                                                    {t('reports.total_purchases_parenthesis')}
                                                 </span>
                                                 <span className="font-semibold text-orange-600">- {formatCurrency(stats.totalPurchasesAmount)}</span>
                                             </div>
                                             <div className={`flex justify-between items-center py-2 px-3 rounded-lg ${stats.grossProfit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
                                                 <span className={`font-medium ${stats.grossProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                                                    = Gross Profit {stats.grossProfit < 0 && '(Loss)'}
+                                                    = {t('reports.gross_profit')} {stats.grossProfit < 0 && `(${t('reports.loss')})`}
                                                 </span>
                                                 <span className={`font-bold text-lg ${stats.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                     {formatCurrency(stats.grossProfit)}
@@ -884,26 +891,27 @@ export default function RevenueReportPage() {
                             <div className="p-4 bg-white rounded-xl shadow-sm border">
                                 <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                    Cash Flow (Money Movement)
+                                    {t('reports.cash_flow_breakdown')}
+                                    <span className="text-xs font-normal text-gray-500 ml-2">({t('reports.money_movement')})</span>
                                 </h4>
                                 <div className="space-y-3">
                                     <div className="flex justify-between items-center py-2 border-b border-dashed">
                                         <span className="text-gray-600 flex items-center gap-2">
                                             <ArrowUpRight className="h-4 w-4 text-green-500" />
-                                            Cash Received (from customers)
+                                            {t('reports.cash_received_customers')}
                                         </span>
                                         <span className="font-semibold text-green-600">{formatCurrency(stats.totalSalesCollected)}</span>
                                     </div>
                                     <div className="flex justify-between items-center py-2 border-b border-dashed">
                                         <span className="text-gray-600 flex items-center gap-2">
                                             <ArrowDownRight className="h-4 w-4 text-orange-500" />
-                                            Cash Paid (to wholesalers)
+                                            {t('reports.cash_paid_wholesalers')}
                                         </span>
                                         <span className="font-semibold text-orange-600">- {formatCurrency(stats.totalPurchasesPaid)}</span>
                                     </div>
                                     <div className={`flex justify-between items-center py-2 px-3 rounded-lg ${stats.netCashFlow >= 0 ? 'bg-blue-50' : 'bg-red-50'}`}>
                                         <span className={`font-medium ${stats.netCashFlow >= 0 ? 'text-blue-700' : 'text-red-700'}`}>
-                                            = Net Cash Flow {stats.netCashFlow < 0 && '(Negative)'}
+                                            {t('reports.net_cash_flow_result')} {stats.netCashFlow < 0 && `(${t('reports.negative')})`}
                                         </span>
                                         <span className={`font-bold text-lg ${stats.netCashFlow >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                                             {formatCurrency(stats.netCashFlow)}
@@ -916,42 +924,42 @@ export default function RevenueReportPage() {
                             <div className="p-4 bg-white rounded-xl shadow-sm border">
                                 <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                    Sales & Receivables
+                                    {t('reports.sales_receivables')}
                                 </h4>
                                 <div className="space-y-3">
                                     {timeFilter === 'all' ? (
                                         /* All Time - Show complete unified breakdown with opening balance */
                                         <div className="space-y-2">
                                             <div className="flex justify-between items-center py-1.5">
-                                                <span className="text-sm text-gray-600">Total Sales Made (in app)</span>
+                                                <span className="text-sm text-gray-600">{t('reports.total_sales_made')}</span>
                                                 <span className="font-semibold text-sm">{formatCurrency(stats.totalSalesAmount)}</span>
                                             </div>
                                             <div className="flex justify-between items-center py-1.5">
-                                                <span className="text-sm text-gray-600">Amount Collected</span>
+                                                <span className="text-sm text-gray-600">{t('reports.amount_collected')}</span>
                                                 <span className="font-semibold text-sm text-green-600">- {formatCurrency(stats.totalSalesCollected)}</span>
                                             </div>
                                             <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-yellow-50">
-                                                <span className="font-medium text-sm text-yellow-700">= Pending from Bills</span>
+                                                <span className="font-medium text-sm text-yellow-700">{t('reports.pending_from_bills')}</span>
                                                 <span className="font-bold text-yellow-600">{formatCurrency(stats.totalSalesDue)}</span>
                                             </div>
                                             <div className="flex justify-between items-center py-1.5 border-t border-gray-200 pt-2">
-                                                <span className="text-sm text-gray-600">+ Opening Balance (before app)</span>
+                                                <span className="text-sm text-gray-600">{t('reports.opening_balance_before')}</span>
                                                 <span className="font-semibold text-sm text-blue-600">
                                                     + {formatCurrency(Math.max(0, (duesData?.totalCustomerDue || 0) - stats.totalSalesDue))}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-green-50 border border-green-200">
-                                                <span className="text-sm font-medium text-green-700">= Total Outstanding</span>
+                                                <span className="text-sm font-medium text-green-700">{t('reports.total_outstanding_receivable')}</span>
                                                 <span className="font-bold text-lg text-green-600">{formatCurrency(duesData?.totalCustomerDue || 0)}</span>
                                             </div>
                                             <div className="p-3 mt-2 rounded-lg bg-blue-50 border border-blue-200">
-                                                <p className="text-xs text-blue-700 font-medium">ℹ️ What is this?</p>
+                                                <p className="text-xs text-blue-700 font-medium">{t('reports.what_is_this')}</p>
                                                 <p className="text-xs text-gray-600 mt-1">
-                                                    Total Outstanding includes:
+                                                    {t('reports.total_outstanding_includes')}
                                                 </p>
                                                 <ul className="text-xs text-gray-600 mt-1 ml-4 list-disc">
-                                                    <li>Sales made before using the app (Opening Balance)</li>
-                                                    <li>Unpaid portion of all sales bills created in app</li>
+                                                    <li>{t('reports.sales_made_before_app')}</li>
+                                                    <li>{t('reports.unpaid_sales_bills')}</li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -961,19 +969,19 @@ export default function RevenueReportPage() {
                                             {/* Period Specific Section */}
                                             <div className="pb-3 border-b-2 border-gray-200">
                                                 <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
-                                                    {timeFilter === 'custom' ? 'Selected Period' : filterLabels[timeFilter]}
+                                                    {timeFilter === 'custom' ? t('reports.custom_range') : getFilterLabels(t)[timeFilter]}
                                                 </p>
                                                 <div className="space-y-2">
                                                     <div className="flex justify-between items-center py-1.5">
-                                                        <span className="text-sm text-gray-600">Total Sales Made</span>
+                                                        <span className="text-sm text-gray-600">{t('reports.total_sales_made')}</span>
                                                         <span className="font-semibold text-sm">{formatCurrency(stats.totalSalesAmount)}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center py-1.5">
-                                                        <span className="text-sm text-gray-600">Amount Collected</span>
+                                                        <span className="text-sm text-gray-600">{t('reports.amount_collected')}</span>
                                                         <span className="font-semibold text-sm text-green-600">- {formatCurrency(stats.totalSalesCollected)}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-yellow-50">
-                                                        <span className="font-medium text-sm text-yellow-700">= Pending from Period</span>
+                                                        <span className="font-medium text-sm text-yellow-700">{t('reports.pending_from_bills')}</span>
                                                         <span className="font-bold text-yellow-600">{formatCurrency(stats.totalSalesDue)}</span>
                                                     </div>
                                                 </div>
@@ -981,19 +989,19 @@ export default function RevenueReportPage() {
 
                                             {/* All Time Total Section */}
                                             <div className="pt-2">
-                                                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">All Time Total</p>
+                                                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">{t('reports.all_time')}</p>
                                                 <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-green-50 border border-green-200">
-                                                    <span className="text-sm font-medium text-green-700">Outstanding from Customers</span>
+                                                    <span className="text-sm font-medium text-green-700">{t('reports.total_outstanding_receivable')}</span>
                                                     <span className="font-bold text-lg text-green-600">{formatCurrency(duesData?.totalCustomerDue || 0)}</span>
                                                 </div>
                                                 <div className="p-3 mt-2 rounded-lg bg-blue-50 border border-blue-200">
-                                                    <p className="text-xs text-blue-700 font-medium">ℹ️ What is this?</p>
+                                                    <p className="text-xs text-blue-700 font-medium">{t('reports.what_is_this')}</p>
                                                     <p className="text-xs text-gray-600 mt-1">
-                                                        This is the total amount customers owe you, including:
+                                                        {t('reports.customers_owe_you_includes')}
                                                     </p>
                                                     <ul className="text-xs text-gray-600 mt-1 ml-4 list-disc">
-                                                        <li>Sales made before using the app (Opening Balance)</li>
-                                                        <li>Unpaid portion of all sales bills</li>
+                                                        <li>{t('reports.sales_made_before_app')}</li>
+                                                        <li>{t('reports.unpaid_sales_bills_short')}</li>
                                                     </ul>
                                                 </div>
                                             </div>
@@ -1006,42 +1014,42 @@ export default function RevenueReportPage() {
                             <div className="p-4 bg-white rounded-xl shadow-sm border">
                                 <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                                    Purchases & Payables
+                                    {t('reports.purchases_payables')}
                                 </h4>
                                 <div className="space-y-3">
                                     {timeFilter === 'all' ? (
                                         /* All Time - Show complete unified breakdown with opening balance */
                                         <div className="space-y-2">
                                             <div className="flex justify-between items-center py-1.5">
-                                                <span className="text-sm text-gray-600">Total Purchases Made (in app)</span>
+                                                <span className="text-sm text-gray-600">{t('reports.total_purchases_made')}</span>
                                                 <span className="font-semibold text-sm">{formatCurrency(stats.totalPurchasesAmount)}</span>
                                             </div>
                                             <div className="flex justify-between items-center py-1.5">
-                                                <span className="text-sm text-gray-600">Amount Paid</span>
+                                                <span className="text-sm text-gray-600">{t('reports.amount_paid')}</span>
                                                 <span className="font-semibold text-sm text-green-600">- {formatCurrency(stats.totalPurchasesPaid)}</span>
                                             </div>
                                             <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-orange-50">
-                                                <span className="font-medium text-sm text-orange-700">= Pending from Bills</span>
+                                                <span className="font-medium text-sm text-orange-700">{t('reports.pending_from_bills')}</span>
                                                 <span className="font-bold text-orange-600">{formatCurrency(stats.totalPurchasesDue)}</span>
                                             </div>
                                             <div className="flex justify-between items-center py-1.5 border-t border-gray-200 pt-2">
-                                                <span className="text-sm text-gray-600">+ Opening Balance (before app)</span>
+                                                <span className="text-sm text-gray-600">{t('reports.opening_balance_before')}</span>
                                                 <span className="font-semibold text-sm text-blue-600">
                                                     + {formatCurrency(Math.max(0, (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue))}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-red-50 border border-red-200">
-                                                <span className="text-sm font-medium text-red-700">= Total Outstanding</span>
+                                                <span className="text-sm font-medium text-red-700">{t('reports.total_outstanding_payable')}</span>
                                                 <span className="font-bold text-lg text-red-600">{formatCurrency(duesData?.totalWholesalerDue || 0)}</span>
                                             </div>
                                             <div className="p-3 mt-2 rounded-lg bg-blue-50 border border-blue-200">
-                                                <p className="text-xs text-blue-700 font-medium">ℹ️ What is this?</p>
+                                                <p className="text-xs text-blue-700 font-medium">{t('reports.what_is_this')}</p>
                                                 <p className="text-xs text-gray-600 mt-1">
-                                                    Total Outstanding includes:
+                                                    {t('reports.total_outstanding_includes')}
                                                 </p>
                                                 <ul className="text-xs text-gray-600 mt-1 ml-4 list-disc">
-                                                    <li>Purchases made before using the app (Opening Balance)</li>
-                                                    <li>Unpaid portion of all purchase bills created in app</li>
+                                                    <li>{t('reports.purchases_made_before_app')}</li>
+                                                    <li>{t('reports.unpaid_purchase_bills')}</li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -1051,19 +1059,19 @@ export default function RevenueReportPage() {
                                             {/* Period Specific Section */}
                                             <div className="pb-3 border-b-2 border-gray-200">
                                                 <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
-                                                    {timeFilter === 'custom' ? 'Selected Period' : filterLabels[timeFilter]}
+                                                    {timeFilter === 'custom' ? t('reports.custom_range') : getFilterLabels(t)[timeFilter]}
                                                 </p>
                                                 <div className="space-y-2">
                                                     <div className="flex justify-between items-center py-1.5">
-                                                        <span className="text-sm text-gray-600">Total Purchases Made</span>
+                                                        <span className="text-sm text-gray-600">{t('reports.total_purchases_made')}</span>
                                                         <span className="font-semibold text-sm">{formatCurrency(stats.totalPurchasesAmount)}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center py-1.5">
-                                                        <span className="text-sm text-gray-600">Amount Paid</span>
+                                                        <span className="text-sm text-gray-600">{t('reports.amount_paid')}</span>
                                                         <span className="font-semibold text-sm text-green-600">- {formatCurrency(stats.totalPurchasesPaid)}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-orange-50">
-                                                        <span className="font-medium text-sm text-orange-700">= Pending from Period</span>
+                                                        <span className="font-medium text-sm text-orange-700">{t('reports.pending_from_bills')}</span>
                                                         <span className="font-bold text-orange-600">{formatCurrency(stats.totalPurchasesDue)}</span>
                                                     </div>
                                                 </div>
@@ -1071,19 +1079,19 @@ export default function RevenueReportPage() {
 
                                             {/* All Time Total Section */}
                                             <div className="pt-2">
-                                                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">All Time Total</p>
+                                                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">{t('reports.all_time')}</p>
                                                 <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-red-50 border border-red-200">
-                                                    <span className="text-sm font-medium text-red-700">Outstanding to Wholesalers</span>
+                                                    <span className="text-sm font-medium text-red-700">{t('reports.total_outstanding_payable')}</span>
                                                     <span className="font-bold text-lg text-red-600">{formatCurrency(duesData?.totalWholesalerDue || 0)}</span>
                                                 </div>
                                                 <div className="p-3 mt-2 rounded-lg bg-blue-50 border border-blue-200">
-                                                    <p className="text-xs text-blue-700 font-medium">ℹ️ What is this?</p>
+                                                    <p className="text-xs text-blue-700 font-medium">{t('reports.what_is_this')}</p>
                                                     <p className="text-xs text-gray-600 mt-1">
-                                                        This is the total amount you owe wholesalers, including:
+                                                        {t('reports.owe_wholesalers_includes')}
                                                     </p>
                                                     <ul className="text-xs text-gray-600 mt-1 ml-4 list-disc">
-                                                        <li>Purchases made before using the app (Opening Balance)</li>
-                                                        <li>Unpaid portion of all purchase bills</li>
+                                                        <li>{t('reports.purchases_made_before_app')}</li>
+                                                        <li>{t('reports.unpaid_purchase_bills_short')}</li>
                                                     </ul>
                                                 </div>
                                             </div>
@@ -1095,36 +1103,36 @@ export default function RevenueReportPage() {
 
                         {/* Quick Insights */}
                         <div className="mt-6 p-4 bg-white rounded-xl shadow-sm border">
-                            <h4 className="font-semibold text-gray-800 mb-3">💡 Quick Insights</h4>
+                            <h4 className="font-semibold text-gray-800 mb-3">💡 {t('reports.quick_insights')}</h4>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className={`p-3 rounded-lg ${stats.grossProfit >= 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
                                     <p className={`text-sm font-medium ${stats.grossProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                                        {stats.grossProfit >= 0 ? '✅ Profitable Period' : '⚠️ Loss Period'}
+                                        {stats.grossProfit >= 0 ? `✅ ${t('reports.profitable_period')}` : `⚠️ ${t('reports.loss_period')}`}
                                     </p>
                                     <p className="text-xs text-gray-600 mt-1">
                                         {stats.grossProfit >= 0
-                                            ? 'Your sales exceed your purchases. Good job!'
-                                            : 'Your purchases exceeded your sales. Review your pricing or costs.'}
+                                            ? t('reports.sales_exceed_purchases')
+                                            : t('reports.purchases_exceed_sales')}
                                     </p>
                                 </div>
                                 <div className={`p-3 rounded-lg ${stats.netCashFlow >= 0 ? 'bg-blue-50 border border-blue-200' : 'bg-orange-50 border border-orange-200'}`}>
                                     <p className={`text-sm font-medium ${stats.netCashFlow >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
-                                        {stats.netCashFlow >= 0 ? '💵 Positive Cash Flow' : '💸 Negative Cash Flow'}
+                                        {stats.netCashFlow >= 0 ? `💵 ${t('reports.positive_cash_flow')}` : `💸 ${t('reports.negative_cash_flow')}`}
                                     </p>
                                     <p className="text-xs text-gray-600 mt-1">
                                         {stats.netCashFlow >= 0
-                                            ? 'You received more cash than you spent. Healthy!'
-                                            : 'You paid out more than you collected. Check dues!'}
+                                            ? t('reports.received_more_cash')
+                                            : t('reports.paid_more_cash')}
                                     </p>
                                 </div>
                                 <div className={`p-3 rounded-lg ${(timeFilter === 'all' ? (duesData?.totalCustomerDue || 0) : stats.totalSalesDue) > 0 ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'}`}>
                                     <p className={`text-sm font-medium ${(timeFilter === 'all' ? (duesData?.totalCustomerDue || 0) : stats.totalSalesDue) > 0 ? 'text-yellow-700' : 'text-green-700'}`}>
-                                        {(timeFilter === 'all' ? (duesData?.totalCustomerDue || 0) : stats.totalSalesDue) > 0 ? `📋 ${formatCurrency(timeFilter === 'all' ? (duesData?.totalCustomerDue || 0) : stats.totalSalesDue)} ${timeFilter === 'all' ? 'Outstanding' : 'Pending'}` : '✨ All Collected'}
+                                        {(timeFilter === 'all' ? (duesData?.totalCustomerDue || 0) : stats.totalSalesDue) > 0 ? `📋 ${formatCurrency(timeFilter === 'all' ? (duesData?.totalCustomerDue || 0) : stats.totalSalesDue)} ${timeFilter === 'all' ? t('reports.outstanding') : t('reports.pending')}` : `✨ ${t('reports.all_collected')}`}
                                     </p>
                                     <p className="text-xs text-gray-600 mt-1">
                                         {(timeFilter === 'all' ? (duesData?.totalCustomerDue || 0) : stats.totalSalesDue) > 0
-                                            ? (timeFilter === 'all' ? 'Total amount customers owe (including opening balance).' : 'Some customers have pending dues. Follow up!')
-                                            : 'All sales payments collected. Excellent!'}
+                                            ? (timeFilter === 'all' ? t('reports.understanding_numbers') : t('reports.pending_from_bills'))
+                                            : t('reports.all_sales_collected')}
                                     </p>
                                 </div>
                             </div>
@@ -1141,21 +1149,21 @@ export default function RevenueReportPage() {
                                 className="flex items-center gap-1 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg text-xs md:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white"
                             >
                                 <BarChart3 className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                <span>Day-wise</span>
+                                <span>{t('reports.day_wise_breakdown')}</span>
                             </TabsTrigger>
                             <TabsTrigger
                                 value="transactions"
                                 className="flex items-center gap-1 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg text-xs md:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white"
                             >
                                 <Receipt className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                <span>Transactions</span>
+                                <span>{t('reports.transactions')}</span>
                             </TabsTrigger>
                             <TabsTrigger
                                 value="payment-methods"
                                 className="flex items-center gap-1 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-lg text-xs md:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white"
                             >
                                 <CreditCard className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                <span className="inline">Payments</span>
+                                <span className="inline">{t('reports.payment_methods')}</span>
                             </TabsTrigger>
                         </TabsList>
                     </div>
@@ -1168,9 +1176,9 @@ export default function RevenueReportPage() {
                                         <BarChart3 className="h-4 w-4 md:h-5 md:w-5" />
                                     </div>
                                     <div>
-                                        <CardTitle className="text-base md:text-lg">Day-wise Performance</CardTitle>
+                                        <CardTitle className="text-base md:text-lg">{t('reports.day_wise_performance')}</CardTitle>
                                         <p className="text-xs md:text-sm text-gray-500 mt-0.5 hidden sm:block">
-                                            Breakdown by date for the selected period
+                                            {t('reports.day_wise_breakdown')}
                                         </p>
                                     </div>
                                 </div>
@@ -1188,14 +1196,14 @@ export default function RevenueReportPage() {
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow className="bg-gray-50 hover:bg-gray-50">
-                                                        <TableHead>Date</TableHead>
-                                                        <TableHead className="text-right">Sales</TableHead>
-                                                        <TableHead className="text-right">Collected</TableHead>
-                                                        <TableHead className="text-right">Purchases</TableHead>
-                                                        <TableHead className="text-right">Paid</TableHead>
-                                                        <TableHead className="text-right">Profit</TableHead>
-                                                        <TableHead className="text-right">Cash Flow</TableHead>
-                                                        <TableHead className="text-center">Bills</TableHead>
+                                                        <TableHead>{t('reports.date')}</TableHead>
+                                                        <TableHead className="text-right">{t('reports.sales')}</TableHead>
+                                                        <TableHead className="text-right">{t('reports.collected')}</TableHead>
+                                                        <TableHead className="text-right">{t('reports.purchases')}</TableHead>
+                                                        <TableHead className="text-right">{t('reports.paid')}</TableHead>
+                                                        <TableHead className="text-right">{t('reports.profit')}</TableHead>
+                                                        <TableHead className="text-right">{t('reports.cash_flow')}</TableHead>
+                                                        <TableHead className="text-center">{t('reports.transactions')}</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
@@ -1301,20 +1309,20 @@ export default function RevenueReportPage() {
                                         </div>
                                         <div>
                                             <CardTitle className="text-base md:text-lg">
-                                                <span className="md:hidden">Transactions</span>
-                                                <span className="hidden md:inline">All Transactions</span>
+                                                <span className="md:hidden">{t('reports.transactions')}</span>
+                                                <span className="hidden md:inline">{t('reports.all_transactions')}</span>
                                             </CardTitle>
                                             <p className="text-xs md:text-sm text-gray-500 mt-0.5">
                                                 <span className="md:hidden">{filteredTransactions.length}/{bills.length}</span>
-                                                <span className="hidden md:inline">{filteredTransactions.length} of {bills.length} transactions shown</span>
+                                                <span className="hidden md:inline">{filteredTransactions.length} of {bills.length} {t('reports.transactions')} indicated</span>
                                             </p>
                                         </div>
                                     </div>
                                     {hasTxnFilters && (
                                         <Button variant="ghost" size="sm" onClick={clearTxnFilters} className="text-gray-500 hover:text-gray-700 h-8 px-2 md:px-3 text-xs md:text-sm">
                                             <X className="h-3.5 w-3.5 md:h-4 md:w-4 mr-0.5 md:mr-1" />
-                                            <span className="hidden sm:inline">Clear Filters</span>
-                                            <span className="sm:hidden">Clear</span>
+                                            <span className="hidden sm:inline">{t('reports.clear_filters')}</span>
+                                            <span className="sm:hidden">{t('reports.clear_filters')}</span>
                                         </Button>
                                     )}
                                 </div>
@@ -1323,7 +1331,7 @@ export default function RevenueReportPage() {
                                 <div className="mt-3 relative">
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
                                     <Input
-                                        placeholder="Search bill or party..."
+                                        placeholder={t('reports.search_placeholder')}
                                         value={txnSearch}
                                         onChange={(e) => {
                                             setTxnSearch(e.target.value);
@@ -1345,12 +1353,12 @@ export default function RevenueReportPage() {
                                             }}
                                         >
                                             <SelectTrigger className="w-[100px] md:w-[120px] h-8 md:h-9 text-xs md:text-sm">
-                                                <SelectValue placeholder="Type" />
+                                                <SelectValue placeholder={t('reports.type')} />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="all">All Types</SelectItem>
-                                                <SelectItem value="sale">Sales</SelectItem>
-                                                <SelectItem value="purchase">Purchases</SelectItem>
+                                                <SelectItem value="all">{t('reports.all_types')}</SelectItem>
+                                                <SelectItem value="sale">{t('reports.sale')}</SelectItem>
+                                                <SelectItem value="purchase">{t('reports.purchase')}</SelectItem>
                                             </SelectContent>
                                         </Select>
 
@@ -1363,13 +1371,13 @@ export default function RevenueReportPage() {
                                             }}
                                         >
                                             <SelectTrigger className="w-[100px] md:w-[120px] h-8 md:h-9 text-xs md:text-sm">
-                                                <SelectValue placeholder="Method" />
+                                                <SelectValue placeholder={t('reports.method')} />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="all">All Methods</SelectItem>
-                                                <SelectItem value="cash">Cash</SelectItem>
-                                                <SelectItem value="card">Card</SelectItem>
-                                                <SelectItem value="online">Online</SelectItem>
+                                                <SelectItem value="all">{t('reports.all_methods')}</SelectItem>
+                                                <SelectItem value="cash">{t('reports.cash')}</SelectItem>
+                                                <SelectItem value="card">{t('reports.card')}</SelectItem>
+                                                <SelectItem value="online">{t('reports.online')}</SelectItem>
                                             </SelectContent>
                                         </Select>
 
@@ -1382,13 +1390,13 @@ export default function RevenueReportPage() {
                                             }}
                                         >
                                             <SelectTrigger className="w-[100px] md:w-[120px] h-8 md:h-9 text-xs md:text-sm">
-                                                <SelectValue placeholder="Status" />
+                                                <SelectValue placeholder={t('reports.status')} />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="all">All Status</SelectItem>
-                                                <SelectItem value="paid">Paid</SelectItem>
-                                                <SelectItem value="partial">Partial</SelectItem>
-                                                <SelectItem value="pending">Pending</SelectItem>
+                                                <SelectItem value="all">{t('reports.all_statuses')}</SelectItem>
+                                                <SelectItem value="paid">{t('reports.paid')}</SelectItem>
+                                                <SelectItem value="partial">{t('reports.partial')}</SelectItem>
+                                                <SelectItem value="pending">{t('reports.pending')}</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -1405,19 +1413,19 @@ export default function RevenueReportPage() {
                                         )}
                                         {txnTypeFilter !== 'all' && (
                                             <Badge variant="secondary" className="flex items-center gap-1">
-                                                Type: {txnTypeFilter === 'sale' ? 'Sales' : 'Purchases'}
+                                                {t('reports.type')}: {txnTypeFilter === 'sale' ? t('reports.sale') : t('reports.purchase')}
                                                 <X className="h-3 w-3 cursor-pointer" onClick={() => { setTxnTypeFilter('all'); setTxnPage(1); }} />
                                             </Badge>
                                         )}
                                         {txnMethodFilter !== 'all' && (
                                             <Badge variant="secondary" className="flex items-center gap-1">
-                                                Method: {txnMethodFilter.charAt(0).toUpperCase() + txnMethodFilter.slice(1)}
+                                                {t('reports.method')}: {t(`reports.${txnMethodFilter}`)}
                                                 <X className="h-3 w-3 cursor-pointer" onClick={() => { setTxnMethodFilter('all'); setTxnPage(1); }} />
                                             </Badge>
                                         )}
                                         {txnStatusFilter !== 'all' && (
                                             <Badge variant="secondary" className="flex items-center gap-1">
-                                                Status: {txnStatusFilter.charAt(0).toUpperCase() + txnStatusFilter.slice(1)}
+                                                {t('reports.status')}: {t(`reports.${txnStatusFilter}`)}
                                                 <X className="h-3 w-3 cursor-pointer" onClick={() => { setTxnStatusFilter('all'); setTxnPage(1); }} />
                                             </Badge>
                                         )}
@@ -1436,39 +1444,45 @@ export default function RevenueReportPage() {
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
-                                                        <TableHead>Date</TableHead>
-                                                        <TableHead>Bill No.</TableHead>
-                                                        <TableHead>Type</TableHead>
-                                                        <TableHead>Party</TableHead>
-                                                        <TableHead className="text-right">Amount</TableHead>
-                                                        <TableHead className="text-right">Paid</TableHead>
-                                                        <TableHead>Method</TableHead>
-                                                        <TableHead>Status</TableHead>
+                                                        <TableHead>{t('reports.date')}</TableHead>
+                                                        <TableHead>{t('reports.bill_number')}</TableHead>
+                                                        <TableHead>{t('reports.type')}</TableHead>
+                                                        <TableHead>{t('history.entity')}</TableHead>
+                                                        <TableHead className="text-right">{t('reports.amount')}</TableHead>
+                                                        <TableHead className="text-right">{t('reports.paid')}</TableHead>
+                                                        <TableHead>{t('reports.method')}</TableHead>
+                                                        <TableHead>{t('reports.status')}</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
                                                     {paginatedTransactions.map((bill) => {
                                                         const due = bill.dueAmount || (bill.totalAmount - bill.paidAmount);
+                                                        const entityName = bill.entityName === 'Walk-in Customer' ? t('common.walk_in_customer') : bill.entityName;
+                                                        const paymentMethodLabel = bill.paymentMethod?.toLowerCase() === 'cash' ? t('reports.cash')
+                                                            : bill.paymentMethod?.toLowerCase() === 'online' ? t('reports.online')
+                                                                : bill.paymentMethod?.toLowerCase() === 'card' ? t('reports.card')
+                                                                    : bill.paymentMethod;
+
                                                         return (
                                                             <TableRow key={bill._id}>
                                                                 <TableCell className="text-sm">{format(new Date(bill.createdAt), 'dd MMM, hh:mm a')}</TableCell>
                                                                 <TableCell className="font-mono text-sm">{bill.billNumber}</TableCell>
                                                                 <TableCell>
                                                                     <Badge className={bill.billType === 'sale' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}>
-                                                                        {bill.billType === 'sale' ? 'Sale' : 'Purchase'}
+                                                                        {bill.billType === 'sale' ? t('reports.sale') : t('reports.purchase')}
                                                                     </Badge>
                                                                 </TableCell>
-                                                                <TableCell>{bill.entityName}</TableCell>
+                                                                <TableCell>{entityName}</TableCell>
                                                                 <TableCell className="text-right font-medium">{formatCurrency(bill.totalAmount)}</TableCell>
                                                                 <TableCell className="text-right text-green-600">{formatCurrency(bill.paidAmount)}</TableCell>
-                                                                <TableCell className="capitalize">{bill.paymentMethod}</TableCell>
+                                                                <TableCell className="capitalize">{paymentMethodLabel}</TableCell>
                                                                 <TableCell>
                                                                     {due <= 0 ? (
-                                                                        <Badge className="bg-green-100 text-green-700">Paid</Badge>
+                                                                        <Badge className="bg-green-100 text-green-700">{t('reports.paid')}</Badge>
                                                                     ) : bill.paidAmount > 0 ? (
-                                                                        <Badge className="bg-yellow-100 text-yellow-700">Partial</Badge>
+                                                                        <Badge className="bg-yellow-100 text-yellow-700">{t('reports.partial')}</Badge>
                                                                     ) : (
-                                                                        <Badge variant="destructive">Pending</Badge>
+                                                                        <Badge variant="destructive">{t('reports.pending')}</Badge>
                                                                     )}
                                                                 </TableCell>
                                                             </TableRow>
@@ -1482,38 +1496,44 @@ export default function RevenueReportPage() {
                                         <div className="md:hidden">
                                             {paginatedTransactions.map((bill, index) => {
                                                 const due = bill.dueAmount || (bill.totalAmount - bill.paidAmount);
+                                                const entityName = bill.entityName === 'Walk-in Customer' ? t('common.walk_in_customer') : bill.entityName;
+                                                const paymentMethodLabel = bill.paymentMethod?.toLowerCase() === 'cash' ? t('reports.cash')
+                                                    : bill.paymentMethod?.toLowerCase() === 'online' ? t('reports.online')
+                                                        : bill.paymentMethod?.toLowerCase() === 'card' ? t('reports.card')
+                                                            : bill.paymentMethod;
+
                                                 return (
                                                     <div key={bill._id} className={`p-3 hover:bg-blue-50/30 active:scale-[0.99] transition-all ${index !== paginatedTransactions.length - 1 ? 'border-b-2 border-gray-200' : ''}`}>
                                                         <div className="flex items-start justify-between mb-2">
                                                             <div className="flex items-center gap-2.5">
                                                                 <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm ${bill.billType === 'sale' ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-orange-500 to-amber-600'}`}>
-                                                                    {bill.entityName?.charAt(0)?.toUpperCase() || 'B'}
+                                                                    {entityName?.charAt(0)?.toUpperCase() || 'B'}
                                                                 </div>
                                                                 <div>
-                                                                    <p className="font-semibold text-gray-900 text-sm truncate max-w-[120px]">{bill.entityName}</p>
+                                                                    <p className="font-semibold text-gray-900 text-sm truncate max-w-[120px]">{entityName}</p>
                                                                     <p className="text-[10px] text-gray-500 font-mono">{bill.billNumber}</p>
                                                                 </div>
                                                             </div>
                                                             <div className="text-right">
                                                                 <Badge className={`text-[9px] px-1 ${bill.billType === 'sale' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                                                                    {bill.billType === 'sale' ? 'Sale' : 'Purchase'}
+                                                                    {bill.billType === 'sale' ? t('reports.sale') : t('reports.purchase')}
                                                                 </Badge>
-                                                                <p className="text-[10px] text-gray-400 mt-0.5 capitalize">{bill.paymentMethod}</p>
+                                                                <p className="text-[10px] text-gray-400 mt-0.5 capitalize">{paymentMethodLabel}</p>
                                                             </div>
                                                         </div>
 
                                                         {/* Financials Row */}
                                                         <div className="grid grid-cols-3 gap-2 mb-2 bg-gray-50/50 p-1.5 rounded-lg border border-gray-100">
                                                             <div>
-                                                                <p className="text-[9px] text-gray-500">Total</p>
+                                                                <p className="text-[9px] text-gray-500">{t('common.total')}</p>
                                                                 <p className={`font-bold text-xs ${bill.billType === 'sale' ? 'text-green-700' : 'text-orange-700'}`}>{formatCurrency(bill.totalAmount)}</p>
                                                             </div>
                                                             <div>
-                                                                <p className="text-[9px] text-gray-500">Paid</p>
+                                                                <p className="text-[9px] text-gray-500">{t('reports.paid')}</p>
                                                                 <p className="font-semibold text-xs text-green-600">{formatCurrency(bill.paidAmount)}</p>
                                                             </div>
                                                             <div>
-                                                                <p className="text-[9px] text-gray-500">Due</p>
+                                                                <p className="text-[9px] text-gray-500">{t('billing.due')}</p>
                                                                 <p className={`font-semibold text-xs ${due > 0 ? 'text-red-500' : 'text-gray-400'}`}>
                                                                     {due > 0 ? formatCurrency(due) : '-'}
                                                                 </p>
@@ -1525,7 +1545,7 @@ export default function RevenueReportPage() {
                                                                 bill.paidAmount > 0 ? 'bg-yellow-100 text-yellow-700' :
                                                                     'bg-red-100 text-red-700'
                                                                 }`}>
-                                                                {due <= 0 ? 'Paid' : bill.paidAmount > 0 ? 'Partial' : 'Pending'}
+                                                                {due <= 0 ? t('reports.paid') : bill.paidAmount > 0 ? t('reports.partial') : t('reports.pending')}
                                                             </Badge>
                                                             <p className="text-[10px] text-gray-400">
                                                                 {format(new Date(bill.createdAt), 'dd MMM, hh:mm a')}
@@ -1549,7 +1569,7 @@ export default function RevenueReportPage() {
                                                         className="h-9 px-3"
                                                     >
                                                         <ChevronLeft className="h-4 w-4 mr-1" />
-                                                        Prev
+                                                        {t('reports.prev')}
                                                     </Button>
                                                     <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-100 text-purple-700 text-sm font-medium">
                                                         <span>{txnPage}</span>
@@ -1563,7 +1583,7 @@ export default function RevenueReportPage() {
                                                         disabled={txnPage === txnTotalPages}
                                                         className="h-9 px-3"
                                                     >
-                                                        Next
+                                                        {t('reports.next')}
                                                         <ChevronRight className="h-4 w-4 ml-1" />
                                                     </Button>
                                                 </div>
@@ -1571,7 +1591,12 @@ export default function RevenueReportPage() {
                                                 {/* Desktop Pagination */}
                                                 <div className="hidden md:flex items-center justify-between px-4 py-3 border-t bg-gray-50">
                                                     <p className="text-sm text-gray-600">
-                                                        Showing {((txnPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(txnPage * ITEMS_PER_PAGE, filteredTransactions.length)} of {filteredTransactions.length} transactions
+                                                        {t('reports.showing_range', {
+                                                            start: ((txnPage - 1) * ITEMS_PER_PAGE) + 1,
+                                                            end: Math.min(txnPage * ITEMS_PER_PAGE, filteredTransactions.length),
+                                                            total: filteredTransactions.length,
+                                                            type: t('reports.transactions').toLowerCase()
+                                                        })}
                                                     </p>
                                                     <div className="flex items-center gap-1">
                                                         <Button
@@ -1593,7 +1618,7 @@ export default function RevenueReportPage() {
                                                             <ChevronLeft className="h-4 w-4" />
                                                         </Button>
                                                         <span className="px-3 text-sm font-medium">
-                                                            Page {txnPage} of {txnTotalPages}
+                                                            {t('reports.page_of', { current: txnPage, total: txnTotalPages })}
                                                         </span>
                                                         <Button
                                                             variant="outline"
@@ -1622,11 +1647,11 @@ export default function RevenueReportPage() {
                                     <div className="p-8 text-center">
                                         <Receipt className="h-10 w-10 md:h-12 md:w-12 text-gray-300 mx-auto mb-3 md:mb-4" />
                                         <p className="text-gray-500 text-sm">
-                                            {hasTxnFilters ? 'No transactions match' : 'No transactions'}
+                                            {hasTxnFilters ? t('reports.no_transactions_match') : t('reports.no_transactions_title')}
                                         </p>
                                         {hasTxnFilters && (
                                             <Button variant="link" onClick={clearTxnFilters} size="sm" className="mt-2">
-                                                Clear filters
+                                                {t('reports.clear_filters')}
                                             </Button>
                                         )}
                                     </div>
@@ -1645,7 +1670,7 @@ export default function RevenueReportPage() {
                                     <div>
                                         <CardTitle className="text-base md:text-lg">Payment Methods</CardTitle>
                                         <p className="text-xs md:text-sm text-gray-500 mt-0.5 hidden sm:block">
-                                            Cash flow by payment type
+                                            {t('reports.cash_flow_by_type')}
                                         </p>
                                     </div>
                                 </div>
@@ -1659,25 +1684,25 @@ export default function RevenueReportPage() {
                                                 <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-green-100 flex items-center justify-center">
                                                     <Wallet className="h-4 w-4 md:h-6 md:w-6 text-green-600" />
                                                 </div>
-                                                <h3 className="font-semibold text-sm md:text-base">Cash</h3>
+                                                <h3 className="font-semibold text-sm md:text-base">{t('reports.cash')}</h3>
                                             </div>
                                             <div className="space-y-1.5 md:space-y-2 text-sm">
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-600 text-xs md:text-sm">Received</span>
+                                                    <span className="text-gray-600 text-xs md:text-sm">{t('reports.received')}</span>
                                                     <span className="font-medium text-green-600">
                                                         <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.cash.sales)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.cash.sales)}</span>
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-600 text-xs md:text-sm">Paid</span>
+                                                    <span className="text-gray-600 text-xs md:text-sm">{t('reports.paid')}</span>
                                                     <span className="font-medium text-orange-600">
                                                         <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.cash.purchases)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.cash.purchases)}</span>
                                                     </span>
                                                 </div>
                                                 <div className="border-t pt-1.5 md:pt-2 flex justify-between">
-                                                    <span className="font-medium text-xs md:text-sm">Net</span>
+                                                    <span className="font-medium text-xs md:text-sm">{t('reports.net')}</span>
                                                     <span className={`font-bold ${stats.paymentBreakdown.cash.sales - stats.paymentBreakdown.cash.purchases >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                         <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.cash.sales - stats.paymentBreakdown.cash.purchases)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.cash.sales - stats.paymentBreakdown.cash.purchases)}</span>
@@ -1694,25 +1719,25 @@ export default function RevenueReportPage() {
                                                 <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-blue-100 flex items-center justify-center">
                                                     <CreditCard className="h-4 w-4 md:h-6 md:w-6 text-blue-600" />
                                                 </div>
-                                                <h3 className="font-semibold text-sm md:text-base">Card</h3>
+                                                <h3 className="font-semibold text-sm md:text-base">{t('reports.card')}</h3>
                                             </div>
                                             <div className="space-y-1.5 md:space-y-2 text-sm">
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-600 text-xs md:text-sm">Received</span>
+                                                    <span className="text-gray-600 text-xs md:text-sm">{t('reports.received')}</span>
                                                     <span className="font-medium text-green-600">
                                                         <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.card.sales)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.card.sales)}</span>
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-600 text-xs md:text-sm">Paid</span>
+                                                    <span className="text-gray-600 text-xs md:text-sm">{t('reports.paid')}</span>
                                                     <span className="font-medium text-orange-600">
                                                         <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.card.purchases)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.card.purchases)}</span>
                                                     </span>
                                                 </div>
                                                 <div className="border-t pt-1.5 md:pt-2 flex justify-between">
-                                                    <span className="font-medium text-xs md:text-sm">Net</span>
+                                                    <span className="font-medium text-xs md:text-sm">{t('reports.net')}</span>
                                                     <span className={`font-bold ${stats.paymentBreakdown.card.sales - stats.paymentBreakdown.card.purchases >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                         <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.card.sales - stats.paymentBreakdown.card.purchases)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.card.sales - stats.paymentBreakdown.card.purchases)}</span>
@@ -1729,25 +1754,25 @@ export default function RevenueReportPage() {
                                                 <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-purple-100 flex items-center justify-center">
                                                     <IndianRupee className="h-4 w-4 md:h-6 md:w-6 text-purple-600" />
                                                 </div>
-                                                <h3 className="font-semibold text-sm md:text-base">Online/UPI</h3>
+                                                <h3 className="font-semibold text-sm md:text-base">{t('reports.online')}/UPI</h3>
                                             </div>
                                             <div className="space-y-1.5 md:space-y-2 text-sm">
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-600 text-xs md:text-sm">Received</span>
+                                                    <span className="text-gray-600 text-xs md:text-sm">{t('reports.received')}</span>
                                                     <span className="font-medium text-green-600">
                                                         <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.online.sales)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.online.sales)}</span>
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-600 text-xs md:text-sm">Paid</span>
+                                                    <span className="text-gray-600 text-xs md:text-sm">{t('reports.paid')}</span>
                                                     <span className="font-medium text-orange-600">
                                                         <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.online.purchases)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.online.purchases)}</span>
                                                     </span>
                                                 </div>
                                                 <div className="border-t pt-1.5 md:pt-2 flex justify-between">
-                                                    <span className="font-medium text-xs md:text-sm">Net</span>
+                                                    <span className="font-medium text-xs md:text-sm">{t('reports.net')}</span>
                                                     <span className={`font-bold ${stats.paymentBreakdown.online.sales - stats.paymentBreakdown.online.purchases >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                         <span className="md:hidden">{formatCurrency(stats.paymentBreakdown.online.sales - stats.paymentBreakdown.online.purchases)}</span>
                                                         <span className="hidden md:inline">{formatCurrency(stats.paymentBreakdown.online.sales - stats.paymentBreakdown.online.purchases)}</span>

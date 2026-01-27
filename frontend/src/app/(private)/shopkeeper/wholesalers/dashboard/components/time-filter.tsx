@@ -32,15 +32,8 @@ interface TimeFilterProps {
     onChange: (option: TimeFilterOption, range: DateRange) => void;
 }
 
-const filterLabels: Record<TimeFilterOption, string> = {
-    today: 'Today',
-    yesterday: 'Yesterday',
-    this_week: 'This Week',
-    this_month: 'This Month',
-    this_year: 'This Year',
-    all_time: 'All Time',
-    custom: 'Custom Range',
-};
+import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
 
 export function getDateRange(option: TimeFilterOption, customStart?: Date, customEnd?: Date): DateRange {
     const now = new Date();
@@ -70,9 +63,20 @@ export function getDateRange(option: TimeFilterOption, customStart?: Date, custo
 }
 
 export function TimeFilter({ value, onChange }: TimeFilterProps) {
+    const { t } = useTranslation();
     const [customStartDate, setCustomStartDate] = useState('');
     const [customEndDate, setCustomEndDate] = useState('');
     const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false);
+
+    const filterLabels: Record<TimeFilterOption, string> = {
+        today: t('history.time_filters.today'),
+        yesterday: t('history.time_filters.yesterday'),
+        this_week: t('history.time_filters.this_week'),
+        this_month: t('history.time_filters.this_month'),
+        this_year: t('history.time_filters.this_year'),
+        all_time: t('wholesaler_dashboard.all_time'),
+        custom: t('history.time_filters.custom'),
+    };
 
     const handleOptionSelect = (option: TimeFilterOption) => {
         if (option === 'custom') {
@@ -130,7 +134,7 @@ export function TimeFilter({ value, onChange }: TimeFilterProps) {
                         >
                             <span className="flex items-center gap-2">
                                 {value === 'today' && <span className="w-2 h-2 rounded-full bg-purple-500" />}
-                                Today
+                                {t('history.time_filters.today')}
                             </span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -139,7 +143,7 @@ export function TimeFilter({ value, onChange }: TimeFilterProps) {
                         >
                             <span className="flex items-center gap-2">
                                 {value === 'yesterday' && <span className="w-2 h-2 rounded-full bg-purple-500" />}
-                                Yesterday
+                                {t('history.time_filters.yesterday')}
                             </span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -148,7 +152,7 @@ export function TimeFilter({ value, onChange }: TimeFilterProps) {
                         >
                             <span className="flex items-center gap-2">
                                 {value === 'this_week' && <span className="w-2 h-2 rounded-full bg-purple-500" />}
-                                This Week
+                                {t('history.time_filters.this_week')}
                             </span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -157,7 +161,7 @@ export function TimeFilter({ value, onChange }: TimeFilterProps) {
                         >
                             <span className="flex items-center gap-2">
                                 {value === 'this_month' && <span className="w-2 h-2 rounded-full bg-purple-500" />}
-                                This Month
+                                {t('history.time_filters.this_month')}
                             </span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -166,7 +170,7 @@ export function TimeFilter({ value, onChange }: TimeFilterProps) {
                         >
                             <span className="flex items-center gap-2">
                                 {value === 'this_year' && <span className="w-2 h-2 rounded-full bg-purple-500" />}
-                                This Year
+                                {t('history.time_filters.this_year')}
                             </span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -175,7 +179,7 @@ export function TimeFilter({ value, onChange }: TimeFilterProps) {
                         >
                             <span className="flex items-center gap-2">
                                 {value === 'all_time' && <span className="w-2 h-2 rounded-full bg-purple-500" />}
-                                All Time
+                                {t('wholesaler_dashboard.all_time')}
                             </span>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -185,7 +189,7 @@ export function TimeFilter({ value, onChange }: TimeFilterProps) {
                         >
                             <span className="flex items-center gap-2">
                                 {value === 'custom' && <span className="w-2 h-2 rounded-full bg-purple-500" />}
-                                Custom Range...
+                                {t('wholesaler_dashboard.select_custom_range')}...
                             </span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -198,7 +202,7 @@ export function TimeFilter({ value, onChange }: TimeFilterProps) {
                         size="icon"
                         onClick={handleReset}
                         className="bg-white shadow-sm hover:bg-gray-50 h-8 w-8 md:h-10 md:w-10"
-                        title="Reset to Today"
+                        title={t('wholesaler_dashboard.reset_to_today')}
                     >
                         <RotateCcw className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-500" />
                     </Button>
@@ -211,13 +215,13 @@ export function TimeFilter({ value, onChange }: TimeFilterProps) {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Calendar className="h-5 w-5 text-purple-500" />
-                            Select Custom Date Range
+                            {t('wholesaler_dashboard.select_custom_range')}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="startDate">Start Date</Label>
+                                <Label htmlFor="startDate">{t('history.custom_range.from')}</Label>
                                 <Input
                                     id="startDate"
                                     type="date"
@@ -226,7 +230,7 @@ export function TimeFilter({ value, onChange }: TimeFilterProps) {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="endDate">End Date</Label>
+                                <Label htmlFor="endDate">{t('history.custom_range.to')}</Label>
                                 <Input
                                     id="endDate"
                                     type="date"
@@ -255,14 +259,14 @@ export function TimeFilter({ value, onChange }: TimeFilterProps) {
                                 onClick={() => setIsCustomDialogOpen(false)}
                                 className="flex-1"
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </Button>
                             <Button
                                 onClick={handleCustomApply}
                                 className="flex-1 bg-purple-600 hover:bg-purple-700"
                                 disabled={!customStartDate || !customEndDate}
                             >
-                                Apply Range
+                                {t('history.custom_range.apply')}
                             </Button>
                         </div>
                     </div>

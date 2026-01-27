@@ -29,10 +29,10 @@ function formatCurrency(amount: number): string {
 
 
 
-function getDaysAgo(date: string): string {
+function getDaysAgo(date: string, t: any): string {
     const days = differenceInDays(new Date(), new Date(date));
-    if (days === 0) return 'Today';
-    if (days === 1) return 'Yesterday';
+    if (days === 0) return t('history.time_filters.today');
+    if (days === 1) return t('history.time_filters.yesterday');
     if (days < 7) return `${days}d ago`;
     if (days < 30) return `${Math.floor(days / 7)}w ago`;
     return `${Math.floor(days / 30)}m ago`;
@@ -44,14 +44,17 @@ function getUrgencyColor(amount: number): string {
     return 'from-yellow-500 to-amber-500';
 }
 
+import { useTranslation } from 'react-i18next';
+
 export function PendingDues({ customers, isLoading }: PendingDuesProps) {
+    const { t } = useTranslation();
     if (isLoading) {
         return (
             <Card className="border-0 shadow-lg md:shadow-xl rounded-xl md:rounded-2xl">
                 <CardHeader className="bg-gradient-to-r from-rose-50 to-red-50 border-b p-3 md:p-6">
                     <CardTitle className="flex items-center gap-2 text-sm md:text-base">
                         <AlertTriangle className="h-4 w-4 md:h-5 md:w-5 text-rose-500" />
-                        Pending Dues
+                        {t('customer_dashboard.pending_dues')}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 md:pt-6 md:px-6">
@@ -81,9 +84,9 @@ export function PendingDues({ customers, isLoading }: PendingDuesProps) {
                             <AlertTriangle className="h-4 w-4 md:h-5 md:w-5" />
                         </div>
                         <div>
-                            <span className="block">Pending Dues</span>
+                            <span className="block">{t('customer_dashboard.pending_dues')}</span>
                             <span className="text-[10px] md:text-sm font-normal text-rose-600">
-                                <span className="text-rose-600">{sortedCustomers.length} customers • {formatCurrency(totalDue)} pending</span>
+                                <span className="text-rose-600">{sortedCustomers.length} {t('common.customers')} • {formatCurrency(totalDue)} {t('billing.status_due')}</span>
                             </span>
                         </div>
                     </CardTitle>
@@ -91,7 +94,7 @@ export function PendingDues({ customers, isLoading }: PendingDuesProps) {
                         href="/shopkeeper/customers/due"
                         className="text-xs md:text-sm text-rose-600 hover:text-rose-700 flex items-center gap-1 font-medium"
                     >
-                        <span className="hidden sm:inline">View All</span> <ArrowRight className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        <span className="hidden sm:inline">{t('dashboard.view_all')}</span> <ArrowRight className="h-3.5 w-3.5 md:h-4 md:w-4" />
                     </Link>
                 </div>
             </CardHeader>
@@ -126,7 +129,7 @@ export function PendingDues({ customers, isLoading }: PendingDuesProps) {
                                                     {customer.lastTransactionDate && (
                                                         <div className="flex items-center gap-1">
                                                             <Clock className="h-3 w-3" />
-                                                            <span>{getDaysAgo(customer.lastTransactionDate)}</span>
+                                                            <span>{getDaysAgo(customer.lastTransactionDate, t)}</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -171,7 +174,7 @@ export function PendingDues({ customers, isLoading }: PendingDuesProps) {
                                             </div>
                                             {customer.lastTransactionDate && (
                                                 <span className="text-[10px] text-gray-400 flex-shrink-0">
-                                                    {getDaysAgo(customer.lastTransactionDate)}
+                                                    {getDaysAgo(customer.lastTransactionDate, t)}
                                                 </span>
                                             )}
                                         </div>
@@ -179,7 +182,7 @@ export function PendingDues({ customers, isLoading }: PendingDuesProps) {
                                         {/* Due Amount - Prominent Display */}
                                         <div className="bg-red-50 rounded-lg p-2 border border-red-100">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs text-red-600 font-medium">Pending Due</span>
+                                                <span className="text-xs text-red-600 font-medium">{t('billing.status_due')}</span>
                                                 <span className="font-bold text-red-600 text-base">{formatCurrency(customer.outstandingDue)}</span>
                                             </div>
                                         </div>
@@ -193,8 +196,8 @@ export function PendingDues({ customers, isLoading }: PendingDuesProps) {
                         <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3 md:mb-4">
                             <span className="text-xl md:text-2xl">🎉</span>
                         </div>
-                        <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">No pending dues!</h3>
-                        <p className="text-gray-500 text-sm md:text-base">All payments are up to date</p>
+                        <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">{t('dashboard.no_pending_dues')}</h3>
+                        <p className="text-gray-500 text-sm md:text-base">{t('wholesaler_detail.payments_table.empty_desc')}</p>
                     </div>
                 )}
             </CardContent>

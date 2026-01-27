@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import api from '@/config/axios';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface Customer {
     _id: string;
@@ -35,6 +36,7 @@ function formatCurrency(amount: number): string {
 }
 
 export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
+    const { t } = useTranslation();
     const queryClient = useQueryClient();
     const [isOpen, setIsOpen] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'online'>('cash');
@@ -61,10 +63,10 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
             setIsOpen(false);
             setAmount('');
             setNotes('');
-            toast.success('Payment recorded successfully');
+            toast.success(t('wholesaler_payments.messages.success'));
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Failed to record payment');
+            toast.error(error.response?.data?.message || t('wholesaler_payments.messages.error'));
         },
     });
 
@@ -72,7 +74,7 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
         e.preventDefault();
 
         if (!parsedAmount || parsedAmount <= 0) {
-            toast.error('Please enter a valid amount');
+            toast.error(t('wholesaler_payments.messages.invalid_amount'));
             return;
         }
 
@@ -96,8 +98,8 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
     };
 
     const paymentMethods = [
-        { value: 'cash' as const, label: 'Cash', icon: Banknote, color: 'green' },
-        { value: 'card' as const, label: 'Card', icon: CreditCard, color: 'blue' },
+        { value: 'cash' as const, label: t('dashboard.cash'), icon: Banknote, color: 'green' },
+        { value: 'card' as const, label: t('dashboard.card'), icon: CreditCard, color: 'blue' },
         { value: 'online' as const, label: 'UPI', icon: Smartphone, color: 'purple' },
     ];
 
@@ -106,8 +108,8 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
             <DialogTrigger asChild>
                 <Button size="sm" className="bg-gradient-to-r from-green-600 to-emerald-600 h-8 md:h-9 text-xs md:text-sm px-2 md:px-4">
                     <IndianRupee className="mr-1 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
-                    <span className="hidden sm:inline">Receive Payment</span>
-                    <span className="sm:hidden">Pay</span>
+                    <span className="hidden sm:inline">{t('wholesaler_payments.record_payment')}</span>
+                    <span className="sm:hidden">{t('wholesaler_payments.record_payment_short')}</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0 gap-0 max-h-[85vh] flex flex-col" showCloseButton={false}>
@@ -123,9 +125,9 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
 
                     <DialogHeader>
                         <DialogTitle className="text-white text-base md:text-lg font-bold pr-8">
-                            Receive Payment
+                            {t('wholesaler_payments.record_payment')}
                         </DialogTitle>
-                        <p className="text-green-100 text-xs md:text-sm mt-0.5">from {customer.name}</p>
+                        <p className="text-green-100 text-xs md:text-sm mt-0.5">{t('wholesaler_payments.detail.pay_to', { name: customer.name })}</p>
                     </DialogHeader>
 
                     {/* Outstanding Due Badge */}
@@ -135,7 +137,7 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
                                 <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/20 flex items-center justify-center">
                                     <Wallet className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" />
                                 </div>
-                                <span className="text-white/80 text-xs md:text-sm font-medium">Outstanding</span>
+                                <span className="text-white/80 text-xs md:text-sm font-medium">{t('wholesaler_payments.stats.outstanding')}</span>
                             </div>
                             <span className={`text-lg md:text-xl font-bold ${customer.outstandingDue > 0 ? 'text-white' : 'text-green-200'}`}>
                                 {formatCurrency(customer.outstandingDue)}
@@ -150,7 +152,7 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
                         {/* Amount Input */}
                         <div className="space-y-1.5">
                             <Label htmlFor="amount" className="text-xs md:text-sm font-semibold text-slate-700">
-                                Payment Amount *
+                                {t('wholesaler_payments.form.amount')} *
                             </Label>
                             <div className="relative">
                                 <span className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-green-600 font-bold text-lg md:text-xl">₹</span>
@@ -177,7 +179,7 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-1.5">
                                                 <TrendingDown className="h-3.5 w-3.5 text-green-600" />
-                                                <span className="text-xs md:text-sm font-medium text-green-700">After Payment</span>
+                                                <span className="text-xs md:text-sm font-medium text-green-700">{t('wholesaler_payments.detail.after_payment')}</span>
                                             </div>
                                             <span className="text-base md:text-lg font-bold text-green-700">
                                                 {formatCurrency(newOutstandingDue)}
@@ -186,7 +188,7 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
                                         {newOutstandingDue === 0 && (
                                             <p className="text-[10px] md:text-xs text-green-600 mt-1 flex items-center gap-1">
                                                 <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-green-500 text-white text-[8px]">✓</span>
-                                                All dues cleared!
+                                                {t('wholesaler_payments.detail.all_dues_cleared')}
                                             </p>
                                         )}
                                     </div>
@@ -200,7 +202,7 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-1.5">
                                                         <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-green-500 text-white text-[10px] font-bold">✓</span>
-                                                        <span className="text-xs md:text-sm font-medium text-green-700">Dues Cleared</span>
+                                                        <span className="text-xs md:text-sm font-medium text-green-700">{t('wholesaler_payments.detail.dues_cleared')}</span>
                                                     </div>
                                                     <span className="text-sm md:text-base font-bold text-green-700">
                                                         {formatCurrency(customer.outstandingDue)}
@@ -212,14 +214,14 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-1.5">
                                                     <ArrowRight className="h-3.5 w-3.5 text-blue-600" />
-                                                    <span className="text-xs md:text-sm font-medium text-blue-700">Advance</span>
+                                                    <span className="text-xs md:text-sm font-medium text-blue-700">{t('wholesaler_payments.detail.advance')}</span>
                                                 </div>
                                                 <span className="text-base md:text-lg font-bold text-blue-700">
                                                     {formatCurrency(Math.abs(newOutstandingDue))}
                                                 </span>
                                             </div>
                                             <p className="text-[10px] md:text-xs text-blue-600 mt-1">
-                                                Customer will have credit for future purchases
+                                                {t('wholesaler_payments.detail.advance_desc').replace('മൊത്തക്കച്ചവടക്കാരനിൽ', t('common.customer'))}
                                             </p>
                                         </div>
                                     </div>
@@ -229,7 +231,7 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
 
                         {/* Payment Method Selection */}
                         <div className="space-y-1.5">
-                            <Label className="text-xs md:text-sm font-semibold text-slate-700">Payment Method *</Label>
+                            <Label className="text-xs md:text-sm font-semibold text-slate-700">{t('wholesaler_payments.form.method')} *</Label>
                             <div className="grid grid-cols-3 gap-2">
                                 {paymentMethods.map((method) => {
                                     const Icon = method.icon;
@@ -240,12 +242,12 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
                                             type="button"
                                             onClick={() => setPaymentMethod(method.value)}
                                             className={`py-2 md:py-2.5 px-2 rounded-lg text-[10px] md:text-xs font-semibold transition-all flex flex-col items-center gap-1 ${isSelected
-                                                    ? method.color === 'green'
-                                                        ? 'bg-green-500 text-white shadow-md'
-                                                        : method.color === 'blue'
-                                                            ? 'bg-blue-500 text-white shadow-md'
-                                                            : 'bg-purple-500 text-white shadow-md'
-                                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
+                                                ? method.color === 'green'
+                                                    ? 'bg-green-500 text-white shadow-md'
+                                                    : method.color === 'blue'
+                                                        ? 'bg-blue-500 text-white shadow-md'
+                                                        : 'bg-purple-500 text-white shadow-md'
+                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
                                                 }`}
                                         >
                                             <Icon className="h-4 w-4" />
@@ -259,13 +261,13 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
                         {/* Notes */}
                         <div className="space-y-1.5">
                             <Label htmlFor="notes" className="text-xs md:text-sm font-medium text-slate-600">
-                                Notes (Optional)
+                                {t('wholesaler_payments.form.notes')}
                             </Label>
                             <Input
                                 id="notes"
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
-                                placeholder="Add any notes..."
+                                placeholder={t('wholesaler_payments.form.notes_placeholder')}
                                 className="h-9 md:h-10 text-sm border-2 border-slate-200 focus:border-slate-400"
                             />
                         </div>
@@ -278,7 +280,7 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
                                 onClick={() => handleOpenChange(false)}
                                 className="flex-1 h-10 md:h-11 text-sm font-semibold border-2"
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </Button>
                             <Button
                                 type="submit"
@@ -288,12 +290,12 @@ export function RecordPaymentDialog({ customer }: RecordPaymentDialogProps) {
                                 {paymentMutation.isPending ? (
                                     <>
                                         <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                                        Processing...
+                                        {t('wholesaler_payments.detail.processing')}
                                     </>
                                 ) : (
                                     <>
                                         <IndianRupee className="mr-1.5 h-4 w-4" />
-                                        Receive
+                                        {t('wholesaler_payments.record_payment_short')}
                                     </>
                                 )}
                             </Button>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Package, CheckCircle, XCircle, AlertCircle, IndianRupee, Users } from 'lucide-react';
@@ -25,6 +26,7 @@ function formatCurrency(amount: number): string {
 }
 
 export function WholesalerStats({ stats, isLoading }: WholesalerStatsProps) {
+    const { t } = useTranslation();
     if (isLoading) {
         return (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6 mb-4 md:mb-6">
@@ -53,13 +55,13 @@ export function WholesalerStats({ stats, isLoading }: WholesalerStatsProps) {
                             <Package className="h-4 w-4 md:h-5 md:w-5" />
                         </div>
                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                            All
+                            {t('wholesalers_list.stats.all_badge')}
                         </Badge>
                     </div>
                     <h3 className="text-xl md:text-3xl font-bold">{stats.total}</h3>
-                    <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">Total</p>
+                    <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">{t('wholesalers_list.stats.total')}</p>
                     <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
-                        <span className="text-white/70">Active Rate</span>
+                        <span className="text-white/70">{t('wholesalers_list.stats.active_rate')}</span>
                         <span className="font-semibold">{activePercentage}%</span>
                     </div>
                 </CardContent>
@@ -74,14 +76,14 @@ export function WholesalerStats({ stats, isLoading }: WholesalerStatsProps) {
                             <CheckCircle className="h-4 w-4 md:h-5 md:w-5" />
                         </div>
                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                            Active
+                            {t('wholesalers_list.stats.active')}
                         </Badge>
                     </div>
                     <h3 className="text-xl md:text-3xl font-bold">{stats.active}</h3>
-                    <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">Active</p>
+                    <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">{t('wholesalers_list.stats.active')}</p>
                     <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
-                        <span className="text-white/70">Inactive</span>
-                        <span className="font-semibold">{stats.inactive} partners</span>
+                        <span className="text-white/70">{t('wholesalers_list.stats.inactive')}</span>
+                        <span className="font-semibold">{stats.inactive} {t('wholesalers_list.stats.partners')}</span>
                     </div>
                 </CardContent>
                 <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />
@@ -95,13 +97,13 @@ export function WholesalerStats({ stats, isLoading }: WholesalerStatsProps) {
                             <AlertCircle className="h-4 w-4 md:h-5 md:w-5" />
                         </div>
                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                            Pending
+                            {t('wholesalers_list.stats.pending')}
                         </Badge>
                     </div>
                     <h3 className="text-xl md:text-3xl font-bold">{stats.withDues}</h3>
-                    <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">With Dues</p>
+                    <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">{t('wholesalers_list.stats.with_dues')}</p>
                     <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
-                        <span className="text-white/70">Follow-up</span>
+                        <span className="text-white/70">{t('wholesalers_list.stats.follow_up')}</span>
                         <span className="font-semibold">{stats.withDues > 0 ? '⚠️' : '✓'}</span>
                     </div>
                 </CardContent>
@@ -116,16 +118,16 @@ export function WholesalerStats({ stats, isLoading }: WholesalerStatsProps) {
                             <IndianRupee className="h-4 w-4 md:h-5 md:w-5" />
                         </div>
                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                            Due
+                            {t('wholesalers_list.filters.dues')}
                         </Badge>
                     </div>
                     <h3 className="text-xl md:text-3xl font-bold">
                         {formatCurrency(stats.totalOutstanding)}
                     </h3>
-                    <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">Outstanding</p>
+                    <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">{t('wholesalers_list.stats.outstanding')}</p>
                     <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
-                        <span className="text-white/70">Partners</span>
-                        <span className="font-semibold">{stats.withDues} with dues</span>
+                        <span className="text-white/70">{t('wholesalers_list.stats.partners')}</span>
+                        <span className="font-semibold">{t('wholesalers_list.stats.with_dues_count', { count: stats.withDues })}</span>
                     </div>
                 </CardContent>
                 <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />

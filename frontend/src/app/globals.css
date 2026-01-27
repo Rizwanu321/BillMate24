@@ -119,9 +119,22 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Malayalam Font Support */
+:root[lang='ml'] body,
+[lang='ml'] {
+  font-family: var(--font-malayalam), var(--font-inter), sans-serif !important;
+}
+
+/* Make Malayalam text slightly larger and better spaced for readability as Noto Sans can be dense */
+:root[lang='ml'] {
+  letter-spacing: 0.01em;
+  line-height: 1.6;
 }
 
 /* Utility to hide scrollbars */
@@ -129,6 +142,7 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
@@ -143,13 +157,23 @@
 }
 
 @keyframes shake {
-  0%, 100% { transform: rotate(-6deg); }
-  25% { transform: rotate(-9deg); }
-  75% { transform: rotate(-3deg); }
+
+  0%,
+  100% {
+    transform: rotate(-6deg);
+  }
+
+  25% {
+    transform: rotate(-9deg);
+  }
+
+  75% {
+    transform: rotate(-3deg);
+  }
 }
 
 .animate-shake {
-  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
 }
 
 /* Custom Animation Utilities for Radix Dialogs */
@@ -158,8 +182,15 @@
 }
 
 @keyframes slide-up {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .animate-slide-up {

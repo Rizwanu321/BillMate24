@@ -35,14 +35,17 @@ const rankIcons = [
     { icon: Award, color: 'bg-gradient-to-br from-orange-400 to-amber-600', textColor: 'text-orange-500' },
 ];
 
+import { useTranslation } from 'react-i18next';
+
 export function TopWholesalers({ wholesalers, isLoading }: TopWholesalersProps) {
+    const { t } = useTranslation();
     if (isLoading) {
         return (
             <Card className="border-0 shadow-lg">
                 <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2">
                         <Package className="h-5 w-5 text-purple-500" />
-                        Top Wholesalers
+                        {t('wholesaler_dashboard.top_wholesalers')}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -69,11 +72,11 @@ export function TopWholesalers({ wholesalers, isLoading }: TopWholesalersProps) 
                     <div className="p-1.5 md:p-2 rounded-lg bg-purple-100">
                         <Trophy className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
                     </div>
-                    <span className="hidden sm:inline">Top Wholesalers</span>
-                    <span className="sm:hidden">Top 5</span>
+                    <span className="hidden sm:inline">{t('wholesaler_dashboard.top_wholesalers')}</span>
+                    <span className="sm:hidden">{t('wholesaler_dashboard.top_5')}</span>
                 </CardTitle>
                 <Badge variant="secondary" className="bg-purple-50 text-purple-700 text-[10px] md:text-xs px-1.5 md:px-2">
-                    By Purchase
+                    {t('wholesaler_dashboard.by_purchase')}
                 </Badge>
             </CardHeader>
             <CardContent className="p-2 md:p-6 pt-2">
@@ -145,8 +148,8 @@ export function TopWholesalers({ wholesalers, isLoading }: TopWholesalersProps) 
                         <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 md:mb-4">
                             <Package className="h-6 w-6 md:h-8 md:w-8 text-gray-300" />
                         </div>
-                        <p className="text-gray-500 font-medium text-sm md:text-base">No wholesalers found</p>
-                        <p className="text-xs md:text-sm text-gray-400 mt-1">Add wholesalers to see them here</p>
+                        <p className="text-gray-500 font-medium text-sm md:text-base">{t('wholesaler_dashboard.no_wholesalers_found')}</p>
+                        <p className="text-xs md:text-sm text-gray-400 mt-1">{t('wholesaler_dashboard.add_wholesalers_desc')}</p>
                     </div>
                 )}
             </CardContent>

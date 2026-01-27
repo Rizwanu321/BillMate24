@@ -39,14 +39,17 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
+import { useTranslation } from 'react-i18next';
+
 export function RecentPurchases({ purchases, isLoading }: RecentPurchasesProps) {
+    const { t } = useTranslation();
     if (isLoading) {
         return (
             <Card className="border-0 shadow-lg">
                 <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2">
                         <Receipt className="h-5 w-5 text-orange-500" />
-                        Recent Purchases
+                        {t('wholesaler_dashboard.recent_purchases')}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -69,8 +72,8 @@ export function RecentPurchases({ purchases, isLoading }: RecentPurchasesProps) 
                     <div className="p-1.5 md:p-2 rounded-lg bg-orange-100">
                         <Receipt className="h-4 w-4 md:h-5 md:w-5 text-orange-600" />
                     </div>
-                    <span className="hidden sm:inline">Recent Purchases</span>
-                    <span className="sm:hidden">Purchases</span>
+                    <span className="hidden sm:inline">{t('wholesaler_dashboard.recent_purchases')}</span>
+                    <span className="sm:hidden">{t('wholesaler_dashboard.recent_purchases')}</span>
                 </CardTitle>
                 <div className="flex items-center gap-1.5 md:gap-2">
                     <Badge variant="secondary" className="bg-orange-50 text-orange-700 text-[10px] md:text-xs px-1.5 md:px-2">
@@ -78,8 +81,8 @@ export function RecentPurchases({ purchases, isLoading }: RecentPurchasesProps) 
                     </Badge>
                     <Link href="/shopkeeper/billing/history?billType=purchase">
                         <Button variant="outline" size="sm" className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3">
-                            <span className="hidden sm:inline">View All</span>
-                            <span className="sm:hidden">All</span>
+                            <span className="hidden sm:inline">{t('wholesaler_dashboard.view_all')}</span>
+                            <span className="sm:hidden">{t('wholesaler_dashboard.all')}</span>
                             <ChevronRight className="h-3 w-3 ml-0.5 md:ml-1" />
                         </Button>
                     </Link>
@@ -93,12 +96,12 @@ export function RecentPurchases({ purchases, isLoading }: RecentPurchasesProps) 
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-                                        <TableHead className="font-semibold">Bill No.</TableHead>
-                                        <TableHead className="font-semibold">Wholesaler</TableHead>
-                                        <TableHead className="font-semibold text-right">Amount</TableHead>
-                                        <TableHead className="font-semibold text-right">Paid</TableHead>
-                                        <TableHead className="font-semibold">Status</TableHead>
-                                        <TableHead className="font-semibold">Date</TableHead>
+                                        <TableHead className="font-semibold">{t('billing.bill_number')}</TableHead>
+                                        <TableHead className="font-semibold">{t('common.wholesaler')}</TableHead>
+                                        <TableHead className="font-semibold text-right">{t('billing.total_bill')}</TableHead>
+                                        <TableHead className="font-semibold text-right">{t('billing.paid')}</TableHead>
+                                        <TableHead className="font-semibold">{t('billing.status')}</TableHead>
+                                        <TableHead className="font-semibold">{t('history.date')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -126,11 +129,11 @@ export function RecentPurchases({ purchases, isLoading }: RecentPurchasesProps) 
                                                 <TableCell>
                                                     {dueAmount > 0 ? (
                                                         <Badge variant="destructive" className="bg-red-100 text-red-700 border-0 font-mono">
-                                                            Due: {formatCurrency(dueAmount)}
+                                                            {t('billing.status_due')}: {formatCurrency(dueAmount)}
                                                         </Badge>
                                                     ) : (
                                                         <Badge className="bg-green-100 text-green-700 border-0">
-                                                            ✓ Paid
+                                                            ✓ {t('billing.paid')}
                                                         </Badge>
                                                     )}
                                                 </TableCell>
@@ -168,7 +171,7 @@ export function RecentPurchases({ purchases, isLoading }: RecentPurchasesProps) 
 
                                             {/* Purchase Badge */}
                                             <Badge className="text-[10px] px-2 py-0.5 flex-shrink-0 bg-orange-100 text-orange-700 border-0">
-                                                Purchase
+                                                {t('billing.purchase')}
                                             </Badge>
                                         </div>
 
@@ -177,23 +180,23 @@ export function RecentPurchases({ purchases, isLoading }: RecentPurchasesProps) 
                                             <div className="grid grid-cols-3 gap-2 text-center">
                                                 {/* Total Amount */}
                                                 <div>
-                                                    <p className="text-[10px] text-gray-500 font-medium">Total</p>
+                                                    <p className="text-[10px] text-gray-500 font-medium">{t('billing.total')}</p>
                                                     <p className="font-bold text-gray-900 text-sm">{formatCurrency(purchase.totalAmount)}</p>
                                                 </div>
 
                                                 {/* Paid Amount */}
                                                 <div>
-                                                    <p className="text-[10px] text-gray-500 font-medium">Paid</p>
+                                                    <p className="text-[10px] text-gray-500 font-medium">{t('billing.paid')}</p>
                                                     <p className="font-bold text-green-600 text-sm">{formatCurrency(purchase.paidAmount)}</p>
                                                 </div>
 
                                                 {/* Due/Status */}
                                                 <div>
-                                                    <p className="text-[10px] text-gray-500 font-medium">Due</p>
+                                                    <p className="text-[10px] text-gray-500 font-medium">{t('billing.status_due')}</p>
                                                     {dueAmount > 0 ? (
                                                         <p className="font-bold text-red-600 text-sm">{formatCurrency(dueAmount)}</p>
                                                     ) : (
-                                                        <p className="font-bold text-green-600 text-sm">✓ Nil</p>
+                                                        <p className="font-bold text-green-600 text-sm">✓ {t('history.nil')}</p>
                                                     )}
                                                 </div>
                                             </div>
@@ -215,11 +218,11 @@ export function RecentPurchases({ purchases, isLoading }: RecentPurchasesProps) 
                         <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 md:mb-4">
                             <FileText className="h-6 w-6 md:h-8 md:w-8 text-gray-300" />
                         </div>
-                        <p className="text-gray-500 font-medium text-sm md:text-base">No purchases found</p>
-                        <p className="text-xs md:text-sm text-gray-400 mt-1">Purchases will appear here</p>
+                        <p className="text-gray-500 font-medium text-sm md:text-base">{t('wholesaler_dashboard.no_purchases_found')}</p>
+                        <p className="text-xs md:text-sm text-gray-400 mt-1">{t('wholesaler_dashboard.purchases_appear_here')}</p>
                         <Link href="/shopkeeper/billing">
                             <Button size="sm" className="mt-3 md:mt-4 bg-gradient-to-r from-purple-600 to-indigo-600">
-                                Create Purchase
+                                {t('wholesaler_dashboard.create_purchase')}
                             </Button>
                         </Link>
                     </div>

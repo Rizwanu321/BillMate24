@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Users, CreditCard, LayoutDashboard } from 'lucide-react';
 import api from '@/config/axios';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import {
     CustomerDashboardStats,
     TopCustomers,
@@ -66,6 +67,7 @@ interface CustomerPeriodData {
 }
 
 export default function CustomerDashboardPage() {
+    const { t } = useTranslation();
     const [timeFilter, setTimeFilter] = useState<TimeFilterOption>('today');
     const [dateRange, setDateRange] = useState<DateRange>(getDateRange('today'));
 
@@ -238,7 +240,7 @@ export default function CustomerDashboardPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50/30 to-purple-50/20">
-            <Header title="Customers" />
+            <Header title={t('customer_dashboard.customers')} />
 
             <div className="p-3 md:p-6">
                 {/* Header with Filter - Mobile-first responsive */}
@@ -246,8 +248,8 @@ export default function CustomerDashboardPage() {
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 bg-clip-text text-transparent">
-                                <span className="hidden sm:inline">Customer Dashboard</span>
-                                <span className="sm:hidden">Customers</span>
+                                <span className="hidden sm:inline">{t('customer_dashboard.title')}</span>
+                                <span className="sm:hidden">{t('customer_dashboard.customers')}</span>
                             </h2>
                             <LayoutDashboard className="h-5 w-5 md:h-8 md:w-8 text-indigo-600" />
                         </div>
@@ -265,13 +267,13 @@ export default function CustomerDashboardPage() {
                         <Link href="/shopkeeper/customers/due">
                             <Button variant="outline" size="sm" className="shadow-sm px-2 sm:px-4">
                                 <CreditCard className="h-4 w-4 sm:mr-2" />
-                                <span className="hidden sm:inline">Due Customers</span>
+                                <span className="hidden sm:inline">{t('customer_dashboard.due_customers')}</span>
                             </Button>
                         </Link>
                         <Link href="/shopkeeper/customers/normal">
                             <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25 px-2 sm:px-4">
                                 <Users className="h-4 w-4 sm:mr-2" />
-                                <span className="hidden sm:inline">Normal Customers</span>
+                                <span className="hidden sm:inline">{t('customer_dashboard.normal_customers')}</span>
                             </Button>
                         </Link>
                     </div>

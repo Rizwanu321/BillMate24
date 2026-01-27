@@ -10,6 +10,7 @@ import { SidebarItem } from './sidebar-item';
 import { Button } from '@/components/ui/button';
 import { Logo } from '../logo';
 import { useUIStore } from '@/store/ui.store';
+import { useTranslation } from 'react-i18next';
 
 export function Sidebar() {
     const pathname = usePathname();
@@ -20,6 +21,7 @@ export function Sidebar() {
         isSidebarCollapsed: isCollapsed,
         toggleSidebarCollapsed: toggleCollapsed
     } = useUIStore();
+    const { t } = useTranslation();
 
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const sidebarItems = user ? getSidebarConfig(user.role) : [];
@@ -104,7 +106,7 @@ export function Sidebar() {
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+                    <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 space-y-1">
                         {sidebarItems.map((item) => (
                             <SidebarItem
                                 key={item.href}
@@ -126,13 +128,13 @@ export function Sidebar() {
                                 className="w-full justify-start text-gray-400 hover:text-white hover:bg-white/10 px-3"
                             >
                                 <LogOut className="mr-3 h-5 w-5" />
-                                Logout
+                                {t('common.logout')}
                             </Button>
                         ) : (
                             <button
                                 onClick={handleLogout}
                                 className="w-full flex justify-center p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-                                title="Logout"
+                                title={t('common.logout')}
                             >
                                 <LogOut className="h-5 w-5" />
                             </button>

@@ -34,6 +34,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import api from '@/config/axios';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 interface DashboardData {
     // Sales data (from bills)
@@ -88,6 +89,7 @@ function getPercentageChange(current: number, previous: number): { value: number
 }
 
 export default function ShopkeeperDashboard() {
+    const { t } = useTranslation();
     const { data: dashboard, isLoading } = useQuery<DashboardData>({
         queryKey: ['shopkeeper-dashboard'],
         queryFn: async () => {
@@ -107,12 +109,14 @@ export default function ShopkeeperDashboard() {
 
     // Get current date info
     const now = new Date();
-    const greeting = now.getHours() < 12 ? 'Good Morning' : now.getHours() < 17 ? 'Good Afternoon' : 'Good Evening';
+    const hours = now.getHours();
+    const greetingKey = hours < 12 ? 'greeting_morning' : hours < 17 ? 'greeting_afternoon' : 'greeting_evening';
+    const greeting = t(`dashboard.${greetingKey}`);
 
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-purple-50">
-            <Header title="Dashboard" />
+            <Header title={t('common.dashboard')} />
 
             {/* Mobile-optimized content */}
             <div className="p-4 md:p-6">
@@ -135,13 +139,13 @@ export default function ShopkeeperDashboard() {
                         <Link href="/shopkeeper/billing">
                             <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/25">
                                 <Receipt className="h-4 w-4 mr-2" />
-                                New Bill
+                                {t('dashboard.new_bill')}
                             </Button>
                         </Link>
                         <Link href="/shopkeeper/reports/daily">
                             <Button variant="outline">
                                 <FileText className="h-4 w-4 mr-2" />
-                                Reports
+                                {t('common.reports')}
                             </Button>
                         </Link>
                     </div>
@@ -176,11 +180,18 @@ export default function ShopkeeperDashboard() {
                                             ) : (
                                                 <Info className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
                                             )}
-                                            <span className="font-medium text-xs md:text-sm line-clamp-1">{alert.message}</span>
+                                            <span className="font-medium text-xs md:text-sm line-clamp-1">
+                                                {alert.message.includes('customers')
+                                                    ? t('dashboard.customers_due_alert', { count: alert.count })
+                                                    : alert.message.includes('wholesalers')
+                                                        ? t('dashboard.wholesalers_due_alert', { count: alert.count })
+                                                        : alert.message
+                                                }
+                                            </span>
                                         </div>
                                         <Link href="/shopkeeper/reports/dues">
                                             <Button variant="ghost" size="sm" className="text-current hover:bg-current/10 text-xs whitespace-nowrap">
-                                                view <ChevronRight className="h-3 w-3 md:h-4 md:w-4 ml-0.5 md:ml-1" />
+                                                {t('dashboard.view')} <ChevronRight className="h-3 w-3 md:h-4 md:w-4 ml-0.5 md:ml-1" />
                                             </Button>
                                         </Link>
                                     </div>
@@ -205,15 +216,15 @@ export default function ShopkeeperDashboard() {
                                         )}
                                     </div>
                                     <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(dashboard?.todaySales || 0)}</h3>
-                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Today's Sales</p>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">{t('dashboard.today_sales')}</p>
                                     <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
                                         <div className="flex items-center justify-between text-[10px] md:text-sm">
-                                            <span className="text-white/70">Collected</span>
+                                            <span className="text-white/70">{t('dashboard.collected')}</span>
                                             <span className="font-semibold">{formatCurrency(dashboard?.todayCollected || 0)}</span>
                                         </div>
                                         <p className="text-[10px] md:text-xs text-white/60 mt-1 flex items-center gap-1">
                                             <Clock className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                            {dashboard?.todayBillCount || 0} bills
+                                            {t('dashboard.bills_count', { count: dashboard?.todayBillCount || 0 })}
                                         </p>
                                     </div>
                                 </CardContent>
@@ -228,19 +239,19 @@ export default function ShopkeeperDashboard() {
                                             <TrendingUp className="h-4 w-4 md:h-6 md:w-6" />
                                         </div>
                                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                                            Lifetime
+                                            {t('dashboard.lifetime')}
                                         </Badge>
                                     </div>
                                     <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(dashboard?.totalLifetimeSales || 0)}</h3>
-                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Total Sales</p>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">{t('dashboard.total_sales')}</p>
                                     <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
                                         <div className="flex items-center justify-between text-[10px] md:text-sm">
-                                            <span className="text-white/70">This Month</span>
+                                            <span className="text-white/70">{t('dashboard.this_month')}</span>
                                             <span className="font-semibold">{formatCurrency(dashboard?.monthSales || 0)}</span>
                                         </div>
                                         <p className="text-[10px] md:text-xs text-white/60 mt-1 flex items-center gap-1">
                                             <Info className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                            Includes opening balances
+                                            {t('dashboard.includes_opening')}
                                         </p>
                                     </div>
                                 </CardContent>
@@ -255,16 +266,16 @@ export default function ShopkeeperDashboard() {
                                             <Users className="h-4 w-4 md:h-6 md:w-6" />
                                         </div>
                                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                                            Total Due
+                                            {t('dashboard.total_due')}
                                         </Badge>
                                     </div>
                                     <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(dashboard?.totalDueFromCustomers || 0)}</h3>
-                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">To Collect</p>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">{t('dashboard.to_collect')}</p>
                                     <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
-                                        <p className="text-[10px] md:text-xs text-white/70">From Customers (incl. opening)</p>
+                                        <p className="text-[10px] md:text-xs text-white/70">{t('dashboard.from_customers')}</p>
                                         <p className="text-[10px] md:text-xs text-white/60 mt-1 flex items-center gap-1">
                                             <Target className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                            {dashboard?.customersWithDues || 0} customer{dashboard?.customersWithDues !== 1 ? 's' : ''} with dues
+                                            {t('dashboard.with_dues_count', { count: dashboard?.customersWithDues || 0 })}
                                         </p>
                                     </div>
                                 </CardContent>
@@ -279,16 +290,16 @@ export default function ShopkeeperDashboard() {
                                             <Package className="h-4 w-4 md:h-6 md:w-6" />
                                         </div>
                                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                                            Total Due
+                                            {t('dashboard.total_due')}
                                         </Badge>
                                     </div>
                                     <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(dashboard?.totalDueToWholesalers || 0)}</h3>
-                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">To Pay</p>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">{t('dashboard.to_pay')}</p>
                                     <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
-                                        <p className="text-[10px] md:text-xs text-white/70">To Wholesalers (incl. opening)</p>
+                                        <p className="text-[10px] md:text-xs text-white/70">{t('dashboard.to_wholesalers')}</p>
                                         <p className="text-[10px] md:text-xs text-white/60 mt-1 flex items-center gap-1">
                                             <Target className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                            {dashboard?.wholesalersWithDues || 0} pending payment{dashboard?.wholesalersWithDues !== 1 ? 's' : ''}
+                                            {t('dashboard.pending_payments_count', { count: dashboard?.wholesalersWithDues || 0 })}
                                         </p>
                                     </div>
                                 </CardContent>
@@ -305,7 +316,7 @@ export default function ShopkeeperDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-base md:text-2xl font-bold text-gray-900">{formatCurrency(dashboard?.weekSales || 0)}</p>
-                                        <p className="text-xs md:text-sm text-gray-500">Week Sales</p>
+                                        <p className="text-xs md:text-sm text-gray-500">{t('dashboard.week_sales')}</p>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -317,7 +328,7 @@ export default function ShopkeeperDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-base md:text-2xl font-bold text-gray-900">{dashboard?.totalCustomers || 0}</p>
-                                        <p className="text-xs md:text-sm text-gray-500">Customers</p>
+                                        <p className="text-xs md:text-sm text-gray-500">{t('common.customers')}</p>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -329,7 +340,7 @@ export default function ShopkeeperDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-base md:text-2xl font-bold text-gray-900">{dashboard?.totalWholesalers || 0}</p>
-                                        <p className="text-xs md:text-sm text-gray-500">Wholesalers</p>
+                                        <p className="text-xs md:text-sm text-gray-500">{t('common.wholesalers')}</p>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -342,9 +353,9 @@ export default function ShopkeeperDashboard() {
                                 <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 md:px-6 pt-3 md:pt-6">
                                     <CardTitle className="text-sm md:text-lg flex items-center gap-2">
                                         <PieChart className="h-4 w-4 md:h-5 md:w-5 text-purple-500" />
-                                        Payment Methods
+                                        {t('dashboard.payment_methods')}
                                     </CardTitle>
-                                    <Badge variant="secondary" className="text-[10px] md:text-xs">This Month</Badge>
+                                    <Badge variant="secondary" className="text-[10px] md:text-xs">{t('dashboard.this_month')}</Badge>
                                 </CardHeader>
                                 <CardContent className="space-y-3 md:space-y-4 px-3 md:px-6 pb-3 md:pb-6">
                                     {/* Cash */}
@@ -354,7 +365,7 @@ export default function ShopkeeperDashboard() {
                                                 <div className="p-1.5 md:p-2 rounded-lg bg-green-100">
                                                     <Banknote className="h-3 w-3 md:h-4 md:w-4 text-green-600" />
                                                 </div>
-                                                <span className="font-medium text-xs md:text-sm">Cash</span>
+                                                <span className="font-medium text-xs md:text-sm">{t('dashboard.cash')}</span>
                                             </div>
                                             <span className="font-semibold text-xs md:text-sm">{formatCurrency(dashboard?.paymentMethodSplit.cash || 0)}</span>
                                         </div>
@@ -371,7 +382,7 @@ export default function ShopkeeperDashboard() {
                                                 <div className="p-1.5 md:p-2 rounded-lg bg-blue-100">
                                                     <CreditCard className="h-3 w-3 md:h-4 md:w-4 text-blue-600" />
                                                 </div>
-                                                <span className="font-medium text-xs md:text-sm">Card</span>
+                                                <span className="font-medium text-xs md:text-sm">{t('dashboard.card')}</span>
                                             </div>
                                             <span className="font-semibold text-xs md:text-sm">{formatCurrency(dashboard?.paymentMethodSplit.card || 0)}</span>
                                         </div>
@@ -388,7 +399,7 @@ export default function ShopkeeperDashboard() {
                                                 <div className="p-1.5 md:p-2 rounded-lg bg-purple-100">
                                                     <Smartphone className="h-3 w-3 md:h-4 md:w-4 text-purple-600" />
                                                 </div>
-                                                <span className="font-medium text-xs md:text-sm">Online/UPI</span>
+                                                <span className="font-medium text-xs md:text-sm">{t('dashboard.online')}</span>
                                             </div>
                                             <span className="font-semibold text-xs md:text-sm">{formatCurrency(dashboard?.paymentMethodSplit.online || 0)}</span>
                                         </div>
@@ -400,7 +411,7 @@ export default function ShopkeeperDashboard() {
 
                                     <div className="pt-3 md:pt-4 border-t">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-semibold text-gray-700 text-xs md:text-sm">Total</span>
+                                            <span className="font-semibold text-gray-700 text-xs md:text-sm">{t('dashboard.total')}</span>
                                             <span className="font-bold text-sm md:text-lg">{formatCurrency(totalPayments)}</span>
                                         </div>
                                     </div>
@@ -412,16 +423,16 @@ export default function ShopkeeperDashboard() {
                                 <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 md:px-6 pt-3 md:pt-6">
                                     <CardTitle className="text-sm md:text-lg flex items-center gap-2">
                                         <AlertCircle className="h-4 w-4 md:h-5 md:w-5 text-orange-500" />
-                                        Top Dues
+                                        {t('dashboard.top_dues')}
                                     </CardTitle>
                                     <Link href="/shopkeeper/reports/dues">
-                                        <Button variant="ghost" size="sm" className="text-xs h-7 md:h-8">View All</Button>
+                                        <Button variant="ghost" size="sm" className="text-xs h-7 md:h-8">{t('dashboard.view_all')}</Button>
                                     </Link>
                                 </CardHeader>
                                 <CardContent className="space-y-3 md:space-y-4 px-3 md:px-6 pb-3 md:pb-6">
                                     {/* Customer Dues */}
                                     <div>
-                                        <p className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase mb-1.5 md:mb-2">From Customers</p>
+                                        <p className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase mb-1.5 md:mb-2">{t('dashboard.from_customers')}</p>
                                         {dashboard?.topCustomersDue && dashboard.topCustomersDue.length > 0 ? (
                                             <div className="space-y-1.5 md:space-y-2">
                                                 {dashboard.topCustomersDue.slice(0, 3).map((customer: any) => (
@@ -439,13 +450,13 @@ export default function ShopkeeperDashboard() {
                                                 ))}
                                             </div>
                                         ) : (
-                                            <p className="text-xs text-gray-500 text-center py-2">No pending dues</p>
+                                            <p className="text-xs text-gray-500 text-center py-2">{t('dashboard.no_pending_dues')}</p>
                                         )}
                                     </div>
 
                                     {/* Wholesaler Dues */}
                                     <div>
-                                        <p className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase mb-1.5 md:mb-2">To Wholesalers</p>
+                                        <p className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase mb-1.5 md:mb-2">{t('dashboard.to_wholesalers')}</p>
                                         {dashboard?.topWholesalersDue && dashboard.topWholesalersDue.length > 0 ? (
                                             <div className="space-y-1.5 md:space-y-2">
                                                 {dashboard.topWholesalersDue.slice(0, 3).map((wholesaler: any) => (
@@ -463,7 +474,7 @@ export default function ShopkeeperDashboard() {
                                                 ))}
                                             </div>
                                         ) : (
-                                            <p className="text-xs text-gray-500 text-center py-2">No pending payments</p>
+                                            <p className="text-xs text-gray-500 text-center py-2">{t('dashboard.no_pending_payments')}</p>
                                         )}
                                     </div>
                                 </CardContent>
@@ -474,10 +485,10 @@ export default function ShopkeeperDashboard() {
                                 <CardHeader className="flex flex-row items-center justify-between pb-2 px-3 md:px-6 pt-3 md:pt-6">
                                     <CardTitle className="text-sm md:text-lg flex items-center gap-2">
                                         <Receipt className="h-4 w-4 md:h-5 md:w-5 text-blue-500" />
-                                        Recent Bills
+                                        {t('dashboard.recent_bills')}
                                     </CardTitle>
                                     <Link href="/shopkeeper/billing/history">
-                                        <Button variant="ghost" size="sm" className="text-xs h-7 md:h-8">View All</Button>
+                                        <Button variant="ghost" size="sm" className="text-xs h-7 md:h-8">{t('dashboard.view_all')}</Button>
                                     </Link>
                                 </CardHeader>
                                 <CardContent className="px-3 md:px-6 pb-3 md:pb-6">
@@ -505,7 +516,7 @@ export default function ShopkeeperDashboard() {
                                                             {formatCurrency(bill.totalAmount)}
                                                         </p>
                                                         {bill.dueAmount > 0 && (
-                                                            <p className="text-[10px] md:text-xs text-red-500">Due: {formatCurrency(bill.dueAmount)}</p>
+                                                            <p className="text-[10px] md:text-xs text-red-500">{t('history.due')}: {formatCurrency(bill.dueAmount)}</p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -514,7 +525,7 @@ export default function ShopkeeperDashboard() {
                                     ) : (
                                         <div className="text-center py-6 md:py-8 text-gray-500">
                                             <Receipt className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-2 text-gray-300" />
-                                            <p className="text-xs md:text-sm">No bills yet</p>
+                                            <p className="text-xs md:text-sm">{t('dashboard.no_bills_yet')}</p>
                                         </div>
                                     )}
                                 </CardContent>
@@ -526,32 +537,32 @@ export default function ShopkeeperDashboard() {
                             <CardContent className="py-6">
                                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                                     <div>
-                                        <h3 className="text-xl font-bold">Quick Actions</h3>
-                                        <p className="text-white/70 text-sm">Manage your business efficiently</p>
+                                        <h3 className="text-xl font-bold">{t('dashboard.quick_actions')}</h3>
+                                        <p className="text-white/70 text-sm">{t('dashboard.manage_business')}</p>
                                     </div>
                                     <div className="flex flex-wrap gap-3">
                                         <Link href="/shopkeeper/billing">
                                             <Button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-white/20">
                                                 <Receipt className="h-4 w-4 mr-2" />
-                                                Create Bill
+                                                {t('dashboard.create_bill')}
                                             </Button>
                                         </Link>
                                         <Link href="/shopkeeper/wholesalers/payments">
                                             <Button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-white/20">
                                                 <CreditCard className="h-4 w-4 mr-2" />
-                                                Record Payment
+                                                {t('dashboard.record_payment')}
                                             </Button>
                                         </Link>
                                         <Link href="/shopkeeper/customers/due">
                                             <Button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-white/20">
                                                 <Users className="h-4 w-4 mr-2" />
-                                                View Customers
+                                                {t('dashboard.view_customers')}
                                             </Button>
                                         </Link>
                                         <Link href="/shopkeeper/wholesalers">
                                             <Button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border-white/20">
                                                 <Package className="h-4 w-4 mr-2" />
-                                                View Wholesalers
+                                                {t('dashboard.view_wholesalers')}
                                             </Button>
                                         </Link>
                                     </div>

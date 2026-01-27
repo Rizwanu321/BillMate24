@@ -23,14 +23,17 @@ function formatCurrency(amount: number): string {
     }).format(amount);
 }
 
+import { useTranslation } from 'react-i18next';
+
 export function PaymentMethodsBreakdown({ breakdown, totalPaid, isLoading }: PaymentMethodsBreakdownProps) {
+    const { t } = useTranslation();
     if (isLoading) {
         return (
             <Card className="border-0 shadow-xl">
                 <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 border-b">
                     <CardTitle className="flex items-center gap-2">
                         <Wallet className="h-5 w-5 text-purple-500" />
-                        Payment Methods
+                        {t('wholesaler_dashboard.payment_methods')}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
@@ -51,7 +54,7 @@ export function PaymentMethodsBreakdown({ breakdown, totalPaid, isLoading }: Pay
 
     const paymentMethods = [
         {
-            name: 'Cash',
+            name: t('billing.cash'),
             amount: breakdown.cash,
             icon: Banknote,
             gradient: 'from-green-500 to-emerald-600',
@@ -61,7 +64,7 @@ export function PaymentMethodsBreakdown({ breakdown, totalPaid, isLoading }: Pay
             progressColor: 'bg-gradient-to-r from-green-400 to-emerald-500',
         },
         {
-            name: 'Card',
+            name: t('billing.card'),
             amount: breakdown.card,
             icon: CreditCard,
             gradient: 'from-blue-500 to-indigo-600',
@@ -71,7 +74,7 @@ export function PaymentMethodsBreakdown({ breakdown, totalPaid, isLoading }: Pay
             progressColor: 'bg-gradient-to-r from-blue-400 to-indigo-500',
         },
         {
-            name: 'Online / UPI',
+            name: t('billing.upi'),
             amount: breakdown.online,
             icon: Smartphone,
             gradient: 'from-purple-500 to-violet-600',
@@ -96,7 +99,7 @@ export function PaymentMethodsBreakdown({ breakdown, totalPaid, isLoading }: Pay
                             <Wallet className="h-4 w-4 md:h-5 md:w-5" />
                         </div>
                         <div>
-                            <span className="block">Payments</span>
+                            <span className="block">{t('wholesaler_dashboard.payments')}</span>
                             <span className="text-xs md:text-sm font-normal text-purple-600">
                                 {formatCurrency(totalPaid)}
                             </span>
@@ -105,8 +108,8 @@ export function PaymentMethodsBreakdown({ breakdown, totalPaid, isLoading }: Pay
                     {totalPaid > 0 && (
                         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white shadow-sm border border-purple-100">
                             <TrendingUp className="h-4 w-4 text-purple-500" />
-                            <span className="text-sm font-medium text-purple-600">
-                                {dominantMethod.name} leads
+                            <span className="text-sm font-medium text-purple-600 text-right">
+                                {dominantMethod.name} {t('wholesaler_dashboard.leads')}
                             </span>
                         </div>
                     )}
@@ -156,9 +159,9 @@ export function PaymentMethodsBreakdown({ breakdown, totalPaid, isLoading }: Pay
 
                         {/* Summary - Visible on all devices */}
                         <div className="mt-3 md:mt-6 p-2.5 md:p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border border-gray-100">
-                            <div className="flex items-center justify-between">
-                                <span className="font-medium text-gray-600 text-xs md:text-base">Total Paid to Wholesalers</span>
-                                <span className="text-base md:text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                            <div className="flex items-center justify-between gap-4 text-right">
+                                <span className="font-medium text-gray-600 text-xs md:text-base">{t('wholesaler_dashboard.total_paid_to_wholesalers')}</span>
+                                <span className="text-base md:text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent shrink-0">
                                     {formatCurrency(totalPaid)}
                                 </span>
                             </div>
@@ -169,8 +172,8 @@ export function PaymentMethodsBreakdown({ breakdown, totalPaid, isLoading }: Pay
                         <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-3 md:mb-4">
                             <Wallet className="h-6 w-6 md:h-8 md:w-8 text-purple-400" />
                         </div>
-                        <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">No payments yet</h3>
-                        <p className="text-xs md:text-sm text-gray-500">Payment breakdown will appear here</p>
+                        <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">{t('wholesaler_dashboard.no_payments_yet')}</h3>
+                        <p className="text-xs md:text-sm text-gray-500">{t('wholesaler_dashboard.payment_breakdown_appear_here')}</p>
                     </div>
                 )}
             </CardContent>

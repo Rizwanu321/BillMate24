@@ -29,6 +29,7 @@ import {
     History,
     AlertTriangle,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Header } from '@/components/app/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -134,18 +135,20 @@ function getDateRange(filter: TimeFilter): DateRange {
     }
 }
 
-const timeFilterOptions = [
-    { value: 'all', label: 'All Time', icon: Clock },
-    { value: 'today', label: 'Today', icon: Calendar },
-    { value: 'yesterday', label: 'Yesterday', icon: Calendar },
-    { value: 'this_week', label: 'This Week', icon: CalendarDays },
-    { value: 'this_month', label: 'This Month', icon: CalendarDays },
-    { value: 'last_month', label: 'Last Month', icon: CalendarDays },
-    { value: 'custom', label: 'Custom Range', icon: Filter },
-];
 
 export default function BillHistoryPage() {
+    const { t } = useTranslation();
     const queryClient = useQueryClient();
+
+    const timeFilterOptions = [
+        { value: 'all', label: t('history.time_filters.all'), icon: Clock },
+        { value: 'today', label: t('history.time_filters.today'), icon: Calendar },
+        { value: 'yesterday', label: t('history.time_filters.yesterday'), icon: Calendar },
+        { value: 'this_week', label: t('history.time_filters.this_week'), icon: CalendarDays },
+        { value: 'this_month', label: t('history.time_filters.this_month'), icon: CalendarDays },
+        { value: 'last_month', label: t('history.time_filters.last_month'), icon: CalendarDays },
+        { value: 'custom', label: t('history.time_filters.custom'), icon: Filter },
+    ];
     const [page, setPage] = useState(1);
     const [billType, setBillType] = useState<string>('all');
     const [paymentMethod, setPaymentMethod] = useState<string>('all');
@@ -230,6 +233,16 @@ export default function BillHistoryPage() {
         }
     };
 
+    const getPaymentMethodLabel = (method: string) => {
+        if (!method) return '---';
+        switch (method) {
+            case 'cash': return t('billing.cash');
+            case 'card': return t('billing.card');
+            case 'online': return t('billing.upi');
+            default: return method;
+        }
+    };
+
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= (pagination?.totalPages || 1)) {
             setPage(newPage);
@@ -306,14 +319,14 @@ export default function BillHistoryPage() {
         if (timeFilter === 'custom' && customStartDate && customEndDate) {
             return `${format(new Date(customStartDate), 'dd MMM')} - ${format(new Date(customEndDate), 'dd MMM')}`;
         }
-        return timeFilterOptions.find(o => o.value === timeFilter)?.label || 'All Time';
+        return timeFilterOptions.find(o => o.value === timeFilter)?.label || t('history.time_filters.all');
     };
 
     const now = new Date();
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-blue-50">
-            <Header title="Bill History" />
+            <Header title={t('history.title')} />
 
             {/* Mobile-optimized content */}
             <div className="p-3 md:p-6">
@@ -321,7 +334,7 @@ export default function BillHistoryPage() {
                 <div className="mb-4 md:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
                     <div>
                         <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-gray-900 bg-clip-text text-transparent">
-                            Bill History
+                            {t('history.title')}
                         </h2>
                         <p className="text-gray-600 text-xs md:text-base mt-0.5 md:mt-1 flex items-center gap-1.5 md:gap-2">
                             <Calendar className="h-3 w-3 md:h-4 md:w-4" />
@@ -333,13 +346,13 @@ export default function BillHistoryPage() {
                         <Link href="/shopkeeper/billing">
                             <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/25">
                                 <Plus className="h-4 w-4 mr-2" />
-                                New Bill
+                                {t('history.new_bill')}
                             </Button>
                         </Link>
                         <Link href="/shopkeeper/reports/daily">
                             <Button variant="outline">
                                 <FileText className="h-4 w-4 mr-2" />
-                                Reports
+                                {t('history.reports')}
                             </Button>
                         </Link>
                     </div>
@@ -363,14 +376,14 @@ export default function BillHistoryPage() {
                                             <FileText className="h-4 w-4 md:h-6 md:w-6" />
                                         </div>
                                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                                            All Time
+                                            {t('history.all_time')}
                                         </Badge>
                                     </div>
                                     <h3 className="text-xl md:text-3xl font-bold">{statsData?.totalBills || 0}</h3>
-                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Total Bills</p>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">{t('history.total_bills')}</p>
                                     <p className="text-[10px] md:text-xs text-white/60 mt-1 md:mt-2 flex items-center gap-1">
                                         <TrendingUp className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                        Complete history
+                                        {t('history.complete_history')}
                                     </p>
                                 </CardContent>
                                 <div className="absolute -bottom-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
@@ -384,14 +397,14 @@ export default function BillHistoryPage() {
                                             <ArrowUpRight className="h-4 w-4 md:h-6 md:w-6" />
                                         </div>
                                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                                            Sales
+                                            {t('history.sales')}
                                         </Badge>
                                     </div>
                                     <h3 className="text-xl md:text-3xl font-bold">{statsData?.totalSales || 0}</h3>
-                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Sale Bills</p>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">{t('history.sale_bills')}</p>
                                     <p className="text-[10px] md:text-xs text-white/60 mt-1 md:mt-2 flex items-center gap-1">
                                         <Users className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                        To customers
+                                        {t('history.to_customers')}
                                     </p>
                                 </CardContent>
                                 <div className="absolute -bottom-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
@@ -405,14 +418,14 @@ export default function BillHistoryPage() {
                                             <ArrowDownRight className="h-4 w-4 md:h-6 md:w-6" />
                                         </div>
                                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                                            Purchases
+                                            {t('history.purchases')}
                                         </Badge>
                                     </div>
                                     <h3 className="text-xl md:text-3xl font-bold">{statsData?.totalPurchases || 0}</h3>
-                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Purchase Bills</p>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">{t('history.purchase_bills')}</p>
                                     <p className="text-[10px] md:text-xs text-white/60 mt-1 md:mt-2 flex items-center gap-1">
                                         <Package className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                        From wholesalers
+                                        {t('history.from_wholesalers')}
                                     </p>
                                 </CardContent>
                                 <div className="absolute -bottom-4 -right-4 w-16 md:w-24 h-16 md:h-24 bg-white/10 rounded-full blur-2xl" />
@@ -426,11 +439,11 @@ export default function BillHistoryPage() {
                                             <Clock className="h-4 w-4 md:h-6 md:w-6" />
                                         </div>
                                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                                            Today
+                                            {t('history.today')}
                                         </Badge>
                                     </div>
                                     <h3 className="text-xl md:text-3xl font-bold">{statsData?.todayBills || 0}</h3>
-                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">Today's Bills</p>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">{t('history.todays_bills')}</p>
                                     <p className="text-[10px] md:text-xs text-white/60 mt-1 md:mt-2 flex items-center gap-1">
                                         <Calendar className="h-2.5 w-2.5 md:h-3 md:w-3" />
                                         {format(now, 'dd MMM yyyy')}
@@ -452,10 +465,10 @@ export default function BillHistoryPage() {
                                                 <Receipt className="h-5 w-5" />
                                             </div>
                                             <div>
-                                                <span className="font-bold tracking-tight">All Transactions</span>
+                                                <span className="font-bold tracking-tight">{t('history.all_transactions')}</span>
                                                 {hasActiveFilters && (
                                                     <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-700 text-[10px] md:text-xs">
-                                                        Filtered
+                                                        {t('history.filtered')}
                                                     </Badge>
                                                 )}
                                             </div>
@@ -465,7 +478,7 @@ export default function BillHistoryPage() {
                                         <div className="relative w-full sm:max-w-xs">
                                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                             <Input
-                                                placeholder="Search by bill # or name..."
+                                                placeholder={t('history.search_placeholder')}
                                                 value={search}
                                                 onChange={(e) => setSearch(e.target.value)}
                                                 className="pl-10 h-10 md:h-11 bg-white border-gray-200 focus:border-blue-500 focus:ring-blue-500 transition-all rounded-xl"
@@ -503,7 +516,7 @@ export default function BillHistoryPage() {
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-2 text-white">
                                                                 <CalendarDays className="h-5 w-5" />
-                                                                <h4 className="font-semibold">Custom Date Range</h4>
+                                                                <h4 className="font-semibold">{t('history.custom_range.title')}</h4>
                                                             </div>
                                                             <Button
                                                                 variant="ghost"
@@ -520,7 +533,7 @@ export default function BillHistoryPage() {
                                                         {/* Selected Range Preview */}
                                                         {customStartDate && customEndDate && (
                                                             <div className="mt-3 px-3 py-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                                                <p className="text-white/80 text-xs">Selected Range</p>
+                                                                <p className="text-white/80 text-xs">{t('history.custom_range.selected')}</p>
                                                                 <p className="text-white font-medium">
                                                                     {format(new Date(customStartDate), 'dd MMM yyyy')} → {format(new Date(customEndDate), 'dd MMM yyyy')}
                                                                 </p>
@@ -531,7 +544,7 @@ export default function BillHistoryPage() {
                                                     <div className="p-4 space-y-4">
                                                         {/* Quick Presets */}
                                                         <div>
-                                                            <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Quick Select</Label>
+                                                            <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('history.custom_range.presets')}</Label>
                                                             <div className="grid grid-cols-3 gap-2 mt-2">
                                                                 <Button
                                                                     variant="outline"
@@ -544,7 +557,7 @@ export default function BillHistoryPage() {
                                                                     }}
                                                                     className="text-xs hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200"
                                                                 >
-                                                                    Last 7 Days
+                                                                    {t('history.custom_range.last_7_days')}
                                                                 </Button>
                                                                 <Button
                                                                     variant="outline"
@@ -557,7 +570,7 @@ export default function BillHistoryPage() {
                                                                     }}
                                                                     className="text-xs hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200"
                                                                 >
-                                                                    Last 30 Days
+                                                                    {t('history.custom_range.last_30_days')}
                                                                 </Button>
                                                                 <Button
                                                                     variant="outline"
@@ -570,7 +583,7 @@ export default function BillHistoryPage() {
                                                                     }}
                                                                     className="text-xs hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200"
                                                                 >
-                                                                    Last 90 Days
+                                                                    {t('history.custom_range.last_90_days')}
                                                                 </Button>
                                                             </div>
                                                             <div className="grid grid-cols-2 gap-2 mt-2">
@@ -585,7 +598,7 @@ export default function BillHistoryPage() {
                                                                     }}
                                                                     className="text-xs hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200"
                                                                 >
-                                                                    Last 2 Months
+                                                                    {t('history.custom_range.last_2_months')}
                                                                 </Button>
                                                                 <Button
                                                                     variant="outline"
@@ -598,7 +611,7 @@ export default function BillHistoryPage() {
                                                                     }}
                                                                     className="text-xs hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200"
                                                                 >
-                                                                    Last 6 Months
+                                                                    {t('history.custom_range.last_6_months')}
                                                                 </Button>
                                                             </div>
                                                         </div>
@@ -607,15 +620,15 @@ export default function BillHistoryPage() {
                                                             <div className="absolute inset-0 flex items-center">
                                                                 <span className="w-full border-t" />
                                                             </div>
-                                                            <div className="relative flex justify-center text-xs uppercase">
-                                                                <span className="bg-white px-2 text-gray-500">or select dates</span>
+                                                            <div className="relative flex justify-center text-xs">
+                                                                <span className="bg-white px-3 text-gray-500">{t('history.custom_range.or_select')}</span>
                                                             </div>
                                                         </div>
 
                                                         {/* Date Inputs */}
                                                         <div className="grid grid-cols-2 gap-3">
                                                             <div className="space-y-1.5">
-                                                                <Label className="text-xs font-medium text-gray-600">From</Label>
+                                                                <Label className="text-xs font-medium text-gray-600">{t('history.custom_range.from')}</Label>
                                                                 <div className="relative">
                                                                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                                                     <Input
@@ -628,7 +641,7 @@ export default function BillHistoryPage() {
                                                                 </div>
                                                             </div>
                                                             <div className="space-y-1.5">
-                                                                <Label className="text-xs font-medium text-gray-600">To</Label>
+                                                                <Label className="text-xs font-medium text-gray-600">{t('history.custom_range.to')}</Label>
                                                                 <div className="relative">
                                                                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                                                     <Input
@@ -654,14 +667,14 @@ export default function BillHistoryPage() {
                                                                 className="flex-1"
                                                                 disabled={!customStartDate && !customEndDate}
                                                             >
-                                                                Clear
+                                                                {t('history.custom_range.clear')}
                                                             </Button>
                                                             <Button
                                                                 onClick={applyCustomDateRange}
                                                                 className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                                                                 disabled={!customStartDate || !customEndDate}
                                                             >
-                                                                Apply Range
+                                                                {t('history.custom_range.apply')}
                                                             </Button>
                                                         </div>
                                                     </div>
@@ -685,20 +698,20 @@ export default function BillHistoryPage() {
                                         <div className="col-span-1">
                                             <Select value={billType} onValueChange={(v) => { setBillType(v); setPage(1); }}>
                                                 <SelectTrigger className="w-full lg:w-36 h-10 bg-white border-gray-200">
-                                                    <SelectValue placeholder="All Types" />
+                                                    <SelectValue placeholder={t('history.all_types')} />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="all">All Types</SelectItem>
+                                                    <SelectItem value="all">{t('history.all_types')}</SelectItem>
                                                     <SelectItem value="sale">
                                                         <div className="flex items-center gap-2">
                                                             <ArrowUpRight className="h-4 w-4 text-green-600" />
-                                                            Sales
+                                                            {t('billing.sale')}
                                                         </div>
                                                     </SelectItem>
                                                     <SelectItem value="purchase">
                                                         <div className="flex items-center gap-2">
                                                             <ArrowDownRight className="h-4 w-4 text-orange-600" />
-                                                            Purchases
+                                                            {t('billing.purchase')}
                                                         </div>
                                                     </SelectItem>
                                                 </SelectContent>
@@ -716,25 +729,25 @@ export default function BillHistoryPage() {
                                                 }}
                                             >
                                                 <SelectTrigger className="w-full lg:w-40 h-10 bg-white border-gray-200">
-                                                    <SelectValue placeholder="Active" />
+                                                    <SelectValue placeholder={t('history.active')} />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="active">
                                                         <div className="flex items-center gap-2">
                                                             <div className="h-2 w-2 rounded-full bg-green-500" />
-                                                            Active
+                                                            {t('history.active')}
                                                         </div>
                                                     </SelectItem>
                                                     <SelectItem value="edited">
                                                         <div className="flex items-center gap-2">
                                                             <History className="h-4 w-4 text-blue-500" />
-                                                            Edited
+                                                            {t('history.edited')}
                                                         </div>
                                                     </SelectItem>
                                                     <SelectItem value="deleted">
                                                         <div className="flex items-center gap-2">
                                                             <Trash2 className="h-4 w-4 text-red-500" />
-                                                            Deleted
+                                                            {t('history.deleted')}
                                                         </div>
                                                     </SelectItem>
                                                 </SelectContent>
@@ -745,26 +758,26 @@ export default function BillHistoryPage() {
                                         <div className="col-span-1">
                                             <Select value={paymentMethod} onValueChange={(v) => { setPaymentMethod(v); setPage(1); }}>
                                                 <SelectTrigger className="w-full lg:w-40 h-10 bg-white border-gray-200">
-                                                    <SelectValue placeholder="All Methods" />
+                                                    <SelectValue placeholder={t('history.all_methods')} />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="all">All Methods</SelectItem>
+                                                    <SelectItem value="all">{t('history.all_methods')}</SelectItem>
                                                     <SelectItem value="cash">
                                                         <div className="flex items-center gap-2">
                                                             <Banknote className="h-4 w-4 text-green-600" />
-                                                            Cash
+                                                            {t('billing.cash')}
                                                         </div>
                                                     </SelectItem>
                                                     <SelectItem value="card">
                                                         <div className="flex items-center gap-2">
                                                             <CreditCard className="h-4 w-4 text-blue-600" />
-                                                            Card
+                                                            {t('billing.card')}
                                                         </div>
                                                     </SelectItem>
                                                     <SelectItem value="online">
                                                         <div className="flex items-center gap-2">
                                                             <Smartphone className="h-4 w-4 text-purple-600" />
-                                                            UPI
+                                                            {t('billing.upi')}
                                                         </div>
                                                     </SelectItem>
                                                 </SelectContent>
@@ -781,7 +794,7 @@ export default function BillHistoryPage() {
                                                     className="w-full lg:w-auto text-gray-500 hover:text-red-600 hover:bg-red-50 h-10 px-4 transition-colors font-medium border border-dashed border-gray-200 lg:border-none"
                                                 >
                                                     <X className="h-4 w-4 mr-2" />
-                                                    Clear All Filters
+                                                    {t('history.clear_filters')}
                                                 </Button>
                                             </div>
                                         )}
@@ -796,15 +809,15 @@ export default function BillHistoryPage() {
                                         <Table>
                                             <TableHeader>
                                                 <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-                                                    <TableHead className="font-semibold">Bill No.</TableHead>
-                                                    <TableHead className="font-semibold">Type</TableHead>
-                                                    <TableHead className="font-semibold">Party</TableHead>
-                                                    <TableHead className="font-semibold text-right">Amount</TableHead>
-                                                    <TableHead className="font-semibold text-right">Paid</TableHead>
-                                                    <TableHead className="font-semibold">Status</TableHead>
-                                                    <TableHead className="font-semibold">Method</TableHead>
-                                                    <TableHead className="font-semibold">Date</TableHead>
-                                                    <TableHead className="font-semibold text-right">Actions</TableHead>
+                                                    <TableHead className="font-semibold">{t('history.bill_no')}</TableHead>
+                                                    <TableHead className="font-semibold">{t('history.type')}</TableHead>
+                                                    <TableHead className="font-semibold">{t('history.entity')}</TableHead>
+                                                    <TableHead className="font-semibold text-right">{t('history.amount')}</TableHead>
+                                                    <TableHead className="font-semibold text-right">{t('history.paid')}</TableHead>
+                                                    <TableHead className="font-semibold">{t('history.status')}</TableHead>
+                                                    <TableHead className="font-semibold">{t('history.method')}</TableHead>
+                                                    <TableHead className="font-semibold">{t('history.date')}</TableHead>
+                                                    <TableHead className="font-semibold text-right">{t('history.actions')}</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -833,7 +846,7 @@ export default function BillHistoryPage() {
                                                                 ) : (
                                                                     <ArrowDownRight className="h-3 w-3" />
                                                                 )}
-                                                                {bill.billType === 'sale' ? 'Sale' : 'Purchase'}
+                                                                {bill.billType === 'sale' ? t('billing.sale') : t('billing.purchase')}
                                                             </div>
                                                         </TableCell>
                                                         <TableCell className="max-w-[180px]">
@@ -848,11 +861,11 @@ export default function BillHistoryPage() {
                                                         <TableCell>
                                                             {bill.dueAmount > 0 ? (
                                                                 <Badge variant="destructive" className="bg-red-100 text-red-700 border-0 font-mono">
-                                                                    Due: {formatCurrency(bill.dueAmount)}
+                                                                    {t('history.due')}: {formatCurrency(bill.dueAmount)}
                                                                 </Badge>
                                                             ) : (
                                                                 <Badge className="bg-green-100 text-green-700 border-0">
-                                                                    ✓ Paid
+                                                                    ✓ {t('billing.paid')}
                                                                 </Badge>
                                                             )}
                                                         </TableCell>
@@ -863,7 +876,7 @@ export default function BillHistoryPage() {
                                                                         'bg-purple-50 text-purple-700'
                                                                 }`}>
                                                                 {getPaymentMethodIcon(bill.paymentMethod)}
-                                                                <span className="capitalize font-medium">{bill.paymentMethod || '---'}</span>
+                                                                <span className="font-medium">{getPaymentMethodLabel(bill.paymentMethod)}</span>
                                                             </div>
                                                         </TableCell>
                                                         <TableCell className="text-gray-500 text-sm">
@@ -880,20 +893,20 @@ export default function BillHistoryPage() {
                                                                     <DropdownMenuContent align="end" className="w-36">
                                                                         <DropdownMenuItem onClick={() => handleEdit(bill)}>
                                                                             <Edit className="mr-2 h-4 w-4" />
-                                                                            Edit Bill
+                                                                            {t('history.edit_bill')}
                                                                         </DropdownMenuItem>
                                                                         <DropdownMenuItem
                                                                             onClick={() => handleDelete(bill)}
                                                                             className="text-red-600 focus:text-red-600"
                                                                         >
                                                                             <Trash2 className="mr-2 h-4 w-4" />
-                                                                            Delete
+                                                                            {t('common.delete')}
                                                                         </DropdownMenuItem>
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>
                                                             ) : (
                                                                 <Badge variant="outline" className="text-gray-400 border-gray-200">
-                                                                    Deleted
+                                                                    {t('history.deleted')}
                                                                 </Badge>
                                                             )}
                                                         </TableCell>
@@ -906,19 +919,19 @@ export default function BillHistoryPage() {
                                             <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
                                                 <Receipt className="h-10 w-10 text-gray-300" />
                                             </div>
-                                            <p className="text-gray-500 font-semibold text-lg">No bills found</p>
+                                            <p className="text-gray-500 font-semibold text-lg">{t('history.no_bills_found')}</p>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                {hasActiveFilters ? 'Try adjusting your filters' : 'Create a new bill to get started'}
+                                                {hasActiveFilters ? t('history.adjust_filters') : t('history.create_new_desc')}
                                             </p>
                                             {hasActiveFilters ? (
                                                 <Button onClick={clearFilters} variant="outline" className="mt-4">
-                                                    Clear Filters
+                                                    {t('history.clear_filters')}
                                                 </Button>
                                             ) : (
                                                 <Link href="/shopkeeper/billing">
                                                     <Button className="mt-4 bg-gradient-to-r from-blue-600 to-purple-600">
                                                         <Plus className="h-4 w-4 mr-2" />
-                                                        Create New Bill
+                                                        {t('history.new_bill')}
                                                     </Button>
                                                 </Link>
                                             )}
@@ -956,7 +969,7 @@ export default function BillHistoryPage() {
                                                                 <p className="font-mono text-[11px] text-gray-400">{bill.billNumber}</p>
                                                                 {bill.isEdited && (
                                                                     <span className="text-[9px] text-blue-500 font-bold bg-blue-50 px-1 rounded flex items-center gap-0.5">
-                                                                        <History className="h-2 w-2" /> EDITED
+                                                                        <History className="h-2 w-2" /> {t('history.edited').toUpperCase()}
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -967,7 +980,7 @@ export default function BillHistoryPage() {
                                                             ? 'bg-green-100 text-green-700'
                                                             : 'bg-orange-100 text-orange-700'
                                                             } border-0`}>
-                                                            {bill.billType === 'sale' ? 'Sale' : 'Purchase'}
+                                                            {bill.billType === 'sale' ? t('billing.sale') : t('billing.purchase')}
                                                         </Badge>
 
                                                         {/* Actions for mobile */}
@@ -981,7 +994,7 @@ export default function BillHistoryPage() {
                                                                 <DropdownMenuContent align="end" className="w-36">
                                                                     <DropdownMenuItem onClick={() => handleEdit(bill)}>
                                                                         <Edit className="mr-2 h-4 w-4" />
-                                                                        Edit Bill
+                                                                        {t('history.edit_bill')}
                                                                     </DropdownMenuItem>
                                                                     <DropdownMenuItem
                                                                         onClick={() => handleDelete(bill)}
@@ -1000,23 +1013,23 @@ export default function BillHistoryPage() {
                                                         <div className="flex items-center divide-x divide-gray-200">
                                                             {/* Total Amount */}
                                                             <div className="flex-1 text-center px-2">
-                                                                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">Total</p>
+                                                                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">{t('history.amount')}</p>
                                                                 <p className="font-bold text-gray-900 text-sm">{formatCurrency(bill.totalAmount)}</p>
                                                             </div>
 
                                                             {/* Paid Amount */}
                                                             <div className="flex-1 text-center px-2">
-                                                                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">Paid</p>
+                                                                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">{t('history.paid')}</p>
                                                                 <p className="font-bold text-green-600 text-sm">{formatCurrency(bill.paidAmount)}</p>
                                                             </div>
 
                                                             {/* Due/Status */}
                                                             <div className="flex-1 text-center px-2">
-                                                                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">Due</p>
+                                                                <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">{t('history.due')}</p>
                                                                 {bill.dueAmount > 0 ? (
                                                                     <p className="font-bold text-red-600 text-sm">{formatCurrency(bill.dueAmount)}</p>
                                                                 ) : (
-                                                                    <p className="font-bold text-green-600 text-sm">✓ Nil</p>
+                                                                    <p className="font-bold text-green-600 text-sm">✓ {t('history.nil')}</p>
                                                                 )}
                                                             </div>
                                                         </div>
@@ -1033,7 +1046,7 @@ export default function BillHistoryPage() {
                                                             {bill.paymentMethod === 'cash' && <Banknote className="h-3.5 w-3.5" />}
                                                             {bill.paymentMethod === 'card' && <CreditCard className="h-3.5 w-3.5" />}
                                                             {bill.paymentMethod === 'online' && <Smartphone className="h-3.5 w-3.5" />}
-                                                            <span className="capitalize">{bill.paymentMethod || '---'}</span>
+                                                            <span>{getPaymentMethodLabel(bill.paymentMethod)}</span>
                                                         </div>
 
                                                         <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -1049,15 +1062,15 @@ export default function BillHistoryPage() {
                                             <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
                                                 <Receipt className="h-8 w-8 text-gray-300" />
                                             </div>
-                                            <p className="text-gray-500 font-medium">No bills found</p>
+                                            <p className="text-gray-500 font-medium">{t('history.no_bills_found')}</p>
                                             <p className="text-xs text-gray-400 mt-1">
-                                                {hasActiveFilters ? 'Try adjusting filters' : 'Create a new bill'}
+                                                {hasActiveFilters ? t('history.adjust_filters') : t('history.create_new_desc')}
                                             </p>
                                             {!hasActiveFilters && (
                                                 <Link href="/shopkeeper/billing">
                                                     <Button size="sm" className="mt-3 bg-gradient-to-r from-blue-600 to-purple-600">
                                                         <Plus className="h-4 w-4 mr-1" />
-                                                        New Bill
+                                                        {t('history.new_bill')}
                                                     </Button>
                                                 </Link>
                                             )}

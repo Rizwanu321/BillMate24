@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from 'react-i18next';
 import { Receipt, ExternalLink } from 'lucide-react';
 import {
     Table,
@@ -51,6 +52,7 @@ const paymentMethodColors: Record<string, string> = {
 };
 
 export function TransactionsTable({ bills, wholesaler, isLoading }: TransactionsTableProps) {
+    const { t } = useTranslation();
     // Calculate opening balance (total purchased that came from before using the app)
     const billsTotal = bills.reduce((sum, bill) => sum + bill.totalAmount, 0);
     const openingBalance = wholesaler ? Math.max(0, wholesaler.totalPurchased - billsTotal) : 0;
@@ -59,7 +61,7 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
         return (
             <div className="p-8 md:p-12 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-t-2 border-b-2 border-purple-500 mx-auto" />
-                <p className="text-gray-500 mt-3 md:mt-4 text-sm md:text-base">Loading...</p>
+                <p className="text-gray-500 mt-3 md:mt-4 text-sm md:text-base">{t('wholesalers_list.empty.loading')}</p>
             </div>
         );
     }
@@ -71,11 +73,11 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                 <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 md:mb-4">
                     <Receipt className="h-6 w-6 md:h-8 md:w-8 text-gray-400" />
                 </div>
-                <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">No transactions</h3>
-                <p className="text-gray-500 mb-3 md:mb-4 text-sm md:text-base">Create a purchase bill to see transactions.</p>
+                <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">{t('wholesaler_detail.transactions.empty')}</h3>
+                <p className="text-gray-500 mb-3 md:mb-4 text-sm md:text-base">{t('wholesaler_detail.transactions.empty_desc')}</p>
                 <Link href="/shopkeeper/billing">
                     <Button className="bg-purple-600 hover:bg-purple-700 h-9 text-sm">
-                        Create Bill
+                        {t('billing.total_bill')}
                     </Button>
                 </Link>
             </div>
@@ -89,13 +91,13 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-                            <TableHead className="font-semibold">Date</TableHead>
-                            <TableHead className="font-semibold">Bill Number</TableHead>
-                            <TableHead className="font-semibold text-right">Amount</TableHead>
-                            <TableHead className="font-semibold text-right">Paid</TableHead>
-                            <TableHead className="font-semibold text-right">Due</TableHead>
-                            <TableHead className="font-semibold">Method</TableHead>
-                            <TableHead className="font-semibold">Status</TableHead>
+                            <TableHead className="font-semibold">{t('history.date')}</TableHead>
+                            <TableHead className="font-semibold">{t('wholesaler_detail.transactions.bill_no')}</TableHead>
+                            <TableHead className="font-semibold text-right">{t('wholesaler_detail.info.purchased')}</TableHead>
+                            <TableHead className="font-semibold text-right">{t('wholesaler_detail.info.paid')}</TableHead>
+                            <TableHead className="font-semibold text-right">{t('wholesaler_detail.info.due')}</TableHead>
+                            <TableHead className="font-semibold">{t('wholesaler_detail.transactions.method')}</TableHead>
+                            <TableHead className="font-semibold">{t('history.status')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -103,11 +105,11 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                         {openingBalance > 0 && (
                             <TableRow className="bg-blue-50/50 border-b-2 border-blue-200">
                                 <TableCell className="text-gray-600 font-medium">
-                                    Before App
+                                    {t('wholesaler_detail.transactions.before_app')}
                                 </TableCell>
                                 <TableCell>
                                     <Badge className="bg-blue-100 text-blue-700 border-0 font-mono text-sm">
-                                        Opening Balance
+                                        {t('wholesaler_detail.transactions.opening_balance')}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-right font-bold text-gray-900">
@@ -128,7 +130,7 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                                 </TableCell>
                                 <TableCell>
                                     <Badge className="bg-orange-100 text-orange-700 border-0">
-                                        Pending
+                                        {t('wholesaler_detail.transactions.pending_status')}
                                     </Badge>
                                 </TableCell>
                             </TableRow>
@@ -165,11 +167,11 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                                     <TableCell>
                                         {(() => {
                                             if (due <= 0) {
-                                                return <Badge className="bg-green-100 text-green-700 border-0">✓ Paid</Badge>;
+                                                return <Badge className="bg-green-100 text-green-700 border-0">✓ {t('wholesaler_detail.transactions.paid_status')}</Badge>;
                                             } else if (bill.paidAmount > 0) {
-                                                return <Badge className="bg-yellow-100 text-yellow-700 border-0">Partial</Badge>;
+                                                return <Badge className="bg-yellow-100 text-yellow-700 border-0">{t('wholesaler_detail.transactions.partial_status')}</Badge>;
                                             } else {
-                                                return <Badge className="bg-red-100 text-red-700 border-0">Pending</Badge>;
+                                                return <Badge className="bg-red-100 text-red-700 border-0">{t('wholesaler_detail.transactions.pending_status')}</Badge>;
                                             }
                                         })()}
                                     </TableCell>
@@ -189,14 +191,14 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
                                 <Badge className="bg-blue-100 text-blue-700 border-0 text-[10px] px-1.5 font-mono">
-                                    Opening Balance
+                                    {t('wholesaler_detail.transactions.opening_balance')}
                                 </Badge>
                                 <Badge className="bg-gray-100 text-gray-600 border-0 text-[10px] px-1.5">
-                                    N/A
+                                    {t('history.nil')}
                                 </Badge>
                             </div>
                             <Badge className="bg-orange-100 text-orange-700 border-0 text-[10px] px-1.5">
-                                Pending
+                                {t('wholesaler_detail.transactions.pending_status')}
                             </Badge>
                         </div>
 
@@ -204,15 +206,15 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div>
-                                    <p className="text-[10px] text-gray-500">Amount</p>
+                                    <p className="text-[10px] text-gray-500">{t('wholesaler_detail.info.purchased')}</p>
                                     <p className="text-xs font-bold text-gray-900">{formatCurrency(openingBalance)}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-gray-500">Paid</p>
+                                    <p className="text-[10px] text-gray-500">{t('wholesaler_detail.info.paid')}</p>
                                     <p className="text-xs font-bold text-gray-400">₹0</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-gray-500">Due</p>
+                                    <p className="text-[10px] text-gray-500">{t('wholesaler_detail.info.due')}</p>
                                     <p className="text-xs font-bold text-orange-600">{formatCurrency(openingBalance)}</p>
                                 </div>
                             </div>
@@ -220,7 +222,7 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
 
                         {/* Date */}
                         <p className="text-[10px] text-gray-500 mt-2 font-medium">
-                            Before using app
+                            {t('wholesaler_detail.transactions.before_app')}
                         </p>
                     </div>
                 )}
@@ -245,11 +247,11 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                                 </div>
                                 {(() => {
                                     if (due <= 0) {
-                                        return <Badge className="bg-green-100 text-green-700 border-0 text-[10px] px-1.5">✓ Paid</Badge>;
+                                        return <Badge className="bg-green-100 text-green-700 border-0 text-[10px] px-1.5">✓ {t('wholesaler_detail.transactions.paid_status')}</Badge>;
                                     } else if (bill.paidAmount > 0) {
-                                        return <Badge className="bg-yellow-100 text-yellow-700 border-0 text-[10px] px-1.5">Partial</Badge>;
+                                        return <Badge className="bg-yellow-100 text-yellow-700 border-0 text-[10px] px-1.5">{t('wholesaler_detail.transactions.partial_status')}</Badge>;
                                     } else {
-                                        return <Badge className="bg-red-100 text-red-700 border-0 text-[10px] px-1.5">Pending</Badge>;
+                                        return <Badge className="bg-red-100 text-red-700 border-0 text-[10px] px-1.5">{t('wholesaler_detail.transactions.pending_status')}</Badge>;
                                     }
                                 })()}
                             </div>
@@ -258,19 +260,19 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                             <div className="bg-gray-50 rounded-lg p-2.5 my-2 border border-gray-100">
                                 <div className="flex items-center divide-x divide-gray-200">
                                     <div className="flex-1 text-center px-2">
-                                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">Amount</p>
+                                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">{t('wholesaler_detail.info.purchased')}</p>
                                         <p className="font-bold text-gray-900 text-sm">{formatCurrency(bill.totalAmount)}</p>
                                     </div>
                                     <div className="flex-1 text-center px-2">
-                                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">Paid</p>
+                                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">{t('wholesaler_detail.info.paid')}</p>
                                         <p className="font-bold text-green-600 text-sm">{formatCurrency(bill.paidAmount)}</p>
                                     </div>
                                     <div className="flex-1 text-center px-2">
-                                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">Due</p>
+                                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wide mb-1">{t('wholesaler_detail.info.due')}</p>
                                         {due > 0 ? (
                                             <p className="font-bold text-red-600 text-sm">{formatCurrency(due)}</p>
                                         ) : (
-                                            <p className="font-bold text-green-600 text-sm">✓ Nil</p>
+                                            <p className="font-bold text-green-600 text-sm">✓ {t('history.nil')}</p>
                                         )}
                                     </div>
                                 </div>

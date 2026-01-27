@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, AlertTriangle, Trash2 } from 'lucide-react';
 import api from '@/config/axios';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface DeleteBillDialogProps {
     bill: any | null;
@@ -24,6 +25,7 @@ interface DeleteBillDialogProps {
 }
 
 export function DeleteBillDialog({ bill, open, onOpenChange, onSuccess }: DeleteBillDialogProps) {
+    const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(false);
 
     const handleDelete = async () => {
@@ -31,11 +33,11 @@ export function DeleteBillDialog({ bill, open, onOpenChange, onSuccess }: Delete
         setIsLoading(true);
         try {
             await api.delete(`/bills/${bill._id}`);
-            toast.success('Bill deleted successfully');
+            toast.success(t('history.delete_success'));
             onSuccess();
             onOpenChange(false);
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to delete bill');
+            toast.error(error.response?.data?.message || t('history.delete_error'));
         } finally {
             setIsLoading(false);
         }
@@ -43,41 +45,60 @@ export function DeleteBillDialog({ bill, open, onOpenChange, onSuccess }: Delete
 
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
-            <AlertDialogContent className="sm:max-w-[400px]">
-                <AlertDialogHeader>
-                    <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                        <AlertTriangle className="h-6 w-6 text-red-600" />
+            <AlertDialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-0 shadow-2xl">
+                {/* Header Section */}
+                <div className="bg-red-50 p-6 flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4 shadow-sm border border-red-200">
+                        <AlertTriangle className="h-8 w-8 text-red-600" />
                     </div>
-                    <AlertDialogTitle className="text-center text-xl font-bold">Delete Bill?</AlertDialogTitle>
-                    <AlertDialogDescription className="text-center">
-                        This will soft delete bill <span className="font-mono font-bold text-slate-900">{bill?.billNumber}</span>.
-                        The {bill?.billType === 'purchase' ? "wholesaler's" : "customer's"} ledger balance will be reversed.
-                        <br /><br />
-                        <span className="text-xs text-red-500 font-medium">This action can be undone by an admin.</span>
+                    <AlertDialogTitle className="text-2xl font-bold text-red-900 text-center">
+                        {t('history.delete_title')}
+                    </AlertDialogTitle>
+                </div>
+
+                <div className="p-6 pt-2">
+                    <AlertDialogDescription asChild>
+                        <div className="text-center text-slate-600 text-base leading-relaxed">
+                            {t('history.delete_desc', {
+                                billNumber: bill?.billNumber,
+                                entityType: bill?.billType === 'purchase' ? t('common.wholesaler') : t('common.customer')
+                            })}
+                            <br /><br />
+                            <div className="flex items-start gap-2 bg-amber-50 p-3 rounded-lg border border-amber-100">
+                                <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                                <span className="text-xs text-amber-700 text-left leading-tight font-medium">
+                                    {t('history.delete_warning')}
+                                </span>
+                            </div>
+                        </div>
                     </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter className="sm:flex-col gap-2 mt-2">
-                    <Button
-                        variant="destructive"
-                        onClick={handleDelete}
-                        disabled={isLoading}
-                        className="w-full h-11 font-bold shadow-lg shadow-red-500/20"
-                    >
-                        {isLoading ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : (
-                            <>
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Confirm Delete
-                            </>
-                        )}
-                    </Button>
-                    <AlertDialogCancel asChild>
-                        <Button variant="ghost" className="w-full h-11 font-semibold border-0">
-                            Keep Bill
+
+                    <AlertDialogFooter className="flex-col sm:flex-col gap-2 mt-6">
+                        <Button
+                            variant="destructive"
+                            onClick={handleDelete}
+                            disabled={isLoading}
+                            className="w-full h-12 font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/25 transition-all active:scale-[0.98]"
+                        >
+                            {isLoading ? (
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                                <>
+                                    <Trash2 className="h-5 w-5 mr-2" />
+                                    {t('history.confirm_delete')}
+                                </>
+                            )}
                         </Button>
-                    </AlertDialogCancel>
-                </AlertDialogFooter>
+                        <AlertDialogCancel asChild>
+                            <Button
+                                variant="ghost"
+                                className="w-full h-12 font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-50 border-0"
+                            >
+                                {t('history.keep_bill')}
+                            </Button>
+                        </AlertDialogCancel>
+                    </AlertDialogFooter>
+                </div>
             </AlertDialogContent>
         </AlertDialog>
     );

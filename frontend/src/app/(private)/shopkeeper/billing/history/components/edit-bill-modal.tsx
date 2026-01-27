@@ -15,16 +15,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Loader2, Receipt, IndianRupee, Banknote, CreditCard, Smartphone } from 'lucide-react';
+import { Loader2, Receipt, Banknote, CreditCard, Smartphone, AlertCircle } from 'lucide-react';
 import api from '@/config/axios';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 const updateBillSchema = z.object({
     totalAmount: z.number().min(0.01, 'Total amount must be greater than 0'),
@@ -51,6 +45,7 @@ interface EditBillModalProps {
 }
 
 export function EditBillModal({ bill, open, onOpenChange, onSuccess }: EditBillModalProps) {
+    const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(false);
 
     const {
@@ -85,11 +80,11 @@ export function EditBillModal({ bill, open, onOpenChange, onSuccess }: EditBillM
 
         try {
             await api.patch(`/bills/${bill._id}`, payload);
-            toast.success('Bill updated successfully');
+            toast.success(t('billing.bill_success'));
             onSuccess();
             onOpenChange(false);
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to update bill');
+            toast.error(error.response?.data?.message || t('billing.bill_error'));
         } finally {
             setIsLoading(false);
         }
@@ -101,66 +96,99 @@ export function EditBillModal({ bill, open, onOpenChange, onSuccess }: EditBillM
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[450px]">
-                <DialogHeader>
-                    <div className="flex items-center gap-2 text-blue-600 mb-1">
-                        <Receipt className="h-5 w-5" />
-                        <span className="text-xs font-bold uppercase tracking-wider">Edit Transaction</span>
-                    </div>
-                    <DialogTitle className="text-2xl font-bold">Update Bill Details</DialogTitle>
-                    <DialogDescription>
-                        Correcting bill details will automatically update the {bill?.billType === 'purchase' ? "wholesaler's" : "customer's"} ledger balance.
-                    </DialogDescription>
-                </DialogHeader>
+            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto p-0">
+                {/* Header with gradient */}
+                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 md:p-6 rounded-t-lg">
+                    <DialogHeader className="space-y-2">
+                        <div className="flex items-center gap-2 text-white/80">
+                            <Receipt className="h-4 w-4 md:h-5 md:w-5" />
+                            <span className="text-xs md:text-sm font-semibold uppercase tracking-wider">
+                                {t('history.edit_bill')}
+                            </span>
+                        </div>
+                        <DialogTitle className="text-xl md:text-2xl font-bold text-white">
+                            {t('billing.transaction_type')}
+                        </DialogTitle>
+                        <DialogDescription className="text-white/90 text-xs md:text-sm">
+                            {bill?.billType === 'purchase'
+                                ? t('billing.update_purchase_desc')
+                                : t('billing.update_sale_desc')}
+                        </DialogDescription>
+                    </DialogHeader>
+                </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pt-2">
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6 space-y-4 md:space-y-5">
+                    {/* Amount Section */}
+                    <div className="bg-gradient-to-br from-slate-50 to-gray-50 p-3 md:p-4 rounded-xl border border-slate-200 space-y-3 md:space-y-4">
+                        {/* Total Amount */}
                         <div className="space-y-2">
-                            <Label htmlFor="totalAmount" className="text-slate-700 font-semibold">Total Bill Amount</Label>
+                            <Label htmlFor="totalAmount" className="text-slate-700 font-semibold text-sm md:text-base flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-blue-500"></span>
+                                {t('billing.total_bill')}
+                            </Label>
                             <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">₹</span>
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-sm md:text-base">₹</span>
                                 <Input
                                     id="totalAmount"
                                     type="number"
                                     step="0.01"
-                                    className="pl-8 h-11 border-slate-200 focus:border-blue-500 font-bold text-lg"
+                                    className="pl-7 md:pl-8 h-10 md:h-12 border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-bold text-base md:text-lg bg-white"
                                     {...register('totalAmount', { valueAsNumber: true })}
                                 />
                             </div>
-                            {errors.totalAmount && <p className="text-xs text-red-500">{errors.totalAmount.message}</p>}
+                            {errors.totalAmount && (
+                                <div className="flex items-center gap-1 text-xs text-red-600">
+                                    <AlertCircle className="h-3 w-3" />
+                                    <p>{errors.totalAmount.message}</p>
+                                </div>
+                            )}
                         </div>
 
+                        {/* Paid Amount */}
                         <div className="space-y-2">
-                            <Label htmlFor="paidAmount" className="text-slate-700 font-semibold">Amount Paid</Label>
+                            <Label htmlFor="paidAmount" className="text-slate-700 font-semibold text-sm md:text-base flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                                {t('billing.paid_now')}
+                            </Label>
                             <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-green-500">₹</span>
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-green-500 text-sm md:text-base">₹</span>
                                 <Input
                                     id="paidAmount"
                                     type="number"
                                     step="0.01"
-                                    className="pl-8 h-11 border-slate-200 focus:border-green-500 font-bold text-lg text-green-700"
+                                    className="pl-7 md:pl-8 h-10 md:h-12 border-slate-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 font-bold text-base md:text-lg text-green-700 bg-white"
                                     {...register('paidAmount', { valueAsNumber: true })}
                                 />
                             </div>
-                            {errors.paidAmount && <p className="text-xs text-red-500">{errors.paidAmount.message}</p>}
+                            {errors.paidAmount && (
+                                <div className="flex items-center gap-1 text-xs text-red-600">
+                                    <AlertCircle className="h-3 w-3" />
+                                    <p>{errors.paidAmount.message}</p>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200 shadow-sm">
-                            <span className="text-sm font-medium text-slate-600">Balance Due:</span>
-                            <span className={`font-bold ${dueAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {/* Balance Due Display */}
+                        <div className="flex items-center justify-between p-3 md:p-4 bg-white rounded-lg border-2 border-dashed border-slate-200 shadow-sm">
+                            <span className="text-xs md:text-sm font-semibold text-slate-600">{t('billing.balance_due')}:</span>
+                            <span className={`font-bold text-base md:text-lg ${dueAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
                                 ₹{dueAmount.toLocaleString('en-IN')}
                             </span>
                         </div>
                     </div>
 
+                    {/* Payment Method Section */}
                     {paidAmount > 0 && (
                         <div className="space-y-3">
-                            <Label className="text-slate-700 font-semibold">Payment Method</Label>
-                            <div className="flex gap-2">
+                            <Label className="text-slate-700 font-semibold text-sm md:text-base flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-purple-500"></span>
+                                {t('billing.payment_method')}
+                            </Label>
+                            <div className="grid grid-cols-3 gap-2 md:gap-3">
                                 {[
-                                    { value: 'cash', label: 'Cash', icon: Banknote, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
-                                    { value: 'card', label: 'Card', icon: CreditCard, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
-                                    { value: 'online', label: 'UPI', icon: Smartphone, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200' },
+                                    { value: 'cash', label: t('billing.cash'), icon: Banknote, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-300', ring: 'ring-green-500/30' },
+                                    { value: 'card', label: t('billing.card'), icon: CreditCard, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-300', ring: 'ring-blue-500/30' },
+                                    { value: 'online', label: t('billing.upi'), icon: Smartphone, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-300', ring: 'ring-purple-500/30' },
                                 ].map((method) => {
                                     const isSelected = watch('paymentMethod') === method.value;
                                     return (
@@ -168,51 +196,63 @@ export function EditBillModal({ bill, open, onOpenChange, onSuccess }: EditBillM
                                             key={method.value}
                                             type="button"
                                             onClick={() => setValue('paymentMethod', method.value as any)}
-                                            className={`flex-1 py-3 px-2 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all ${isSelected
-                                                ? `${method.border} ${method.bg} shadow-sm ring-1 ring-${method.color.split('-')[1]}-500/20`
-                                                : 'border-slate-100 hover:border-slate-200 bg-white'
+                                            className={`py-2.5 md:py-3 px-2 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all ${isSelected
+                                                    ? `${method.border} ${method.bg} shadow-md ring-2 ${method.ring}`
+                                                    : 'border-slate-200 hover:border-slate-300 bg-white hover:shadow-sm'
                                                 }`}
                                         >
-                                            <method.icon className={`h-5 w-5 ${isSelected ? method.color : 'text-slate-400'}`} />
-                                            <span className={`text-[11px] font-bold ${isSelected ? 'text-slate-900' : 'text-slate-500'}`}>{method.label}</span>
+                                            <method.icon className={`h-4 w-4 md:h-5 md:w-5 ${isSelected ? method.color : 'text-slate-400'}`} />
+                                            <span className={`text-[10px] md:text-xs font-bold ${isSelected ? 'text-slate-900' : 'text-slate-500'}`}>
+                                                {method.label}
+                                            </span>
                                         </button>
                                     );
                                 })}
                             </div>
                             {errors.paymentMethod && (
-                                <p className="text-xs text-red-500 mt-1 font-medium">{errors.paymentMethod.message}</p>
+                                <div className="flex items-center gap-1 text-xs text-red-600 mt-1">
+                                    <AlertCircle className="h-3 w-3" />
+                                    <p className="font-medium">{errors.paymentMethod.message}</p>
+                                </div>
                             )}
                         </div>
                     )}
 
+                    {/* Notes Section */}
                     <div className="space-y-2">
-                        <Label htmlFor="notes" className="text-slate-700 font-semibold">Notes</Label>
+                        <Label htmlFor="notes" className="text-slate-700 font-semibold text-sm md:text-base">
+                            {t('billing.notes')}
+                        </Label>
                         <Input
                             id="notes"
-                            placeholder="Add reason for edit or other notes..."
-                            className="h-11 border-slate-200"
+                            placeholder={t('billing.notes_placeholder')}
+                            className="h-10 md:h-11 border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm md:text-base"
                             {...register('notes')}
                         />
                     </div>
 
-                    <DialogFooter className="pt-2 gap-2">
+                    {/* Footer Buttons */}
+                    <DialogFooter className="pt-2 gap-2 flex-col sm:flex-row">
                         <Button
                             type="button"
-                            variant="ghost"
+                            variant="outline"
                             onClick={() => onOpenChange(false)}
-                            className="flex-1 h-11 font-semibold"
+                            className="flex-1 h-10 md:h-11 font-semibold border-2 hover:bg-slate-50 text-sm md:text-base"
                         >
-                            Cancel
+                            {t('common.cancel')}
                         </Button>
                         <Button
                             type="submit"
                             disabled={isLoading}
-                            className="flex-[2] h-11 font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/25"
+                            className="flex-1 sm:flex-[2] h-10 md:h-11 font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/25 text-sm md:text-base"
                         >
                             {isLoading ? (
-                                <Loader2 className="h-5 w-5 animate-spin" />
+                                <>
+                                    <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin mr-2" />
+                                    {t('billing.processing')}
+                                </>
                             ) : (
-                                'Save Changes'
+                                t('common.save_changes')
                             )}
                         </Button>
                     </DialogFooter>

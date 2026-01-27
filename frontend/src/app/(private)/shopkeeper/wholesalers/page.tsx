@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -106,6 +107,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function WholesalersPage() {
+    const { t } = useTranslation();
     const queryClient = useQueryClient();
     const router = useRouter();
 
@@ -198,7 +200,7 @@ export default function WholesalersPage() {
             queryClient.invalidateQueries({ queryKey: ['wholesaler-stats'] });
             setEditDialogOpen(false);
             setEditingWholesaler(null);
-            toast.success('Wholesaler updated successfully');
+            toast.success(t('wholesalers_list.dialogs.success_update'));
         },
         onError: (error: any) => {
             toast.error(error.response?.data?.message || 'Failed to update wholesaler');
@@ -214,7 +216,7 @@ export default function WholesalersPage() {
             queryClient.invalidateQueries({ queryKey: ['wholesaler-stats'] });
             setDeleteDialogOpen(false);
             setSelectedWholesaler(null);
-            toast.success('Wholesaler deleted (soft delete)');
+            toast.success(t('wholesalers_list.dialogs.success_delete'));
         },
         onError: () => {
             toast.error('Failed to delete wholesaler');
@@ -228,7 +230,7 @@ export default function WholesalersPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['wholesalers'] });
             queryClient.invalidateQueries({ queryKey: ['wholesaler-stats'] });
-            toast.success('Wholesaler restored successfully');
+            toast.success(t('wholesalers_list.dialogs.success_restore'));
         },
         onError: () => {
             toast.error('Failed to restore wholesaler');
@@ -290,7 +292,7 @@ export default function WholesalersPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/20">
-            <Header title="Wholesalers" />
+            <Header title={t('wholesalers_list.title')} />
 
             <div className="p-3 md:p-6">
                 {/* Page Header */}
@@ -298,8 +300,8 @@ export default function WholesalersPage() {
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
-                                <span className="hidden sm:inline">Wholesalers / Distributors</span>
-                                <span className="sm:hidden">Wholesalers</span>
+                                <span className="hidden sm:inline">{t('wholesalers_list.subtitle')}</span>
+                                <span className="sm:hidden">{t('wholesalers_list.title')}</span>
                             </h2>
                             <Users className="h-5 w-5 md:h-8 md:w-8 text-indigo-600" />
                         </div>
@@ -313,13 +315,13 @@ export default function WholesalersPage() {
                         <Link href="/shopkeeper/wholesalers/dashboard" className="hidden md:block">
                             <Button variant="outline" className="shadow-sm">
                                 <LayoutDashboard className="h-4 w-4 mr-2" />
-                                Dashboard
+                                {t('common.dashboard')}
                             </Button>
                         </Link>
                         <Link href="/shopkeeper/wholesalers/payments" className="hidden md:block">
                             <Button variant="outline" className="shadow-sm">
                                 <CreditCard className="h-4 w-4 mr-2" />
-                                Payments
+                                {t('sidebar.payments')}
                             </Button>
                         </Link>
                         <AddWholesalerDialog />
@@ -340,8 +342,8 @@ export default function WholesalersPage() {
                                     <div className="p-1.5 md:p-2 rounded-lg bg-purple-100">
                                         <Package className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
                                     </div>
-                                    <span className="hidden sm:inline">All Wholesalers</span>
-                                    <span className="sm:hidden">Wholesalers</span>
+                                    <span className="hidden sm:inline">{t('wholesalers_list.all_wholesalers')}</span>
+                                    <span className="sm:hidden">{t('wholesalers_list.title')}</span>
                                     <Badge variant="secondary" className="ml-1 md:ml-2 bg-purple-50 text-purple-700 text-[10px] md:text-xs px-1.5 md:px-2">
                                         {pagination.total}
                                     </Badge>
@@ -352,7 +354,7 @@ export default function WholesalersPage() {
                                 <div className="relative w-full sm:w-auto">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                     <Input
-                                        placeholder="Search..."
+                                        placeholder={t('wholesalers_list.filters.search')}
                                         value={searchInput}
                                         onChange={(e) => handleSearchChange(e.target.value)}
                                         className="pl-10 w-full sm:w-60 md:w-72 bg-white h-9 md:h-10 text-sm"
@@ -364,7 +366,7 @@ export default function WholesalersPage() {
                             <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
                                 <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-gray-600 flex-shrink-0">
                                     <Filter className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                    <span className="font-medium hidden sm:inline">Filters:</span>
+                                    <span className="font-medium hidden sm:inline">{t('wholesalers_list.filters.filters_label')}</span>
                                 </div>
 
                                 {/* Status Filter */}
@@ -373,26 +375,26 @@ export default function WholesalersPage() {
                                     onValueChange={(value: 'all' | 'active' | 'inactive' | 'deleted') => handleFilterChange(setStatusFilter, value)}
                                 >
                                     <SelectTrigger className="w-[100px] md:w-[130px] h-8 md:h-9 bg-white text-xs md:text-sm flex-shrink-0">
-                                        <SelectValue placeholder="Status" />
+                                        <SelectValue placeholder={t('wholesalers_list.filters.status')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Status</SelectItem>
+                                        <SelectItem value="all">{t('wholesalers_list.filters.all_status')}</SelectItem>
                                         <SelectItem value="active">
                                             <span className="flex items-center gap-2">
                                                 <CheckCircle className="h-3 w-3 text-green-500" />
-                                                Active
+                                                {t('wholesalers_list.stats.active')}
                                             </span>
                                         </SelectItem>
                                         <SelectItem value="inactive">
                                             <span className="flex items-center gap-2">
                                                 <X className="h-3 w-3 text-gray-500" />
-                                                Inactive
+                                                {t('wholesalers_list.stats.inactive')}
                                             </span>
                                         </SelectItem>
                                         <SelectItem value="deleted">
                                             <span className="flex items-center gap-2">
                                                 <Trash2 className="h-3 w-3 text-red-500" />
-                                                Recycle Bin
+                                                {t('wholesalers_list.filters.recycle_bin')}
                                             </span>
                                         </SelectItem>
                                     </SelectContent>
@@ -404,20 +406,20 @@ export default function WholesalersPage() {
                                     onValueChange={(value: 'all' | 'with_dues' | 'clear') => handleFilterChange(setDuesFilter, value)}
                                 >
                                     <SelectTrigger className="w-[90px] md:w-[140px] h-8 md:h-9 bg-white text-xs md:text-sm flex-shrink-0">
-                                        <SelectValue placeholder="Dues" />
+                                        <SelectValue placeholder={t('wholesalers_list.filters.dues')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Dues</SelectItem>
+                                        <SelectItem value="all">{t('wholesalers_list.filters.all_dues')}</SelectItem>
                                         <SelectItem value="with_dues">
                                             <span className="flex items-center gap-2">
                                                 <AlertCircle className="h-3 w-3 text-red-500" />
-                                                With Dues
+                                                {t('wholesalers_list.stats.with_dues')}
                                             </span>
                                         </SelectItem>
                                         <SelectItem value="clear">
                                             <span className="flex items-center gap-2">
                                                 <CheckCircle className="h-3 w-3 text-green-500" />
-                                                Clear
+                                                {t('wholesalers_list.filters.clear_dues')}
                                             </span>
                                         </SelectItem>
                                     </SelectContent>
@@ -429,13 +431,13 @@ export default function WholesalersPage() {
                                     onValueChange={(value: 'name' | 'purchases' | 'outstanding' | 'createdAt') => handleFilterChange(setSortBy, value)}
                                 >
                                     <SelectTrigger className="w-[100px] md:w-[160px] h-8 md:h-9 bg-white text-xs md:text-sm flex-shrink-0">
-                                        <SelectValue placeholder="Sort" />
+                                        <SelectValue placeholder={t('wholesalers_list.filters.sort')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="createdAt">Latest</SelectItem>
-                                        <SelectItem value="name">Name</SelectItem>
-                                        <SelectItem value="purchases">Purchases</SelectItem>
-                                        <SelectItem value="outstanding">Outstanding</SelectItem>
+                                        <SelectItem value="createdAt">{t('wholesalers_list.filters.latest')}</SelectItem>
+                                        <SelectItem value="name">{t('wholesalers_list.filters.name')}</SelectItem>
+                                        <SelectItem value="purchases">{t('wholesalers_list.filters.purchases')}</SelectItem>
+                                        <SelectItem value="outstanding">{t('wholesalers_list.stats.outstanding')}</SelectItem>
                                     </SelectContent>
                                 </Select>
 
@@ -448,8 +450,8 @@ export default function WholesalersPage() {
                                         className="h-8 md:h-9 text-red-600 hover:text-red-700 hover:bg-red-50 px-2 md:px-3 text-xs md:text-sm flex-shrink-0"
                                     >
                                         <X className="h-3.5 w-3.5 md:h-4 md:w-4 mr-0.5 md:mr-1" />
-                                        <span className="hidden sm:inline">Clear All</span>
-                                        <span className="sm:hidden">Clear</span>
+                                        <span className="hidden sm:inline">{t('wholesalers_list.filters.clear_all')}</span>
+                                        <span className="sm:hidden">{t('history.clear_filters')}</span>
                                     </Button>
                                 )}
                             </div>
@@ -460,7 +462,7 @@ export default function WholesalersPage() {
                         {isLoading ? (
                             <div className="p-8 md:p-12 text-center">
                                 <div className="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-t-2 border-b-2 border-purple-500 mx-auto" />
-                                <p className="text-gray-500 mt-3 md:mt-4 text-sm md:text-base">Loading...</p>
+                                <p className="text-gray-500 mt-3 md:mt-4 text-sm md:text-base">{t('wholesalers_list.empty.loading')}</p>
                             </div>
                         ) : wholesalers.length > 0 ? (
                             <>
@@ -469,13 +471,13 @@ export default function WholesalersPage() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-                                                <TableHead className="font-semibold">Wholesaler</TableHead>
-                                                <TableHead className="font-semibold">Contact</TableHead>
-                                                <TableHead className="font-semibold text-right">Total Purchased</TableHead>
-                                                <TableHead className="font-semibold text-right">Total Paid</TableHead>
-                                                <TableHead className="font-semibold text-right">Outstanding</TableHead>
-                                                <TableHead className="font-semibold">Status</TableHead>
-                                                <TableHead className="font-semibold text-center w-[100px]">Actions</TableHead>
+                                                <TableHead className="font-semibold">{t('wholesalers_list.table.wholesaler')}</TableHead>
+                                                <TableHead className="font-semibold">{t('wholesalers_list.table.contact')}</TableHead>
+                                                <TableHead className="font-semibold text-right">{t('wholesalers_list.table.purchased')}</TableHead>
+                                                <TableHead className="font-semibold text-right">{t('wholesalers_list.table.paid')}</TableHead>
+                                                <TableHead className="font-semibold text-right">{t('wholesalers_list.table.outstanding')}</TableHead>
+                                                <TableHead className="font-semibold">{t('wholesalers_list.table.status')}</TableHead>
+                                                <TableHead className="font-semibold text-center w-[100px]">{t('wholesalers_list.table.actions')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -526,7 +528,7 @@ export default function WholesalersPage() {
                                                                 : 'bg-green-100 text-green-700 border-0'
                                                             }
                                                         >
-                                                            {w.outstandingDue > 0 ? formatCurrency(w.outstandingDue) : '✓ Clear'}
+                                                            {w.outstandingDue > 0 ? formatCurrency(w.outstandingDue) : t('wholesalers_list.table.clear_badge')}
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell>
@@ -534,7 +536,7 @@ export default function WholesalersPage() {
                                                             ? 'bg-green-100 text-green-700 border-0'
                                                             : 'bg-gray-100 text-gray-600 border-0'
                                                         }>
-                                                            {w.isActive ? '● Active' : '○ Inactive'}
+                                                            {w.isActive ? `● ${t('wholesalers_list.stats.active')}` : `○ ${t('wholesalers_list.stats.inactive')}`}
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell>
@@ -555,7 +557,7 @@ export default function WholesalersPage() {
                                                                         className="cursor-pointer"
                                                                     >
                                                                         <Eye className="mr-2 h-4 w-4 text-blue-600" />
-                                                                        View Details
+                                                                        {t('wholesalers_list.table.view_details')}
                                                                     </DropdownMenuItem>
                                                                     {!w.isDeleted ? (
                                                                         <>
@@ -564,7 +566,7 @@ export default function WholesalersPage() {
                                                                                 className="cursor-pointer"
                                                                             >
                                                                                 <Edit className="mr-2 h-4 w-4 text-purple-600" />
-                                                                                Edit Wholesaler
+                                                                                {t('wholesalers_list.edit_wholesaler')}
                                                                             </DropdownMenuItem>
                                                                             <DropdownMenuSeparator />
                                                                             <DropdownMenuItem
@@ -572,7 +574,7 @@ export default function WholesalersPage() {
                                                                                 onClick={() => handleDeleteClick(w)}
                                                                             >
                                                                                 <Trash2 className="mr-2 h-4 w-4" />
-                                                                                Delete
+                                                                                {t('wholesalers_list.table.delete')}
                                                                             </DropdownMenuItem>
                                                                         </>
                                                                     ) : (
@@ -581,7 +583,7 @@ export default function WholesalersPage() {
                                                                             onClick={() => restoreMutation.mutate(w._id)}
                                                                         >
                                                                             <RefreshCw className="mr-2 h-4 w-4" />
-                                                                            Restore Wholesaler
+                                                                            {t('wholesalers_list.table.restore')}
                                                                         </DropdownMenuItem>
                                                                     )}
                                                                 </DropdownMenuContent>
@@ -626,7 +628,7 @@ export default function WholesalersPage() {
                                                         ? 'bg-green-100 text-green-700'
                                                         : 'bg-gray-100 text-gray-600'
                                                         }`}>
-                                                        {w.isActive ? 'Active' : 'Inactive'}
+                                                        {w.isActive ? t('wholesalers_list.stats.active') : t('wholesalers_list.stats.inactive')}
                                                     </Badge>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -637,13 +639,13 @@ export default function WholesalersPage() {
                                                         <DropdownMenuContent align="end" className="w-48">
                                                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/shopkeeper/wholesalers/${w._id}`); }}>
                                                                 <Eye className="mr-2 h-4 w-4 text-blue-600" />
-                                                                View Details
+                                                                {t('wholesalers_list.table.view_details')}
                                                             </DropdownMenuItem>
                                                             {!w.isDeleted ? (
                                                                 <>
                                                                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(w); }}>
                                                                         <Edit className="mr-2 h-4 w-4 text-purple-600" />
-                                                                        Edit
+                                                                        {t('wholesalers_list.dialogs.edit_title')}
                                                                     </DropdownMenuItem>
                                                                     <DropdownMenuSeparator />
                                                                     <DropdownMenuItem
@@ -651,7 +653,7 @@ export default function WholesalersPage() {
                                                                         onClick={(e) => { e.stopPropagation(); handleDeleteClick(w); }}
                                                                     >
                                                                         <Trash2 className="mr-2 h-4 w-4" />
-                                                                        Delete
+                                                                        {t('wholesalers_list.table.delete')}
                                                                     </DropdownMenuItem>
                                                                 </>
                                                             ) : (
@@ -660,7 +662,7 @@ export default function WholesalersPage() {
                                                                     onClick={(e) => { e.stopPropagation(); restoreMutation.mutate(w._id); }}
                                                                 >
                                                                     <RefreshCw className="mr-2 h-4 w-4" />
-                                                                    Restore
+                                                                    {t('wholesalers_list.table.restore')}
                                                                 </DropdownMenuItem>
                                                             )}
                                                         </DropdownMenuContent>
@@ -673,23 +675,23 @@ export default function WholesalersPage() {
                                                 <div className="grid grid-cols-3 gap-2 text-center">
                                                     {/* Purchased */}
                                                     <div>
-                                                        <p className="text-[10px] text-gray-500 font-medium">Purchased</p>
+                                                        <p className="text-[10px] text-gray-500 font-medium">{t('wholesalers_list.filters.purchases')}</p>
                                                         <p className="font-bold text-gray-900 text-sm">{formatCurrency(w.totalPurchased)}</p>
                                                     </div>
 
                                                     {/* Paid */}
                                                     <div>
-                                                        <p className="text-[10px] text-gray-500 font-medium">Paid</p>
+                                                        <p className="text-[10px] text-gray-500 font-medium">{t('billing.paid')}</p>
                                                         <p className="font-bold text-green-600 text-sm">{formatCurrency(w.totalPaid)}</p>
                                                     </div>
 
                                                     {/* Due */}
                                                     <div>
-                                                        <p className="text-[10px] text-gray-500 font-medium">Due</p>
+                                                        <p className="text-[10px] text-gray-500 font-medium">{t('billing.due')}</p>
                                                         {w.outstandingDue > 0 ? (
                                                             <p className="font-bold text-red-600 text-sm">{formatCurrency(w.outstandingDue)}</p>
                                                         ) : (
-                                                            <p className="font-bold text-green-600 text-sm">✓ Nil</p>
+                                                            <p className="font-bold text-green-600 text-sm">{t('wholesalers_list.table.nil_badge')}</p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -711,7 +713,7 @@ export default function WholesalersPage() {
                                                 className="h-9 px-3"
                                             >
                                                 <ChevronLeft className="h-4 w-4 mr-1" />
-                                                Prev
+                                                {t('wholesalers_list.pagination.prev')}
                                             </Button>
                                             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-100 text-purple-700 text-sm font-medium">
                                                 <span>{currentPage}</span>
@@ -725,7 +727,7 @@ export default function WholesalersPage() {
                                                 disabled={currentPage === pagination.totalPages}
                                                 className="h-9 px-3"
                                             >
-                                                Next
+                                                {t('wholesalers_list.pagination.next')}
                                                 <ChevronRight className="h-4 w-4 ml-1" />
                                             </Button>
                                         </div>
@@ -733,9 +735,11 @@ export default function WholesalersPage() {
                                         {/* Desktop: Full pagination */}
                                         <div className="hidden md:flex md:flex-row items-center justify-between w-full">
                                             <p className="text-sm text-gray-600">
-                                                Showing <span className="font-semibold">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to{' '}
-                                                <span className="font-semibold">{Math.min(currentPage * ITEMS_PER_PAGE, pagination.total)}</span> of{' '}
-                                                <span className="font-semibold">{pagination.total}</span> wholesalers
+                                                {t('wholesalers_list.pagination.showing_info', {
+                                                    start: (currentPage - 1) * ITEMS_PER_PAGE + 1,
+                                                    end: Math.min(currentPage * ITEMS_PER_PAGE, pagination.total),
+                                                    total: pagination.total
+                                                })}
                                             </p>
                                             <div className="flex items-center gap-1">
                                                 <Button
@@ -801,9 +805,9 @@ export default function WholesalersPage() {
                                 <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-3 md:mb-4">
                                     <Package className="h-6 w-6 md:h-8 md:w-8 text-purple-400" />
                                 </div>
-                                <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">No wholesalers found</h3>
+                                <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">{t('wholesalers_list.empty.no_found')}</h3>
                                 <p className="text-gray-500 mb-3 md:mb-4 text-sm md:text-base">
-                                    {hasActiveFilters ? 'Try adjusting filters' : 'Add your first wholesaler'}
+                                    {hasActiveFilters ? t('wholesalers_list.empty.adjust_filters') : t('wholesalers_list.dialogs.add_desc')}
                                 </p>
                                 {hasActiveFilters ? (
                                     <Button
@@ -813,7 +817,7 @@ export default function WholesalersPage() {
                                         className="h-9"
                                     >
                                         <X className="mr-1.5 h-4 w-4" />
-                                        Clear Filters
+                                        {t('wholesalers_list.filters.clear_all')}
                                     </Button>
                                 ) : (
                                     <AddWholesalerDialog
@@ -823,7 +827,7 @@ export default function WholesalersPage() {
                                                 size="sm"
                                             >
                                                 <Plus className="mr-1.5 h-4 w-4" />
-                                                Add Wholesaler
+                                                {t('wholesalers_list.add_wholesaler')}
                                             </Button>
                                         }
                                     />

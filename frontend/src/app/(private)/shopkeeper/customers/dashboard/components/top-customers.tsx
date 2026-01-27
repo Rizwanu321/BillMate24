@@ -38,14 +38,17 @@ const rankIcons = [
     { icon: Star, color: 'text-blue-500', bg: 'bg-gradient-to-br from-blue-400 to-cyan-500' },
 ];
 
+import { useTranslation } from 'react-i18next';
+
 export function TopCustomers({ customers, isLoading }: TopCustomersProps) {
+    const { t } = useTranslation();
     if (isLoading) {
         return (
             <Card className="border-0 shadow-lg md:shadow-xl rounded-xl md:rounded-2xl">
                 <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b p-3 md:p-6">
                     <CardTitle className="flex items-center gap-2 text-sm md:text-base">
                         <Users className="h-4 w-4 md:h-5 md:w-5 text-indigo-500" />
-                        Top Customers
+                        {t('customer_dashboard.top_customers')}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 md:pt-6 md:px-6">
@@ -70,8 +73,8 @@ export function TopCustomers({ customers, isLoading }: TopCustomersProps) {
                     <div className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
                         <Users className="h-4 w-4 md:h-5 md:w-5" />
                     </div>
-                    <span className="hidden sm:inline">Top Customers by Sales</span>
-                    <span className="sm:hidden">Top Customers</span>
+                    <span className="hidden sm:inline">{t('customer_dashboard.top_customers')} ({t('wholesaler_dashboard.by_purchase')})</span>
+                    <span className="sm:hidden">{t('customer_dashboard.top_customers')}</span>
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-0 md:p-6 md:pt-6">
@@ -103,13 +106,13 @@ export function TopCustomers({ customers, isLoading }: TopCustomersProps) {
                                                     </p>
                                                     <div className="flex items-center gap-2 mt-0.5">
                                                         <span className="text-sm text-gray-500">
-                                                            Total: {formatCurrency(customer.totalPurchased)}
+                                                            {t('dashboard.total')}: {formatCurrency(customer.totalPurchased)}
                                                         </span>
                                                         <Badge variant="outline" className={`text-xs px-2 ${customer.customerType === 'due'
                                                             ? 'border-orange-200 text-orange-600 bg-orange-50'
                                                             : 'border-blue-200 text-blue-600 bg-blue-50'
                                                             }`}>
-                                                            {customer.customerType === 'due' ? 'Credit' : 'Regular'}
+                                                            {customer.customerType === 'due' ? t('billing.status_due') : t('dashboard.all')}
                                                         </Badge>
                                                     </div>
                                                 </div>
@@ -117,11 +120,11 @@ export function TopCustomers({ customers, isLoading }: TopCustomersProps) {
                                             <div className="text-right">
                                                 {customer.outstandingDue > 0 ? (
                                                     <Badge variant="destructive" className="shadow-sm text-xs px-2">
-                                                        Due: {formatCurrency(customer.outstandingDue)}
+                                                        {t('billing.due')}: {formatCurrency(customer.outstandingDue)}
                                                     </Badge>
                                                 ) : (
                                                     <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-sm text-xs px-2">
-                                                        Clear ✓
+                                                        {t('wholesalers_list.table.clear_badge')}
                                                     </Badge>
                                                 )}
                                             </div>
@@ -159,7 +162,7 @@ export function TopCustomers({ customers, isLoading }: TopCustomersProps) {
                                                     ? 'border-orange-200 text-orange-600 bg-orange-50'
                                                     : 'border-blue-200 text-blue-600 bg-blue-50'
                                                     }`}>
-                                                    {customer.customerType === 'due' ? 'Credit' : 'Regular'}
+                                                    {customer.customerType === 'due' ? t('billing.status_due') : t('dashboard.all')}
                                                 </Badge>
                                             </div>
 
@@ -168,23 +171,23 @@ export function TopCustomers({ customers, isLoading }: TopCustomersProps) {
                                                 <div className="grid grid-cols-3 gap-2 text-center">
                                                     {/* Purchased */}
                                                     <div>
-                                                        <p className="text-[10px] text-gray-500 font-medium">Purchased</p>
+                                                        <p className="text-[10px] text-gray-500 font-medium">{t('wholesalers_list.filters.purchases')}</p>
                                                         <p className="font-bold text-gray-900 text-sm">{formatCurrency(customer.totalPurchased)}</p>
                                                     </div>
 
                                                     {/* Paid */}
                                                     <div>
-                                                        <p className="text-[10px] text-gray-500 font-medium">Paid</p>
+                                                        <p className="text-[10px] text-gray-500 font-medium">{t('billing.paid')}</p>
                                                         <p className="font-bold text-green-600 text-sm">{formatCurrency(customer.totalPaid)}</p>
                                                     </div>
 
                                                     {/* Due */}
                                                     <div>
-                                                        <p className="text-[10px] text-gray-500 font-medium">Due</p>
+                                                        <p className="text-[10px] text-gray-500 font-medium">{t('billing.due')}</p>
                                                         {customer.outstandingDue > 0 ? (
                                                             <p className="font-bold text-red-600 text-sm">{formatCurrency(customer.outstandingDue)}</p>
                                                         ) : (
-                                                            <p className="font-bold text-green-600 text-sm">✓ Nil</p>
+                                                            <p className="font-bold text-green-600 text-sm">{t('wholesalers_list.table.nil_badge')}</p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -200,8 +203,8 @@ export function TopCustomers({ customers, isLoading }: TopCustomersProps) {
                         <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-indigo-100 flex items-center justify-center mx-auto mb-3 md:mb-4">
                             <Users className="h-6 w-6 md:h-8 md:w-8 text-indigo-400" />
                         </div>
-                        <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">No customers yet</h3>
-                        <p className="text-gray-500 text-sm md:text-base">Customers will appear here once they make purchases</p>
+                        <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">{t('customer_dashboard.no_customers_found')}</h3>
+                        <p className="text-gray-500 text-sm md:text-base">{t('customer_dashboard.add_customers_desc')}</p>
                     </div>
                 )}
             </CardContent>

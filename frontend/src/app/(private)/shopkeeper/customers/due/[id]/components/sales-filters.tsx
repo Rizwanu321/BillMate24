@@ -20,6 +20,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 export type TimeFilterOption = 'all' | 'today' | 'this_week' | 'this_month' | 'this_year' | 'custom';
 
@@ -35,13 +36,13 @@ interface SalesFiltersProps {
     onFiltersChange: (filters: FilterState) => void;
 }
 
-const filterLabels: Record<TimeFilterOption, string> = {
-    all: 'All Time',
-    today: 'Today',
-    this_week: 'This Week',
-    this_month: 'This Month',
-    this_year: 'This Year',
-    custom: 'Custom Range',
+const filterLabelsMap: Record<TimeFilterOption, string> = {
+    all: 'all',
+    today: 'today',
+    this_week: 'this_week',
+    this_month: 'this_month',
+    this_year: 'this_year',
+    custom: 'custom',
 };
 
 export function getDateRangeForFilter(option: TimeFilterOption, customStart?: string, customEnd?: string): { startDate?: string; endDate?: string } {
@@ -78,6 +79,7 @@ export function getDateRangeForFilter(option: TimeFilterOption, customStart?: st
 }
 
 export function SalesFilters({ filters, onFiltersChange }: SalesFiltersProps) {
+    const { t } = useTranslation();
     const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false);
     const [customStartDate, setCustomStartDate] = useState(filters.startDate || '');
     const [customEndDate, setCustomEndDate] = useState(filters.endDate || '');
@@ -129,7 +131,7 @@ export function SalesFilters({ filters, onFiltersChange }: SalesFiltersProps) {
         if (filters.timeFilter === 'custom' && filters.startDate && filters.endDate) {
             return `${format(new Date(filters.startDate), 'dd MMM')} - ${format(new Date(filters.endDate), 'dd MMM')}`;
         }
-        return filterLabels[filters.timeFilter];
+        return t(`history.time_filters.${filterLabelsMap[filters.timeFilter]}`);
     };
 
     return (
@@ -139,7 +141,7 @@ export function SalesFilters({ filters, onFiltersChange }: SalesFiltersProps) {
                 <div className="relative flex-1">
                     <Search className="absolute left-2.5 md:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
                     <Input
-                        placeholder="Search bill..."
+                        placeholder={t('common.search')}
                         value={filters.search}
                         onChange={(e) => handleSearchChange(e.target.value)}
                         className="pl-8 md:pl-10 h-9 md:h-10 text-sm"
@@ -166,7 +168,7 @@ export function SalesFilters({ filters, onFiltersChange }: SalesFiltersProps) {
                                 >
                                     <span className="flex items-center gap-2">
                                         {filters.timeFilter === option && <span className="w-2 h-2 rounded-full bg-indigo-500" />}
-                                        {filterLabels[option]}
+                                        {t(`history.time_filters.${filterLabelsMap[option]}`)}
                                     </span>
                                 </DropdownMenuItem>
                             ))}
@@ -177,7 +179,7 @@ export function SalesFilters({ filters, onFiltersChange }: SalesFiltersProps) {
                             >
                                 <span className="flex items-center gap-2">
                                     {filters.timeFilter === 'custom' && <span className="w-2 h-2 rounded-full bg-indigo-500" />}
-                                    Custom Range...
+                                    {t('history.time_filters.custom')}...
                                 </span>
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -187,7 +189,7 @@ export function SalesFilters({ filters, onFiltersChange }: SalesFiltersProps) {
                     {hasActiveFilters && (
                         <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 md:h-10 px-2 md:px-3">
                             <X className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                            <span className="hidden sm:inline ml-1">Clear</span>
+                            <span className="hidden sm:inline ml-1">{t('history.custom_range.clear')}</span>
                         </Button>
                     )}
                 </div>
@@ -198,7 +200,7 @@ export function SalesFilters({ filters, onFiltersChange }: SalesFiltersProps) {
                 <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3 md:mb-4">
                     {filters.search && (
                         <Badge variant="secondary" className="flex items-center gap-1 text-[10px] md:text-xs px-1.5 md:px-2">
-                            Search: {filters.search}
+                            {t('common.search')}: {filters.search}
                             <X
                                 className="h-2.5 w-2.5 md:h-3 md:w-3 cursor-pointer"
                                 onClick={() => handleSearchChange('')}
@@ -223,13 +225,13 @@ export function SalesFilters({ filters, onFiltersChange }: SalesFiltersProps) {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Calendar className="h-5 w-5 text-blue-500" />
-                            Select Date Range
+                            {t('history.custom_range.title')}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="startDate">Start Date</Label>
+                                <Label htmlFor="startDate">{t('history.custom_range.from')}</Label>
                                 <Input
                                     id="startDate"
                                     type="date"
@@ -238,7 +240,7 @@ export function SalesFilters({ filters, onFiltersChange }: SalesFiltersProps) {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="endDate">End Date</Label>
+                                <Label htmlFor="endDate">{t('history.custom_range.to')}</Label>
                                 <Input
                                     id="endDate"
                                     type="date"
@@ -267,14 +269,14 @@ export function SalesFilters({ filters, onFiltersChange }: SalesFiltersProps) {
                                 onClick={() => setIsCustomDialogOpen(false)}
                                 className="flex-1"
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </Button>
                             <Button
                                 onClick={handleCustomApply}
                                 className="flex-1 bg-blue-600 hover:bg-blue-700"
                                 disabled={!customStartDate || !customEndDate}
                             >
-                                Apply
+                                {t('history.custom_range.apply')}
                             </Button>
                         </div>
                     </div>

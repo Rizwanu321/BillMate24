@@ -11,6 +11,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 interface Customer {
     totalSales: number;
@@ -43,15 +44,16 @@ function formatCurrency(amount: number): string {
 
 
 
-const paymentMethodConfig: Record<string, { label: string; icon: React.ReactNode; bgColor: string; color: string }> = {
-    cash: { label: 'Cash', icon: <Banknote className="h-3 w-3" />, bgColor: 'bg-green-100', color: 'text-green-700' },
-    card: { label: 'Card', icon: <CreditCardIcon className="h-3 w-3" />, bgColor: 'bg-blue-100', color: 'text-blue-700' },
-    upi: { label: 'UPI', icon: <Smartphone className="h-3 w-3" />, bgColor: 'bg-purple-100', color: 'text-purple-700' },
-    online: { label: 'Online', icon: <Smartphone className="h-3 w-3" />, bgColor: 'bg-purple-100', color: 'text-purple-700' },
-    none: { label: '---', icon: null, bgColor: 'bg-gray-100', color: 'text-gray-600' },
+const paymentMethodConfig: Record<string, { key: string; icon: React.ReactNode; bgColor: string; color: string }> = {
+    cash: { key: 'cash', icon: <Banknote className="h-3 w-3" />, bgColor: 'bg-green-100', color: 'text-green-700' },
+    card: { key: 'card', icon: <CreditCardIcon className="h-3 w-3" />, bgColor: 'bg-blue-100', color: 'text-blue-700' },
+    upi: { key: 'online', icon: <Smartphone className="h-3 w-3" />, bgColor: 'bg-purple-100', color: 'text-purple-700' },
+    online: { key: 'online', icon: <Smartphone className="h-3 w-3" />, bgColor: 'bg-purple-100', color: 'text-purple-700' },
+    none: { key: 'nil', icon: null, bgColor: 'bg-gray-100', color: 'text-gray-600' },
 };
 
 export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
+    const { t } = useTranslation();
     // Calculate opening balance (total sales that came from before using the app)
     const billsTotal = bills.reduce((sum, bill) => sum + bill.totalAmount, 0);
     const openingBalance = customer ? Math.max(0, customer.totalSales - billsTotal) : 0;
@@ -60,7 +62,7 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
         return (
             <div className="p-8 md:p-12 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-t-2 border-b-2 border-emerald-500 mx-auto" />
-                <p className="text-gray-500 mt-3 md:mt-4 text-sm">Loading sales...</p>
+                <p className="text-gray-500 mt-3 md:mt-4 text-sm">{t('wholesalers_list.empty.loading')}</p>
             </div>
         );
     }
@@ -69,8 +71,8 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
         return (
             <div className="p-8 md:p-12 text-center">
                 <Receipt className="h-8 w-8 md:h-12 md:w-12 text-gray-300 mx-auto mb-3 md:mb-4" />
-                <h3 className="text-base md:text-lg font-medium text-gray-900 mb-1 md:mb-2">No sales yet</h3>
-                <p className="text-gray-500 text-sm">Create a sale to this customer to see transactions here.</p>
+                <h3 className="text-base md:text-lg font-medium text-gray-900 mb-1 md:mb-2">{t('history.no_bills_found')}</h3>
+                <p className="text-gray-500 text-sm">{t('history.create_new_desc').replace('മൊത്തക്കച്ചവടക്കാരനെ', t('common.customer'))}</p>
             </div>
         );
     }
@@ -82,13 +84,13 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-gray-50/50">
-                            <TableHead>Date</TableHead>
-                            <TableHead>Bill Number</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead className="text-right">Paid</TableHead>
-                            <TableHead className="text-right">Due</TableHead>
-                            <TableHead>Method</TableHead>
-                            <TableHead>Status</TableHead>
+                            <TableHead>{t('history.date')}</TableHead>
+                            <TableHead>{t('billing.bill_number')}</TableHead>
+                            <TableHead className="text-right">{t('dashboard.total')}</TableHead>
+                            <TableHead className="text-right">{t('billing.paid')}</TableHead>
+                            <TableHead className="text-right">{t('billing.due')}</TableHead>
+                            <TableHead>{t('wholesaler_payments.table.method')}</TableHead>
+                            <TableHead>{t('wholesalers_list.table.status')}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -96,11 +98,11 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
                         {openingBalance > 0 && (
                             <TableRow className="bg-blue-50/50 border-b-2 border-blue-200">
                                 <TableCell className="text-gray-600 font-medium">
-                                    Before App
+                                    {t('dashboard.includes_opening').replace('(', '').replace(')', '')}
                                 </TableCell>
                                 <TableCell>
                                     <Badge className="bg-blue-100 text-blue-700 border-0 font-mono text-sm">
-                                        Opening Balance
+                                        {t('wholesalers_list.dialogs.opening_balance')}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-right font-bold text-gray-900">
@@ -116,12 +118,12 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
                                 </TableCell>
                                 <TableCell>
                                     <Badge className="bg-gray-100 text-gray-600 border-0 text-xs">
-                                        N/A
+                                        {t('history.nil')}
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
                                     <Badge className="bg-orange-100 text-orange-700 border-0">
-                                        Pending
+                                        {t('billing.status_due')}
                                     </Badge>
                                 </TableCell>
                             </TableRow>
@@ -129,6 +131,7 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
 
                         {bills.map((bill) => {
                             const methodConfig = bill.paymentMethod ? (paymentMethodConfig[bill.paymentMethod] || paymentMethodConfig.cash) : paymentMethodConfig.none;
+                            const methodLabel = methodConfig.key === 'online' ? t('dashboard.online') + ' / UPI' : t(`dashboard.${methodConfig.key}`);
                             const due = bill.dueAmount || (bill.totalAmount - bill.paidAmount);
                             return (
                                 <TableRow key={bill._id} className="hover:bg-emerald-50/30">
@@ -149,16 +152,16 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
                                     </TableCell>
                                     <TableCell>
                                         <Badge className={`${methodConfig.bgColor} ${methodConfig.color} border-0`}>
-                                            {methodConfig.label}
+                                            {methodLabel}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
                                         {due <= 0 ? (
-                                            <Badge className="bg-green-100 text-green-700 border-0">Paid</Badge>
+                                            <Badge className="bg-green-100 text-green-700 border-0">{t('billing.paid')}</Badge>
                                         ) : bill.paidAmount > 0 ? (
-                                            <Badge className="bg-yellow-100 text-yellow-700 border-0">Partial</Badge>
+                                            <Badge className="bg-yellow-100 text-yellow-700 border-0">{t('billing.partial')}</Badge>
                                         ) : (
-                                            <Badge variant="destructive">Pending</Badge>
+                                            <Badge variant="destructive">{t('billing.status_due')}</Badge>
                                         )}
                                     </TableCell>
                                 </TableRow>
@@ -177,14 +180,14 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
                                 <Badge className="bg-blue-100 text-blue-700 border-0 text-[10px] px-1.5 font-mono">
-                                    Opening Balance
+                                    {t('wholesalers_list.dialogs.opening_balance')}
                                 </Badge>
                                 <Badge className="bg-gray-100 text-gray-600 border-0 text-[10px] px-1.5">
-                                    N/A
+                                    {t('history.nil')}
                                 </Badge>
                             </div>
                             <Badge className="bg-orange-100 text-orange-700 border-0 text-[10px] px-1.5">
-                                Pending
+                                {t('billing.status_due')}
                             </Badge>
                         </div>
 
@@ -196,11 +199,11 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
                                     <p className="font-bold text-gray-900 text-sm">{formatCurrency(openingBalance)}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-gray-500 font-medium">Paid</p>
+                                    <p className="text-[10px] text-gray-500 font-medium">{t('billing.paid')}</p>
                                     <p className="font-bold text-gray-400 text-sm">₹0</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-gray-500 font-medium">Due</p>
+                                    <p className="text-[10px] text-gray-500 font-medium">{t('billing.due')}</p>
                                     <p className="font-bold text-orange-600 text-sm">{formatCurrency(openingBalance)}</p>
                                 </div>
                             </div>
@@ -208,13 +211,14 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
 
                         {/* Date */}
                         <p className="text-[10px] text-gray-500 mt-2 font-medium">
-                            Before using app
+                            {t('dashboard.includes_opening').replace('(', '').replace(')', '')}
                         </p>
                     </div>
                 )}
 
                 {bills.map((bill, index) => {
                     const methodConfig = bill.paymentMethod ? (paymentMethodConfig[bill.paymentMethod] || paymentMethodConfig.cash) : paymentMethodConfig.none;
+                    const methodLabel = methodConfig.key === 'online' ? t('dashboard.online') + ' / UPI' : t(`dashboard.${methodConfig.key}`);
                     const due = bill.dueAmount || (bill.totalAmount - bill.paidAmount);
 
                     return (
@@ -232,14 +236,14 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <Badge className={`${methodConfig.bgColor} ${methodConfig.color} border-0 text-[10px] px-1.5`}>
-                                        {methodConfig.label}
+                                        {methodLabel}
                                     </Badge>
                                     {due <= 0 ? (
-                                        <Badge className="bg-green-100 text-green-700 border-0 text-[10px] px-1.5">Paid</Badge>
+                                        <Badge className="bg-green-100 text-green-700 border-0 text-[10px] px-1.5">{t('billing.paid')}</Badge>
                                     ) : bill.paidAmount > 0 ? (
-                                        <Badge className="bg-yellow-100 text-yellow-700 border-0 text-[10px] px-1.5">Partial</Badge>
+                                        <Badge className="bg-yellow-100 text-yellow-700 border-0 text-[10px] px-1.5">{t('billing.partial')}</Badge>
                                     ) : (
-                                        <Badge variant="destructive" className="text-[10px] px-1.5">Pending</Badge>
+                                        <Badge variant="destructive" className="text-[10px] px-1.5">{t('billing.status_due')}</Badge>
                                     )}
                                 </div>
                             </div>
@@ -249,23 +253,23 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
                                 <div className="grid grid-cols-3 gap-2 text-center">
                                     {/* Total */}
                                     <div>
-                                        <p className="text-[10px] text-gray-500 font-medium">Total</p>
+                                        <p className="text-[10px] text-gray-500 font-medium">{t('dashboard.total')}</p>
                                         <p className="font-bold text-gray-900 text-sm">{formatCurrency(bill.totalAmount)}</p>
                                     </div>
 
                                     {/* Paid */}
                                     <div>
-                                        <p className="text-[10px] text-gray-500 font-medium">Paid</p>
+                                        <p className="text-[10px] text-gray-500 font-medium">{t('billing.paid')}</p>
                                         <p className="font-bold text-green-600 text-sm">{formatCurrency(bill.paidAmount)}</p>
                                     </div>
 
                                     {/* Due */}
                                     <div>
-                                        <p className="text-[10px] text-gray-500 font-medium">Due</p>
+                                        <p className="text-[10px] text-gray-500 font-medium">{t('billing.due')}</p>
                                         {due > 0 ? (
                                             <p className="font-bold text-red-600 text-sm">{formatCurrency(due)}</p>
                                         ) : (
-                                            <p className="font-bold text-green-600 text-sm">✓ Nil</p>
+                                            <p className="font-bold text-green-600 text-sm">{t('wholesalers_list.table.nil_badge')}</p>
                                         )}
                                     </div>
                                 </div>

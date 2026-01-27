@@ -10,6 +10,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Trash2, Loader2, X } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -29,12 +30,16 @@ export function DeleteConfirmDialog({
     isOpen,
     onClose,
     onConfirm,
-    title = 'Confirm Deletion',
-    description = 'Are you sure you want to delete this item? This record will be moved to the recycle bin and can be restored later.',
+    title,
+    description,
     isLoading = false,
     itemName,
 }: DeleteConfirmDialogProps) {
+    const { t } = useTranslation();
     const isMobile = useMediaQuery('(max-width: 640px)');
+
+    const displayTitle = title || t('common.delete_dialog.title');
+    const displayDescription = description || t('common.delete_dialog.description');
 
     return (
         <AlertDialog open={isOpen} onOpenChange={onClose}>
@@ -95,15 +100,15 @@ export function DeleteConfirmDialog({
                 )}>
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-[22px] sm:text-[26px] font-[900] text-gray-900 tracking-tight leading-tight">
-                            {title}
+                            {displayTitle}
                         </AlertDialogTitle>
                         <AlertDialogDescription className="text-gray-500 text-[14px] sm:text-[16px] leading-[1.6] mt-3 sm:mt-4 px-1 sm:px-2">
                             {itemName ? (
                                 <span className="block">
-                                    You are about to remove <span className="text-rose-600 font-bold decoration-rose-200 decoration-2 underline-offset-4 underline">"{itemName}"</span>. {description}
+                                    {t('common.delete_dialog.remove_prefix')} <span className="text-rose-600 font-bold decoration-rose-200 decoration-2 underline-offset-4 underline">"{itemName}"</span>. {displayDescription}
                                 </span>
                             ) : (
-                                description
+                                displayDescription
                             )}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
@@ -117,7 +122,7 @@ export function DeleteConfirmDialog({
                                 disabled={isLoading}
                                 className="flex-1 h-14 sm:h-16 text-base sm:text-lg font-bold text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-xl sm:rounded-2xl transition-all active:scale-95 order-2 sm:order-1"
                             >
-                                Not now
+                                {t('common.delete_dialog.cancel')}
                             </Button>
                         </AlertDialogCancel>
                         <AlertDialogAction asChild>
@@ -129,28 +134,28 @@ export function DeleteConfirmDialog({
                                 }}
                                 disabled={isLoading}
                                 className={cn(
-                                    'flex-[1.8] h-14 sm:h-16',
+                                    'flex-[1.5] h-14 sm:h-16',
                                     'bg-gradient-to-br from-rose-500 to-rose-700',
                                     'hover:from-rose-600 hover:to-rose-800',
-                                    'text-white font-black text-lg sm:text-xl',
+                                    'text-white font-bold text-base sm:text-lg',
                                     'rounded-xl sm:rounded-2xl',
                                     'shadow-[0_10px_25px_rgba(225,29,72,0.3)] sm:shadow-[0_15px_30px_rgba(225,29,72,0.3)]',
                                     'ring-2 sm:ring-4 ring-rose-50 ring-offset-0',
                                     'transition-all hover:translate-y-[-2px] sm:hover:translate-y-[-4px]',
                                     'hover:shadow-[0_15px_35px_rgba(225,29,72,0.4)] sm:hover:shadow-[0_20px_40px_rgba(225,29,72,0.4)]',
                                     'active:scale-95 order-1 sm:order-2',
-                                    'flex items-center justify-center gap-2 sm:gap-3'
+                                    'flex items-center justify-center gap-2 sm:gap-3 px-4'
                                 )}
                             >
                                 {isLoading ? (
                                     <>
                                         <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-white/50" />
-                                        <span>Removing...</span>
+                                        <span>{t('common.delete_dialog.loading')}</span>
                                     </>
                                 ) : (
                                     <>
                                         <Trash2 className="h-5 w-5 sm:h-6 sm:w-6" />
-                                        <span>Yes, Delete</span>
+                                        <span>{t('common.delete_dialog.confirm')}</span>
                                     </>
                                 )}
                             </Button>
@@ -160,11 +165,11 @@ export function DeleteConfirmDialog({
                     <div className="inline-flex items-center gap-1.5 sm:gap-2 mt-6 sm:mt-8 px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-50 rounded-full border border-emerald-100 animate-pulse">
                         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                         <span className="text-[9px] sm:text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-none">
-                            Safe Action • Restore Anytime
+                            {t('common.delete_dialog.safe_action')}
                         </span>
                     </div>
                 </div>
-            </AlertDialogContent>
-        </AlertDialog>
+            </AlertDialogContent >
+        </AlertDialog >
     );
 }

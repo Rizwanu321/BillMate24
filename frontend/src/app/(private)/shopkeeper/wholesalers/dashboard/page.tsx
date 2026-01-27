@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Package, CreditCard, Calendar, LayoutDashboard } from 'lucide-react';
 import api from '@/config/axios';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import {
     WholesalerDashboardStats,
     TopWholesalers,
@@ -59,6 +60,7 @@ interface WholesalerPeriodData {
 }
 
 export default function WholesalerDashboardPage() {
+    const { t } = useTranslation();
     const [timeFilter, setTimeFilter] = useState<TimeFilterOption>('today');
     const [dateRange, setDateRange] = useState<DateRange>(getDateRange('today'));
 
@@ -261,7 +263,7 @@ export default function WholesalerDashboardPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/20">
-            <Header title="Wholesaler Dashboard" />
+            <Header title={t('wholesaler_dashboard.title')} />
 
             {/* Mobile-optimized content */}
             <div className="p-3 md:p-6">
@@ -270,7 +272,7 @@ export default function WholesalerDashboardPage() {
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
-                                Wholesaler Dashboard
+                                {t('wholesaler_dashboard.title')}
                             </h2>
                             <LayoutDashboard className="h-5 w-5 md:h-8 md:w-8 text-indigo-600" />
                         </div>
@@ -284,13 +286,13 @@ export default function WholesalerDashboardPage() {
                         <Link href="/shopkeeper/wholesalers">
                             <Button variant="outline" size="sm" className="shadow-sm px-2 sm:px-4">
                                 <Package className="h-4 w-4 sm:mr-2" />
-                                <span className="hidden sm:inline">All Wholesalers</span>
+                                <span className="hidden sm:inline">{t('wholesaler_dashboard.all_wholesalers')}</span>
                             </Button>
                         </Link>
                         <Link href="/shopkeeper/wholesalers/payments">
                             <Button size="sm" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg shadow-purple-500/25 px-2 sm:px-4">
                                 <CreditCard className="h-4 w-4 sm:mr-2" />
-                                <span className="hidden sm:inline">Make Payment</span>
+                                <span className="hidden sm:inline">{t('wholesaler_dashboard.make_payment')}</span>
                             </Button>
                         </Link>
                     </div>

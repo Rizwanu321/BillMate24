@@ -26,22 +26,22 @@ export interface SidebarConfig {
 
 export const adminSidebarConfig: SidebarItem[] = [
     {
-        title: 'Dashboard',
+        title: 'sidebar.dashboard',
         href: '/admin/dashboard',
         icon: LayoutDashboard,
     },
     {
-        title: 'Shopkeepers',
+        title: 'sidebar.shopkeepers',
         href: '/admin/shopkeepers',
         icon: Store,
     },
     {
-        title: 'Subscriptions',
+        title: 'sidebar.subscriptions',
         href: '/admin/subscriptions',
         icon: CreditCard,
     },
     {
-        title: 'Settings',
+        title: 'sidebar.settings',
         href: '/admin/settings',
         icon: Settings,
     },
@@ -49,24 +49,24 @@ export const adminSidebarConfig: SidebarItem[] = [
 
 export const shopkeeperSidebarConfig: SidebarItem[] = [
     {
-        title: 'Dashboard',
+        title: 'sidebar.dashboard',
         href: '/shopkeeper/dashboard',
         icon: LayoutDashboard,
     },
     {
-        title: 'Billing',
+        title: 'sidebar.billing',
         href: '/shopkeeper/billing',
         icon: Receipt,
         feature: 'billing',
         children: [
             {
-                title: 'Add Bill',
+                title: 'sidebar.add_bill',
                 href: '/shopkeeper/billing',
                 icon: Receipt,
                 feature: 'billing',
             },
             {
-                title: 'Bill History',
+                title: 'sidebar.bill_history',
                 href: '/shopkeeper/billing/history',
                 icon: FileText,
                 feature: 'billing',
@@ -74,25 +74,25 @@ export const shopkeeperSidebarConfig: SidebarItem[] = [
         ],
     },
     {
-        title: 'Wholesalers',
+        title: 'sidebar.wholesalers',
         href: '/shopkeeper/wholesalers',
         icon: Package,
         feature: 'wholesalers',
         children: [
             {
-                title: 'Dashboard',
+                title: 'sidebar.dashboard',
                 href: '/shopkeeper/wholesalers/dashboard',
                 icon: LayoutDashboard,
                 feature: 'wholesalers',
             },
             {
-                title: 'List',
+                title: 'sidebar.list',
                 href: '/shopkeeper/wholesalers',
                 icon: Package,
                 feature: 'wholesalers',
             },
             {
-                title: 'Payments',
+                title: 'sidebar.payments',
                 href: '/shopkeeper/wholesalers/payments',
                 icon: CreditCard,
                 feature: 'wholesalers',
@@ -100,23 +100,23 @@ export const shopkeeperSidebarConfig: SidebarItem[] = [
         ],
     },
     {
-        title: 'Customers',
+        title: 'sidebar.customers',
         href: '/shopkeeper/customers',
         icon: Users,
         children: [
             {
-                title: 'Dashboard',
+                title: 'sidebar.dashboard',
                 href: '/shopkeeper/customers/dashboard',
                 icon: LayoutDashboard,
             },
             {
-                title: 'Due Customers',
+                title: 'sidebar.due_customers',
                 href: '/shopkeeper/customers/due',
                 icon: UserCog,
                 feature: 'dueCustomers',
             },
             {
-                title: 'Normal Customers',
+                title: 'sidebar.normal_customers',
                 href: '/shopkeeper/customers/normal',
                 icon: Users,
                 feature: 'normalCustomers',
@@ -124,19 +124,19 @@ export const shopkeeperSidebarConfig: SidebarItem[] = [
         ],
     },
     {
-        title: 'Reports',
+        title: 'sidebar.reports',
         href: '/shopkeeper/reports',
         icon: FileText,
         feature: 'reports',
         children: [
             {
-                title: 'Revenue Report',
+                title: 'sidebar.revenue_report',
                 href: '/shopkeeper/reports/daily',
                 icon: FileText,
                 feature: 'reports',
             },
             {
-                title: 'Outstanding Dues',
+                title: 'sidebar.outstanding_dues',
                 href: '/shopkeeper/reports/dues',
                 icon: FileText,
                 feature: 'reports',
@@ -144,7 +144,7 @@ export const shopkeeperSidebarConfig: SidebarItem[] = [
         ],
     },
     {
-        title: 'Settings',
+        title: 'sidebar.settings',
         href: '/shopkeeper/settings',
         icon: Settings,
     },

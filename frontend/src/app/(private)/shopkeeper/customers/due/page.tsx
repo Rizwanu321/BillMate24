@@ -42,6 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import api from '@/config/axios';
 import { Customer, PaginatedResponse } from '@/types';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import {
     AddCustomerDialog,
     EditCustomerDialog,
@@ -81,10 +82,10 @@ interface Payment {
 }
 
 // Payment method config for display
-const paymentMethodConfig: Record<string, { color: string; bgColor: string; icon: React.ReactNode; label: string }> = {
-    cash: { color: 'text-green-700', bgColor: 'bg-green-100', icon: <Banknote className="h-4 w-4" />, label: 'Cash' },
-    card: { color: 'text-blue-700', bgColor: 'bg-blue-100', icon: <CreditCard className="h-4 w-4" />, label: 'Card' },
-    online: { color: 'text-purple-700', bgColor: 'bg-purple-100', icon: <Smartphone className="h-4 w-4" />, label: 'Online/UPI' },
+const paymentMethodConfig: Record<string, { color: string; bgColor: string; icon: React.ReactNode; key: string }> = {
+    cash: { color: 'text-green-700', bgColor: 'bg-green-100', icon: <Banknote className="h-4 w-4" />, key: 'cash' },
+    card: { color: 'text-blue-700', bgColor: 'bg-blue-100', icon: <CreditCard className="h-4 w-4" />, key: 'card' },
+    online: { color: 'text-purple-700', bgColor: 'bg-purple-100', icon: <Smartphone className="h-4 w-4" />, key: 'online' },
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -118,6 +119,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function DueCustomersPage() {
+    const { t } = useTranslation();
     const router = useRouter();
     const queryClient = useQueryClient();
 
@@ -229,10 +231,10 @@ export default function DueCustomersPage() {
             queryClient.invalidateQueries({ queryKey: ['due-customers-stats'] });
             setDeleteDialogOpen(false);
             setSelectedCustomer(null);
-            toast.success('Customer deleted (soft delete)');
+            toast.success(t('wholesalers_list.dialogs.success_delete'));
         },
         onError: () => {
-            toast.error('Failed to delete customer');
+            toast.error(t('wholesaler_payments.messages.error'));
         },
     });
 
@@ -243,10 +245,10 @@ export default function DueCustomersPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['due-customers'] });
             queryClient.invalidateQueries({ queryKey: ['due-customers-stats'] });
-            toast.success('Customer restored successfully');
+            toast.success(t('wholesalers_list.dialogs.success_restore'));
         },
         onError: () => {
-            toast.error('Failed to restore customer');
+            toast.error(t('common.error'));
         },
     });
 
@@ -260,10 +262,10 @@ export default function DueCustomersPage() {
             queryClient.invalidateQueries({ queryKey: ['due-customers-stats'] });
             setEditDialogOpen(false);
             setEditingCustomer(null);
-            toast.success('Customer updated successfully');
+            toast.success(t('wholesalers_list.dialogs.success_update'));
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Failed to update customer');
+            toast.error(error.response?.data?.message || t('common.error'));
         },
     });
 
@@ -326,598 +328,602 @@ export default function DueCustomersPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50/30 to-purple-50/20">
-            <Header title="Due Customers" />
+        <>
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50/30 to-purple-50/20">
+                <Header title={t('sidebar.due_customers')} />
 
-            <div className="p-3 md:p-6">
-                {/* Page Header */}
-                <div className="mb-4 md:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 bg-clip-text text-transparent">
-                                <span className="hidden sm:inline">Due Customers</span>
-                                <span className="sm:hidden">Due</span>
-                            </h2>
-                            <CreditCard className="h-5 w-5 md:h-8 md:w-8 text-indigo-600" />
+                <div className="p-3 md:p-6">
+                    {/* Page Header */}
+                    <div className="mb-4 md:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 bg-clip-text text-transparent">
+                                    <span className="hidden sm:inline">{t('sidebar.due_customers')}</span>
+                                    <span className="sm:hidden">{t('billing.status_due')}</span>
+                                </h2>
+                                <CreditCard className="h-5 w-5 md:h-8 md:w-8 text-indigo-600" />
+                            </div>
+                            <p className="text-gray-600 mt-0.5 md:mt-1 flex items-center gap-1.5 md:gap-2 text-xs md:text-base">
+                                <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                <span className="hidden md:inline">{format(new Date(), 'EEEE, MMMM d, yyyy')}</span>
+                                <span className="md:hidden">{format(new Date(), 'EEE, MMM d')}</span>
+                            </p>
                         </div>
-                        <p className="text-gray-600 mt-0.5 md:mt-1 flex items-center gap-1.5 md:gap-2 text-xs md:text-base">
-                            <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                            <span className="hidden md:inline">{format(new Date(), 'EEEE, MMMM d, yyyy')}</span>
-                            <span className="md:hidden">{format(new Date(), 'EEE, MMM d')}</span>
-                        </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                        <Link href="/shopkeeper/customers/dashboard" className="hidden lg:block">
-                            <Button variant="outline" className="shadow-sm">
-                                <LayoutDashboard className="h-4 w-4 mr-2" />
-                                Dashboard
-                            </Button>
-                        </Link>
-                        <Link href="/shopkeeper/customers/normal" className="hidden lg:block">
-                            <Button variant="outline" className="shadow-sm">
-                                <Users className="h-4 w-4 mr-2" />
-                                Normal
-                            </Button>
-                        </Link>
-                        <AddCustomerDialog customerType="due" />
-                    </div>
-                </div>
-
-                {/* Simplified Stats Cards (No Time Filters) */}
-                <CustomerDashboardStats
-                    totalCustomers={totalCustomers}
-                    totalSales={totalSales}
-                    totalPaid={totalPaid}
-                    totalOutstanding={totalOutstanding}
-                />
-
-                {/* Tabs */}
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3 md:space-y-6">
-                    <div className="flex flex-row items-center justify-between gap-2 md:gap-4">
-                        <div className="overflow-x-auto scrollbar-hide -mx-3 px-3 md:mx-0 md:px-0">
-                            <TabsList className="bg-white shadow-sm border p-0.5 md:p-1 h-auto min-w-max">
-                                <TabsTrigger
-                                    value="customers"
-                                    className="flex items-center gap-1 md:gap-2 data-[state=active]:bg-indigo-600 data-[state=active]:text-white px-2.5 md:px-6 py-2 md:py-2.5 text-xs md:text-sm"
-                                >
-                                    <Users className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                    <span className="hidden sm:inline">Customers</span>
-                                    <span className="sm:hidden">List</span>
-                                    <Badge variant="secondary" className="ml-0.5 md:ml-1 bg-indigo-100 text-indigo-700 data-[state=active]:bg-white/20 data-[state=active]:text-white text-[10px] md:text-xs px-1 md:px-2">
-                                        {pagination.total}
-                                    </Badge>
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="sales"
-                                    className="flex items-center gap-1 md:gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white px-2.5 md:px-6 py-2 md:py-2.5 text-xs md:text-sm"
-                                >
-                                    <Receipt className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                    Sales
-                                    {activeTab === 'sales' && salesPagination.total > 0 && (
-                                        <Badge variant="secondary" className="ml-0.5 md:ml-1 bg-white/20 text-white text-[10px] md:text-xs px-1 md:px-2">
-                                            {salesPagination.total}
-                                        </Badge>
-                                    )}
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="payments"
-                                    className="flex items-center gap-1 md:gap-2 data-[state=active]:bg-green-600 data-[state=active]:text-white px-2.5 md:px-6 py-2 md:py-2.5 text-xs md:text-sm"
-                                >
-                                    <CreditCard className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                    <span className="hidden sm:inline">Payments</span>
-                                    <span className="sm:hidden">Pay</span>
-                                    {activeTab === 'payments' && paymentsPagination.total > 0 && (
-                                        <Badge variant="secondary" className="ml-0.5 md:ml-1 bg-white/20 text-white text-[10px] md:text-xs px-1 md:px-2">
-                                            {paymentsPagination.total}
-                                        </Badge>
-                                    )}
-                                </TabsTrigger>
-                            </TabsList>
+                        <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                            <Link href="/shopkeeper/customers/dashboard" className="hidden lg:block">
+                                <Button variant="outline" className="shadow-sm">
+                                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                                    {t('sidebar.dashboard')}
+                                </Button>
+                            </Link>
+                            <Link href="/shopkeeper/customers/normal" className="hidden lg:block">
+                                <Button variant="outline" className="shadow-sm">
+                                    <Users className="h-4 w-4 mr-2" />
+                                    {t('customer_dashboard.normal_customers')}
+                                </Button>
+                            </Link>
+                            <AddCustomerDialog customerType="due" />
                         </div>
                     </div>
 
-                    {/* Customers Tab Content */}
-                    <TabsContent value="customers" className="m-0">
-                        <Card className="border-0 shadow-lg md:shadow-xl overflow-hidden rounded-xl md:rounded-2xl">
-                            <CardHeader className="border-b bg-gray-50/80 p-3 md:py-4 md:px-6">
-                                <div className="space-y-2 md:space-y-4">
-                                    <div className="flex flex-row gap-2 md:gap-4 justify-between items-center">
-                                        <CardTitle className="text-sm md:text-lg flex items-center gap-1.5 md:gap-2 flex-shrink-0">
-                                            <div className="p-1.5 md:p-2 rounded-lg bg-indigo-100">
-                                                <Users className="h-4 w-4 md:h-5 md:w-5 text-indigo-600" />
-                                            </div>
-                                            <span className="hidden sm:inline">Due Customers</span>
-                                            <span className="sm:hidden">Customers</span>
-                                            <Badge variant="secondary" className="ml-1 md:ml-2 bg-indigo-50 text-indigo-700 text-[10px] md:text-xs px-1.5 md:px-2">
-                                                {pagination.total}
+                    {/* Simplified Stats Cards (No Time Filters) */}
+                    <CustomerDashboardStats
+                        totalCustomers={totalCustomers}
+                        totalSales={totalSales}
+                        totalPaid={totalPaid}
+                        totalOutstanding={totalOutstanding}
+                    />
+
+                    {/* Tabs */}
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3 md:space-y-6">
+                        <div className="flex flex-row items-center justify-between gap-2 md:gap-4">
+                            <div className="overflow-x-auto scrollbar-hide -mx-3 px-3 md:mx-0 md:px-0">
+                                <TabsList className="bg-white shadow-sm border p-0.5 md:p-1 h-auto min-w-max">
+                                    <TabsTrigger
+                                        value="customers"
+                                        className="flex items-center gap-1 md:gap-2 data-[state=active]:bg-indigo-600 data-[state=active]:text-white px-2.5 md:px-6 py-2 md:py-2.5 text-xs md:text-sm"
+                                    >
+                                        <Users className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                        <span className="hidden sm:inline">{t('common.customers')}</span>
+                                        <span className="sm:hidden">{t('wholesalers_list.list')}</span>
+                                        <Badge variant="secondary" className="ml-0.5 md:ml-1 bg-indigo-100 text-indigo-700 data-[state=active]:bg-white/20 data-[state=active]:text-white text-[10px] md:text-xs px-1 md:px-2">
+                                            {pagination.total}
+                                        </Badge>
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="sales"
+                                        className="flex items-center gap-1 md:gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white px-2.5 md:px-6 py-2 md:py-2.5 text-xs md:text-sm"
+                                    >
+                                        <Receipt className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                        {t('history.sales')}
+                                        {activeTab === 'sales' && salesPagination.total > 0 && (
+                                            <Badge variant="secondary" className="ml-0.5 md:ml-1 bg-white/20 text-white text-[10px] md:text-xs px-1 md:px-2">
+                                                {salesPagination.total}
                                             </Badge>
-                                            {isFetching && !isLoading && (
-                                                <div className="animate-spin rounded-full h-3 w-3 md:h-4 md:w-4 border-2 border-indigo-500 border-t-transparent" />
-                                            )}
-                                        </CardTitle>
-                                        <div className="relative flex-1 max-w-[180px] md:max-w-[256px]">
-                                            <Search className="absolute left-2.5 md:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
-                                            <Input
-                                                placeholder="Search..."
-                                                value={searchInput}
-                                                onChange={(e) => setSearchInput(e.target.value)}
-                                                className="pl-8 md:pl-10 h-8 md:h-9 text-sm bg-white"
-                                            />
-                                        </div>
-                                    </div>
+                                        )}
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="payments"
+                                        className="flex items-center gap-1 md:gap-2 data-[state=active]:bg-green-600 data-[state=active]:text-white px-2.5 md:px-6 py-2 md:py-2.5 text-xs md:text-sm"
+                                    >
+                                        <CreditCard className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                        <span className="hidden sm:inline">{t('sidebar.payments')}</span>
+                                        <span className="sm:hidden">{t('wholesaler_payments.record_payment')}</span>
+                                        {activeTab === 'payments' && paymentsPagination.total > 0 && (
+                                            <Badge variant="secondary" className="ml-0.5 md:ml-1 bg-white/20 text-white text-[10px] md:text-xs px-1 md:px-2">
+                                                {paymentsPagination.total}
+                                            </Badge>
+                                        )}
+                                    </TabsTrigger>
+                                </TabsList>
+                            </div>
+                        </div>
 
-                                    <div className="overflow-x-auto scrollbar-hide -mx-3 px-3 md:mx-0 md:px-0">
-                                        <div className="flex gap-2 md:gap-3 items-center min-w-max">
-                                            <div className="hidden md:flex items-center gap-2 text-sm text-gray-600">
-                                                <Filter className="h-4 w-4" />
-                                                <span className="font-medium">Filters:</span>
+                        {/* Customers Tab Content */}
+                        <TabsContent value="customers" className="m-0">
+                            <Card className="border-0 shadow-lg md:shadow-xl overflow-hidden rounded-xl md:rounded-2xl">
+                                <CardHeader className="border-b bg-gray-50/80 p-3 md:py-4 md:px-6">
+                                    <div className="space-y-2 md:space-y-4">
+                                        <div className="flex flex-row gap-2 md:gap-4 justify-between items-center">
+                                            <CardTitle className="text-sm md:text-lg flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+                                                <div className="p-1.5 md:p-2 rounded-lg bg-indigo-100">
+                                                    <Users className="h-4 w-4 md:h-5 md:w-5 text-indigo-600" />
+                                                </div>
+                                                <span className="hidden sm:inline">{t('sidebar.due_customers')}</span>
+                                                <span className="sm:hidden">{t('common.customers')}</span>
+                                                <Badge variant="secondary" className="ml-1 md:ml-2 bg-indigo-50 text-indigo-700 text-[10px] md:text-xs px-1.5 md:px-2">
+                                                    {pagination.total}
+                                                </Badge>
+                                                {isFetching && !isLoading && (
+                                                    <div className="animate-spin rounded-full h-3 w-3 md:h-4 md:w-4 border-2 border-indigo-500 border-t-transparent" />
+                                                )}
+                                            </CardTitle>
+                                            <div className="relative flex-1 max-w-[180px] md:max-w-[256px]">
+                                                <Search className="absolute left-2.5 md:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
+                                                <Input
+                                                    placeholder={t('wholesalers_list.filters.search')}
+                                                    value={searchInput}
+                                                    onChange={(e) => setSearchInput(e.target.value)}
+                                                    className="pl-8 md:pl-10 h-8 md:h-9 text-sm bg-white"
+                                                />
                                             </div>
-                                            <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                                <SelectTrigger className="w-[90px] md:w-[130px] h-8 md:h-9 bg-white text-xs md:text-sm">
-                                                    <SelectValue placeholder="Status" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="all">All Status</SelectItem>
-                                                    <SelectItem value="active">Active</SelectItem>
-                                                    <SelectItem value="inactive">Inactive</SelectItem>
-                                                    <SelectItem value="deleted">Recycle Bin</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <Select value={duesFilter} onValueChange={setDuesFilter}>
-                                                <SelectTrigger className="w-[90px] md:w-[140px] h-8 md:h-9 bg-white text-xs md:text-sm">
-                                                    <SelectValue placeholder="Dues" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="all">All Dues</SelectItem>
-                                                    <SelectItem value="with_dues">With Dues</SelectItem>
-                                                    <SelectItem value="clear">Clear</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <Select value={sortBy} onValueChange={setSortBy}>
-                                                <SelectTrigger className="w-[90px] md:w-[140px] h-8 md:h-9 bg-white text-xs md:text-sm">
-                                                    <SelectValue placeholder="Sort" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="createdAt">Latest</SelectItem>
-                                                    <SelectItem value="name">Name A-Z</SelectItem>
-                                                    <SelectItem value="totalSales">Top Sales</SelectItem>
-                                                    <SelectItem value="outstandingDue">Highest Due</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            {hasActiveFilters && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={clearFilters}
-                                                    className="h-8 md:h-9 text-red-600 hover:text-red-700 hover:bg-red-50 px-2 md:px-3 text-xs md:text-sm"
-                                                >
-                                                    <X className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1" />
-                                                    Clear Full
-                                                </Button>
-                                            )}
+                                        </div>
+
+                                        <div className="overflow-x-auto scrollbar-hide -mx-3 px-3 md:mx-0 md:px-0">
+                                            <div className="flex gap-2 md:gap-3 items-center min-w-max">
+                                                <div className="hidden md:flex items-center gap-2 text-sm text-gray-600">
+                                                    <Filter className="h-4 w-4" />
+                                                    <span className="font-medium">{t('wholesalers_list.filters.filters_label')}</span>
+                                                </div>
+                                                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                                    <SelectTrigger className="w-[90px] md:w-[130px] h-8 md:h-9 bg-white text-xs md:text-sm">
+                                                        <SelectValue placeholder={t('wholesalers_list.filters.status')} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="all">{t('wholesalers_list.filters.all_status')}</SelectItem>
+                                                        <SelectItem value="active">{t('wholesalers_list.stats.active')}</SelectItem>
+                                                        <SelectItem value="inactive">{t('wholesalers_list.stats.inactive')}</SelectItem>
+                                                        <SelectItem value="deleted">{t('wholesalers_list.filters.recycle_bin')}</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <Select value={duesFilter} onValueChange={setDuesFilter}>
+                                                    <SelectTrigger className="w-[90px] md:w-[140px] h-8 md:h-9 bg-white text-xs md:text-sm">
+                                                        <SelectValue placeholder={t('wholesalers_list.filters.dues')} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="all">{t('wholesalers_list.filters.all_dues')}</SelectItem>
+                                                        <SelectItem value="with_dues">{t('wholesalers_list.stats.with_dues')}</SelectItem>
+                                                        <SelectItem value="clear">{t('wholesalers_list.filters.clear_dues')}</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <Select value={sortBy} onValueChange={setSortBy}>
+                                                    <SelectTrigger className="w-[90px] md:w-[140px] h-8 md:h-9 bg-white text-xs md:text-sm">
+                                                        <SelectValue placeholder={t('wholesalers_list.filters.sort')} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="createdAt">{t('wholesalers_list.filters.latest')}</SelectItem>
+                                                        <SelectItem value="name">{t('wholesalers_list.filters.name')} A-Z</SelectItem>
+                                                        <SelectItem value="totalSales">{t('wholesalers_list.filters.purchases')}</SelectItem>
+                                                        <SelectItem value="outstandingDue">{t('wholesalers_list.stats.outstanding')}</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                {hasActiveFilters && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={clearFilters}
+                                                        className="h-8 md:h-9 text-red-600 hover:text-red-700 hover:bg-red-50 px-2 md:px-3 text-xs md:text-sm"
+                                                    >
+                                                        <X className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1" />
+                                                        {t('wholesalers_list.filters.clear_all')}
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="p-0">
-                                {isLoading ? (
-                                    <div className="p-12 text-center">
-                                        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500 mx-auto" />
-                                        <p className="text-gray-500 mt-4">Loading customers...</p>
-                                    </div>
-                                ) : customers.length > 0 ? (
-                                    <>
-                                        <div className="hidden md:block">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-                                                        <TableHead className="font-semibold">Customer</TableHead>
-                                                        <TableHead className="font-semibold">Phone</TableHead>
-                                                        <TableHead className="font-semibold text-right">Total Sales</TableHead>
-                                                        <TableHead className="font-semibold text-right">Paid</TableHead>
-                                                        <TableHead className="font-semibold text-right">Outstanding</TableHead>
-                                                        <TableHead className="font-semibold">Status</TableHead>
-                                                        <TableHead className="font-semibold text-right">Actions</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {customers.map((customer) => (
-                                                        <TableRow key={customer._id} className="hover:bg-indigo-50/30 transition-colors">
-                                                            <TableCell>
-                                                                <Link href={`/shopkeeper/customers/due/${customer._id}`} className="flex items-center gap-3 group">
-                                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold transition-transform group-hover:scale-105">
-                                                                        {customer.name.charAt(0).toUpperCase()}
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors capitalize">{customer.name}</p>
-                                                                        {customer.address && (
-                                                                            <p className="text-xs text-gray-500 flex items-center gap-1">
-                                                                                <MapPin className="h-3 w-3" />
-                                                                                {customer.address}
-                                                                            </p>
-                                                                        )}
-                                                                    </div>
-                                                                </Link>
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                {customer.phone ? (
-                                                                    <a href={`tel:${customer.phone}`} className="flex items-center gap-1 text-gray-600 hover:text-indigo-600">
-                                                                        <Phone className="h-3 w-3" />
-                                                                        {customer.phone}
-                                                                    </a>
-                                                                ) : (
-                                                                    <span className="text-gray-400">-</span>
-                                                                )}
-                                                            </TableCell>
-                                                            <TableCell className="text-right font-semibold">
-                                                                {formatCurrency(customer.totalSales)}
-                                                            </TableCell>
-                                                            <TableCell className="text-right font-semibold text-green-600">
-                                                                {formatCurrency(customer.totalPaid)}
-                                                            </TableCell>
-                                                            <TableCell className="text-right">
-                                                                <span className={`font-bold ${customer.outstandingDue > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                                                    {customer.outstandingDue > 0 ? formatCurrency(customer.outstandingDue) : '✓ Clear'}
-                                                                </span>
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <Badge className={customer.isActive !== false
-                                                                    ? 'bg-green-100 text-green-700 border-0'
-                                                                    : 'bg-gray-100 text-gray-600 border-0'
-                                                                }>
-                                                                    {customer.isActive !== false ? 'Active' : 'Inactive'}
+                                </CardHeader>
+                                <CardContent className="p-0">
+                                    {isLoading ? (
+                                        <div className="p-12 text-center">
+                                            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500 mx-auto" />
+                                            <p className="text-gray-500 mt-4">{t('wholesalers_list.empty.loading')}</p>
+                                        </div>
+                                    ) : customers.length > 0 ? (
+                                        <>
+                                            <div className="hidden md:block">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+                                                            <TableHead className="font-semibold">{t('common.customer')}</TableHead>
+                                                            <TableHead className="font-semibold">{t('wholesalers_list.table.contact')}</TableHead>
+                                                            <TableHead className="font-semibold text-right">{t('dashboard.total_sales')}</TableHead>
+                                                            <TableHead className="font-semibold text-right">{t('billing.paid')}</TableHead>
+                                                            <TableHead className="font-semibold text-right">{t('billing.due')}</TableHead>
+                                                            <TableHead className="font-semibold">{t('billing.status')}</TableHead>
+                                                            <TableHead className="font-semibold text-right">{t('wholesalers_list.table.actions')}</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {customers.map((customer) => (
+                                                            <TableRow key={customer._id} className="hover:bg-indigo-50/30 transition-colors">
+                                                                <TableCell>
+                                                                    <Link href={`/shopkeeper/customers/due/${customer._id}`} className="flex items-center gap-3 group">
+                                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold transition-transform group-hover:scale-105">
+                                                                            {customer.name.charAt(0).toUpperCase()}
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors capitalize">{customer.name}</p>
+                                                                            {customer.address && (
+                                                                                <p className="text-xs text-gray-500 flex items-center gap-1">
+                                                                                    <MapPin className="h-3 w-3" />
+                                                                                    {customer.address}
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
+                                                                    </Link>
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    {customer.phone ? (
+                                                                        <a href={`tel:${customer.phone}`} className="flex items-center gap-1 text-gray-600 hover:text-indigo-600">
+                                                                            <Phone className="h-3 w-3" />
+                                                                            {customer.phone}
+                                                                        </a>
+                                                                    ) : (
+                                                                        <span className="text-gray-400">-</span>
+                                                                    )}
+                                                                </TableCell>
+                                                                <TableCell className="text-right font-semibold">
+                                                                    {formatCurrency(customer.totalSales)}
+                                                                </TableCell>
+                                                                <TableCell className="text-right font-semibold text-green-600">
+                                                                    {formatCurrency(customer.totalPaid)}
+                                                                </TableCell>
+                                                                <TableCell className="text-right">
+                                                                    <span className={`font-bold ${customer.outstandingDue > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                                                        {customer.outstandingDue > 0 ? formatCurrency(customer.outstandingDue) : t('wholesalers_list.table.clear_badge')}
+                                                                    </span>
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <Badge className={customer.isActive !== false
+                                                                        ? 'bg-green-100 text-green-700 border-0'
+                                                                        : 'bg-gray-100 text-gray-600 border-0'
+                                                                    }>
+                                                                        {customer.isActive !== false ? t('wholesalers_list.stats.active') : t('wholesalers_list.stats.inactive')}
+                                                                    </Badge>
+                                                                </TableCell>
+                                                                <TableCell className="text-right">
+                                                                    <DropdownMenu>
+                                                                        <DropdownMenuTrigger asChild>
+                                                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                                                <MoreHorizontal className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </DropdownMenuTrigger>
+                                                                        <DropdownMenuContent align="end">
+                                                                            <DropdownMenuItem onClick={() => router.push(`/shopkeeper/customers/due/${customer._id}`)}>
+                                                                                <Eye className="h-4 w-4 mr-2" />
+                                                                                {t('wholesalers_list.table.view_details')}
+                                                                            </DropdownMenuItem>
+                                                                            {!customer.isDeleted ? (
+                                                                                <>
+                                                                                    <DropdownMenuItem onClick={() => handleEditClick(customer)}>
+                                                                                        <Edit className="h-4 w-4 mr-2" />
+                                                                                        {t('wholesalers_list.dialogs.edit_title')}
+                                                                                    </DropdownMenuItem>
+                                                                                    <DropdownMenuSeparator />
+                                                                                    <DropdownMenuItem
+                                                                                        className="text-red-600"
+                                                                                        onClick={() => handleDeleteClick(customer)}
+                                                                                    >
+                                                                                        <Trash2 className="h-4 w-4 mr-2" />
+                                                                                        {t('wholesalers_list.table.delete')}
+                                                                                    </DropdownMenuItem>
+                                                                                </>
+                                                                            ) : (
+                                                                                <DropdownMenuItem
+                                                                                    className="text-emerald-600 focus:text-emerald-600 focus:bg-emerald-50 cursor-pointer"
+                                                                                    onClick={() => restoreMutation.mutate(customer._id)}
+                                                                                >
+                                                                                    <RefreshCw className="mr-2 h-4 w-4" />
+                                                                                    {t('wholesalers_list.table.restore')}
+                                                                                </DropdownMenuItem>
+                                                                            )}
+                                                                        </DropdownMenuContent>
+                                                                    </DropdownMenu>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+
+                                            {/* Mobile Cards */}
+                                            <div className="md:hidden">
+                                                {customers.map((customer, index) => (
+                                                    <div
+                                                        key={customer._id}
+                                                        className={`p-3 hover:bg-indigo-50/30 active:scale-[0.99] transition-all ${index !== customers.length - 1 ? 'border-b-2 border-gray-200' : ''}`}
+                                                        onClick={() => router.push(`/shopkeeper/customers/due/${customer._id}`)}
+                                                    >
+                                                        <div className="flex items-start justify-between mb-2">
+                                                            <div className="flex items-center gap-2.5">
+                                                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                                                                    {customer.name.charAt(0).toUpperCase()}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-semibold text-gray-900 text-sm truncate max-w-[140px]">{customer.name}</p>
+                                                                    {customer.phone && (
+                                                                        <p className="text-[10px] text-gray-500 flex items-center gap-1">
+                                                                            <Phone className="h-2.5 w-2.5" />
+                                                                            {customer.phone}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                                                                <Badge className={`text-[10px] px-1.5 ${customer.isActive !== false
+                                                                    }`}>
+                                                                    {customer.isActive !== false ? t('wholesalers_list.stats.active') : t('wholesalers_list.stats.inactive')}
                                                                 </Badge>
-                                                            </TableCell>
-                                                            <TableCell className="text-right">
                                                                 <DropdownMenu>
-                                                                    <DropdownMenuTrigger asChild>
-                                                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
                                                                             <MoreHorizontal className="h-4 w-4" />
                                                                         </Button>
                                                                     </DropdownMenuTrigger>
-                                                                    <DropdownMenuContent align="end">
-                                                                        <DropdownMenuItem onClick={() => router.push(`/shopkeeper/customers/due/${customer._id}`)}>
-                                                                            <Eye className="h-4 w-4 mr-2" />
-                                                                            View Details
+                                                                    <DropdownMenuContent align="end" className="w-48">
+                                                                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/shopkeeper/customers/due/${customer._id}`); }}>
+                                                                            <Eye className="mr-2 h-4 w-4 text-blue-600" />
+                                                                            {t('wholesalers_list.table.view_details')}
                                                                         </DropdownMenuItem>
                                                                         {!customer.isDeleted ? (
                                                                             <>
-                                                                                <DropdownMenuItem onClick={() => handleEditClick(customer)}>
-                                                                                    <Edit className="h-4 w-4 mr-2" />
-                                                                                    Edit
+                                                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(customer); }}>
+                                                                                    <Edit className="mr-2 h-4 w-4 text-purple-600" />
+                                                                                    {t('wholesalers_list.dialogs.edit_title')}
                                                                                 </DropdownMenuItem>
                                                                                 <DropdownMenuSeparator />
                                                                                 <DropdownMenuItem
                                                                                     className="text-red-600"
-                                                                                    onClick={() => handleDeleteClick(customer)}
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        handleDeleteClick(customer);
+                                                                                    }}
                                                                                 >
-                                                                                    <Trash2 className="h-4 w-4 mr-2" />
-                                                                                    Delete
+                                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                                    {t('wholesalers_list.table.delete')}
                                                                                 </DropdownMenuItem>
                                                                             </>
                                                                         ) : (
                                                                             <DropdownMenuItem
                                                                                 className="text-emerald-600 focus:text-emerald-600 focus:bg-emerald-50 cursor-pointer"
-                                                                                onClick={() => restoreMutation.mutate(customer._id)}
+                                                                                onClick={(e) => { e.stopPropagation(); restoreMutation.mutate(customer._id); }}
                                                                             >
                                                                                 <RefreshCw className="mr-2 h-4 w-4" />
-                                                                                Restore Customer
+                                                                                {t('wholesalers_list.table.restore')}
                                                                             </DropdownMenuItem>
                                                                         )}
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </div>
-
-                                        {/* Mobile Cards */}
-                                        <div className="md:hidden">
-                                            {customers.map((customer, index) => (
-                                                <div
-                                                    key={customer._id}
-                                                    className={`p-3 hover:bg-indigo-50/30 active:scale-[0.99] transition-all ${index !== customers.length - 1 ? 'border-b-2 border-gray-200' : ''}`}
-                                                    onClick={() => router.push(`/shopkeeper/customers/due/${customer._id}`)}
-                                                >
-                                                    <div className="flex items-start justify-between mb-2">
-                                                        <div className="flex items-center gap-2.5">
-                                                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
-                                                                {customer.name.charAt(0).toUpperCase()}
+                                                            </div>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2 text-xs">
+                                                            <div>
+                                                                <p className="text-gray-500 text-[10px]">{t('history.sales')}</p>
+                                                                <p className="font-semibold">{formatCurrency(customer.totalSales)}</p>
                                                             </div>
                                                             <div>
-                                                                <p className="font-semibold text-gray-900 text-sm truncate max-w-[140px]">{customer.name}</p>
-                                                                {customer.phone && (
-                                                                    <p className="text-[10px] text-gray-500 flex items-center gap-1">
-                                                                        <Phone className="h-2.5 w-2.5" />
-                                                                        {customer.phone}
-                                                                    </p>
-                                                                )}
+                                                                <p className="text-gray-500 text-[10px]">{t('billing.paid')}</p>
+                                                                <p className="font-semibold text-green-600">{formatCurrency(customer.totalPaid)}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-gray-500 text-[10px]">{t('billing.due')}</p>
+                                                                <p className={`font-bold ${customer.outstandingDue > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                                                    {customer.outstandingDue > 0 ? formatCurrency(customer.outstandingDue) : t('wholesalers_list.table.nil_badge')}
+                                                                </p>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                                                            <Badge className={`text-[10px] px-1.5 ${customer.isActive !== false
-                                                                ? 'bg-green-100 text-green-700 border-0'
-                                                                : 'bg-gray-100 text-gray-600 border-0'
-                                                                }`}>
-                                                                {customer.isActive !== false ? 'Active' : 'Inactive'}
-                                                            </Badge>
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                                                                        <MoreHorizontal className="h-4 w-4" />
-                                                                    </Button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end" className="w-48">
-                                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/shopkeeper/customers/due/${customer._id}`); }}>
-                                                                        <Eye className="mr-2 h-4 w-4 text-blue-600" />
-                                                                        View Details
-                                                                    </DropdownMenuItem>
-                                                                    {!customer.isDeleted ? (
-                                                                        <>
-                                                                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditClick(customer); }}>
-                                                                                <Edit className="mr-2 h-4 w-4 text-purple-600" />
-                                                                                Edit
-                                                                            </DropdownMenuItem>
-                                                                            <DropdownMenuSeparator />
-                                                                            <DropdownMenuItem
-                                                                                className="text-red-600"
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    handleDeleteClick(customer);
-                                                                                }}
-                                                                            >
-                                                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                                                Delete
-                                                                            </DropdownMenuItem>
-                                                                        </>
-                                                                    ) : (
-                                                                        <DropdownMenuItem
-                                                                            className="text-emerald-600 focus:text-emerald-600 focus:bg-emerald-50 cursor-pointer"
-                                                                            onClick={(e) => { e.stopPropagation(); restoreMutation.mutate(customer._id); }}
-                                                                        >
-                                                                            <RefreshCw className="mr-2 h-4 w-4" />
-                                                                            Restore Customer
-                                                                        </DropdownMenuItem>
-                                                                    )}
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
-                                                        </div>
                                                     </div>
-                                                    <div className="grid grid-cols-3 gap-2 text-xs">
-                                                        <div>
-                                                            <p className="text-gray-500 text-[10px]">Sales</p>
-                                                            <p className="font-semibold">{formatCurrency(customer.totalSales)}</p>
+                                                ))}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="p-12 text-center text-gray-500">
+                                            {t('wholesalers_list.empty.no_found')}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        <TabsContent value="sales" className="m-0">
+                            <Card className="border-0 shadow-lg md:shadow-xl overflow-hidden rounded-xl md:rounded-2xl">
+                                <CardHeader className="border-b bg-gray-50/80 p-3 md:py-4 md:px-6">
+                                    <CardTitle className="text-sm md:text-lg flex items-center gap-1.5 md:gap-2">
+                                        <div className="p-1.5 md:p-2 rounded-lg bg-emerald-100">
+                                            <Receipt className="h-4 w-4 md:h-5 md:w-5 text-emerald-600" />
+                                        </div>
+                                        <span className="hidden sm:inline">{t('history.sale_bills')}</span>
+                                        <span className="sm:hidden">{t('history.sales')}</span>
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-0">
+                                    {salesLoading ? (
+                                        <div className="p-8 md:p-12 text-center">
+                                            <div className="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-t-2 border-b-2 border-emerald-500 mx-auto" />
+                                            <p className="text-gray-500 mt-3 md:mt-4 text-sm">{t('wholesalers_list.empty.loading')}</p>
+                                        </div>
+                                    ) : sales.length > 0 ? (
+                                        <>
+                                            {/* Desktop Table */}
+                                            <div className="hidden md:block">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow className="bg-gray-50/50">
+                                                            <TableHead>{t('history.bill_no')}</TableHead>
+                                                            <TableHead>{t('common.customer')}</TableHead>
+                                                            <TableHead className="text-right">{t('history.amount')}</TableHead>
+                                                            <TableHead className="text-right">{t('billing.paid')}</TableHead>
+                                                            <TableHead className="text-right">{t('billing.due')}</TableHead>
+                                                            <TableHead>{t('history.method')}</TableHead>
+                                                            <TableHead>{t('history.date')}</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {sales.map((sale) => {
+                                                            const methodConfig = paymentMethodConfig[sale.paymentMethod] || paymentMethodConfig.cash;
+                                                            const methodLabel = methodConfig.key === 'online' ? t('dashboard.online') + ' / UPI' : t(`dashboard.${methodConfig.key}`);
+                                                            return (
+                                                                <TableRow key={sale._id} className="hover:bg-emerald-50/30">
+                                                                    <TableCell className="font-mono text-sm">{sale.billNumber}</TableCell>
+                                                                    <TableCell>
+                                                                        <Link href={`/shopkeeper/customers/due/${sale.entityId}`} className="flex items-center gap-2 group">
+                                                                            <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold transition-transform group-hover:scale-110">
+                                                                                {sale.entityName?.charAt(0)?.toUpperCase()}
+                                                                            </div>
+                                                                            <span className="font-medium text-sm group-hover:text-emerald-700 transition-colors">{sale.entityName}</span>
+                                                                        </Link>
+                                                                    </TableCell>
+                                                                    <TableCell className="text-right font-semibold">{formatCurrency(sale.totalAmount)}</TableCell>
+                                                                    <TableCell className="text-right text-green-600">{formatCurrency(sale.paidAmount)}</TableCell>
+                                                                    <TableCell className="text-right">
+                                                                        {sale.dueAmount > 0 ? (
+                                                                            <span className="text-red-600 font-semibold">{formatCurrency(sale.dueAmount)}</span>
+                                                                        ) : (
+                                                                            <Badge className="bg-green-100 text-green-700 border-0">{t('billing.paid')}</Badge>
+                                                                        )}
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                        <Badge className={`${methodConfig.bgColor} ${methodConfig.color} border-0`}>
+                                                                            {methodLabel}
+                                                                        </Badge>
+                                                                    </TableCell>
+                                                                    <TableCell className="text-gray-600 text-xs">{format(new Date(sale.createdAt), 'dd MMM yyyy')}</TableCell>
+                                                                </TableRow>
+                                                            );
+                                                        })}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+
+                                            {/* Mobile Cards */}
+                                            <div className="md:hidden">
+                                                {sales.map((sale) => (
+                                                    <div key={sale._id} className="p-3 border-b hover:bg-gray-50">
+                                                        <div className="flex justify-between mb-1">
+                                                            <span className="font-semibold text-sm">{sale.entityName}</span>
+                                                            <span className="text-xs font-mono text-gray-500">#{sale.billNumber}</span>
                                                         </div>
-                                                        <div>
-                                                            <p className="text-gray-500 text-[10px]">Paid</p>
-                                                            <p className="font-semibold text-green-600">{formatCurrency(customer.totalPaid)}</p>
+                                                        <div className="flex justify-between items-center text-xs text-gray-600 mb-2">
+                                                            <span>{format(new Date(sale.createdAt), 'dd MMM')}</span>
+                                                            <span className="font-bold">{formatCurrency(sale.totalAmount)}</span>
                                                         </div>
+                                                        {sale.dueAmount > 0 && (
+                                                            <div className="text-right">
+                                                                <span className="text-red-600 text-xs font-bold">{t('billing.due')}: {formatCurrency(sale.dueAmount)}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <div className="flex items-center justify-center gap-4 py-4 border-t">
+                                                <Button size="sm" variant="outline" onClick={() => setTxnPage(p => Math.max(1, p - 1))} disabled={txnPage === 1}>{t('wholesalers_list.pagination.prev')}</Button>
+                                                <span className="text-sm">{txnPage} / {salesPagination.totalPages}</span>
+                                                <Button size="sm" variant="outline" onClick={() => setTxnPage(p => Math.min(salesPagination.totalPages, p + 1))} disabled={txnPage === salesPagination.totalPages}>{t('wholesalers_list.pagination.next')}</Button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="p-12 text-center text-gray-500">{t('history.no_bills_found')}</div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        <TabsContent value="payments" className="m-0">
+                            <Card className="border-0 shadow-lg md:shadow-xl overflow-hidden rounded-xl md:rounded-2xl">
+                                <CardHeader className="border-b bg-gray-50/80 p-3 md:py-4 md:px-6">
+                                    <CardTitle className="text-sm md:text-lg flex items-center gap-1.5 md:gap-2">
+                                        <div className="p-1.5 md:p-2 rounded-lg bg-green-100">
+                                            <CreditCard className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
+                                        </div>
+                                        <span className="hidden sm:inline">{t('wholesaler_payments.table.title')}</span>
+                                        <span className="sm:hidden">{t('sidebar.payments')}</span>
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-0">
+                                    {paymentsLoading ? (
+                                        <div className="p-8 md:p-12 text-center">
+                                            <div className="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-t-2 border-b-2 border-green-500 mx-auto" />
+                                            <p className="text-gray-500 mt-3 md:mt-4 text-sm">{t('wholesalers_list.empty.loading')}</p>
+                                        </div>
+                                    ) : payments.length > 0 ? (
+                                        <>
+                                            <div className="hidden md:block">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow className="bg-gray-50/50">
+                                                            <TableHead>{t('common.customer')}</TableHead>
+                                                            <TableHead className="text-right">{t('history.amount')}</TableHead>
+                                                            <TableHead>{t('history.method')}</TableHead>
+                                                            <TableHead>{t('history.date')}</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {payments.map((payment) => (
+                                                            <TableRow key={payment._id}>
+                                                                <TableCell>
+                                                                    <Link
+                                                                        href={`/shopkeeper/customers/due/${payment.entityId}`}
+                                                                        className="font-medium hover:text-green-600 transition-colors"
+                                                                    >
+                                                                        {payment.entityName}
+                                                                    </Link>
+                                                                </TableCell>
+                                                                <TableCell className="text-right font-bold text-green-600">{formatCurrency(payment.amount)}</TableCell>
+                                                                <TableCell className="capitalize">
+                                                                    {payment.paymentMethod === 'online' ? t('dashboard.online') + ' / UPI' : t(`dashboard.${payment.paymentMethod}`)}
+                                                                </TableCell>
+                                                                <TableCell className="text-gray-600 text-xs">{format(new Date(payment.createdAt), 'dd MMM yyyy')}</TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+
+                                            <div className="md:hidden">
+                                                {payments.map((payment) => (
+                                                    <div key={payment._id} className="p-3 border-b hover:bg-gray-50 flex justify-between items-center">
                                                         <div>
-                                                            <p className="text-gray-500 text-[10px]">Due</p>
-                                                            <p className={`font-bold ${customer.outstandingDue > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                                                {customer.outstandingDue > 0 ? formatCurrency(customer.outstandingDue) : '✓'}
+                                                            <p className="text-sm font-semibold">{payment.entityName}</p>
+                                                            <p className="text-xs text-gray-500">{format(new Date(payment.createdAt), 'dd MMM')}</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="font-bold text-green-600">{formatCurrency(payment.amount)}</p>
+                                                            <p className="text-xs text-gray-500 capitalize">
+                                                                {payment.paymentMethod === 'online' ? t('dashboard.online') + ' / UPI' : t(`dashboard.${payment.paymentMethod}`)}
                                                             </p>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="p-12 text-center text-gray-500">
-                                        No customers found.
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+                                                ))}
+                                            </div>
 
-                    <TabsContent value="sales" className="m-0">
-                        <Card className="border-0 shadow-lg md:shadow-xl overflow-hidden rounded-xl md:rounded-2xl">
-                            <CardHeader className="border-b bg-gray-50/80 p-3 md:py-4 md:px-6">
-                                <CardTitle className="text-sm md:text-lg flex items-center gap-1.5 md:gap-2">
-                                    <div className="p-1.5 md:p-2 rounded-lg bg-emerald-100">
-                                        <Receipt className="h-4 w-4 md:h-5 md:w-5 text-emerald-600" />
-                                    </div>
-                                    <span className="hidden sm:inline">Sales History</span>
-                                    <span className="sm:hidden">Sales</span>
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-0">
-                                {salesLoading ? (
-                                    <div className="p-8 md:p-12 text-center">
-                                        <div className="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-t-2 border-b-2 border-emerald-500 mx-auto" />
-                                        <p className="text-gray-500 mt-3 md:mt-4 text-sm">Loading sales...</p>
-                                    </div>
-                                ) : sales.length > 0 ? (
-                                    <>
-                                        {/* Desktop Table */}
-                                        <div className="hidden md:block">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow className="bg-gray-50/50">
-                                                        <TableHead>Bill</TableHead>
-                                                        <TableHead>Customer</TableHead>
-                                                        <TableHead className="text-right">Amount</TableHead>
-                                                        <TableHead className="text-right">Paid</TableHead>
-                                                        <TableHead className="text-right">Due</TableHead>
-                                                        <TableHead>Mode</TableHead>
-                                                        <TableHead>Date</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {sales.map((sale) => {
-                                                        const methodConfig = paymentMethodConfig[sale.paymentMethod] || paymentMethodConfig.cash;
-                                                        return (
-                                                            <TableRow key={sale._id} className="hover:bg-emerald-50/30">
-                                                                <TableCell className="font-mono text-sm">{sale.billNumber}</TableCell>
-                                                                <TableCell>
-                                                                    <Link href={`/shopkeeper/customers/due/${sale.entityId}`} className="flex items-center gap-2 group">
-                                                                        <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold transition-transform group-hover:scale-110">
-                                                                            {sale.entityName?.charAt(0)?.toUpperCase()}
-                                                                        </div>
-                                                                        <span className="font-medium text-sm group-hover:text-emerald-700 transition-colors">{sale.entityName}</span>
-                                                                    </Link>
-                                                                </TableCell>
-                                                                <TableCell className="text-right font-semibold">{formatCurrency(sale.totalAmount)}</TableCell>
-                                                                <TableCell className="text-right text-green-600">{formatCurrency(sale.paidAmount)}</TableCell>
-                                                                <TableCell className="text-right">
-                                                                    {sale.dueAmount > 0 ? (
-                                                                        <span className="text-red-600 font-semibold">{formatCurrency(sale.dueAmount)}</span>
-                                                                    ) : (
-                                                                        <Badge className="bg-green-100 text-green-700 border-0">Paid</Badge>
-                                                                    )}
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <Badge className={`${methodConfig.bgColor} ${methodConfig.color} border-0`}>
-                                                                        {methodConfig.label}
-                                                                    </Badge>
-                                                                </TableCell>
-                                                                <TableCell className="text-gray-600 text-xs">{format(new Date(sale.createdAt), 'dd MMM yyyy')}</TableCell>
-                                                            </TableRow>
-                                                        );
-                                                    })}
-                                                </TableBody>
-                                            </Table>
-                                        </div>
+                                            <div className="flex items-center justify-center gap-4 py-4 border-t">
+                                                <Button size="sm" variant="outline" onClick={() => setPaymentPage(p => Math.max(1, p - 1))} disabled={paymentPage === 1}>{t('wholesalers_list.pagination.prev')}</Button>
+                                                <span className="text-sm">{paymentPage} / {paymentsPagination.totalPages}</span>
+                                                <Button size="sm" variant="outline" onClick={() => setPaymentPage(p => Math.min(paymentsPagination.totalPages, p + 1))} disabled={paymentPage === paymentsPagination.totalPages}>{t('wholesalers_list.pagination.next')}</Button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="p-12 text-center text-gray-500">{t('wholesaler_payments.empty.no_found')}</div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    </Tabs>
+                </div >
 
-                                        {/* Mobile Cards */}
-                                        <div className="md:hidden">
-                                            {sales.map((sale) => (
-                                                <div key={sale._id} className="p-3 border-b hover:bg-gray-50">
-                                                    <div className="flex justify-between mb-1">
-                                                        <span className="font-semibold text-sm">{sale.entityName}</span>
-                                                        <span className="text-xs font-mono text-gray-500">#{sale.billNumber}</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center text-xs text-gray-600 mb-2">
-                                                        <span>{format(new Date(sale.createdAt), 'dd MMM')}</span>
-                                                        <span className="font-bold">{formatCurrency(sale.totalAmount)}</span>
-                                                    </div>
-                                                    {sale.dueAmount > 0 && (
-                                                        <div className="text-right">
-                                                            <span className="text-red-600 text-xs font-bold">Due: {formatCurrency(sale.dueAmount)}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
+                <EditCustomerDialog
+                    isOpen={editDialogOpen}
+                    onClose={() => {
+                        setEditDialogOpen(false);
+                        setEditingCustomer(null);
+                    }}
+                    onSave={handleEditSave}
+                    customer={editingCustomer}
+                    isSaving={updateMutation.isPending}
+                />
 
-                                        {/* Pagination (Simplified) */}
-                                        <div className="flex items-center justify-center gap-4 py-4 border-t">
-                                            <Button size="sm" variant="outline" onClick={() => setTxnPage(p => Math.max(1, p - 1))} disabled={txnPage === 1}>Prev</Button>
-                                            <span className="text-sm">{txnPage} / {salesPagination.totalPages}</span>
-                                            <Button size="sm" variant="outline" onClick={() => setTxnPage(p => Math.min(salesPagination.totalPages, p + 1))} disabled={txnPage === salesPagination.totalPages}>Next</Button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="p-12 text-center text-gray-500">No sales records found.</div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-
-                    <TabsContent value="payments" className="m-0">
-                        <Card className="border-0 shadow-lg md:shadow-xl overflow-hidden rounded-xl md:rounded-2xl">
-                            <CardHeader className="border-b bg-gray-50/80 p-3 md:py-4 md:px-6">
-                                <CardTitle className="text-sm md:text-lg flex items-center gap-1.5 md:gap-2">
-                                    <div className="p-1.5 md:p-2 rounded-lg bg-green-100">
-                                        <CreditCard className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
-                                    </div>
-                                    <span className="hidden sm:inline">Payment History</span>
-                                    <span className="sm:hidden">Payments</span>
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-0">
-                                {paymentsLoading ? (
-                                    <div className="p-8 md:p-12 text-center">
-                                        <div className="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-t-2 border-b-2 border-green-500 mx-auto" />
-                                        <p className="text-gray-500 mt-3 md:mt-4 text-sm">Loading payments...</p>
-                                    </div>
-                                ) : payments.length > 0 ? (
-                                    <>
-                                        <div className="hidden md:block">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow className="bg-gray-50/50">
-                                                        <TableHead>Customer</TableHead>
-                                                        <TableHead className="text-right">Amount</TableHead>
-                                                        <TableHead>Method</TableHead>
-                                                        <TableHead>Date</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {payments.map((payment) => (
-                                                        <TableRow key={payment._id}>
-                                                            <TableCell>
-                                                                <Link
-                                                                    href={`/shopkeeper/customers/due/${payment.entityId}`}
-                                                                    className="font-medium hover:text-green-600 transition-colors"
-                                                                >
-                                                                    {payment.entityName}
-                                                                </Link>
-                                                            </TableCell>
-                                                            <TableCell className="text-right font-bold text-green-600">{formatCurrency(payment.amount)}</TableCell>
-                                                            <TableCell className="capitalize">{payment.paymentMethod}</TableCell>
-                                                            <TableCell className="text-gray-600 text-xs">{format(new Date(payment.createdAt), 'dd MMM yyyy')}</TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </div>
-
-                                        <div className="md:hidden">
-                                            {payments.map((payment) => (
-                                                <div key={payment._id} className="p-3 border-b hover:bg-gray-50 flex justify-between items-center">
-                                                    <div>
-                                                        <p className="text-sm font-semibold">{payment.entityName}</p>
-                                                        <p className="text-xs text-gray-500">{format(new Date(payment.createdAt), 'dd MMM')}</p>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="font-bold text-green-600">{formatCurrency(payment.amount)}</p>
-                                                        <p className="text-xs text-gray-500 capitalize">{payment.paymentMethod}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-
-                                        <div className="flex items-center justify-center gap-4 py-4 border-t">
-                                            <Button size="sm" variant="outline" onClick={() => setPaymentPage(p => Math.max(1, p - 1))} disabled={paymentPage === 1}>Prev</Button>
-                                            <span className="text-sm">{paymentPage} / {paymentsPagination.totalPages}</span>
-                                            <Button size="sm" variant="outline" onClick={() => setPaymentPage(p => Math.min(paymentsPagination.totalPages, p + 1))} disabled={paymentPage === paymentsPagination.totalPages}>Next</Button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="p-12 text-center text-gray-500">No payment records found.</div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                </Tabs>
+                <DeleteConfirmDialog
+                    isOpen={deleteDialogOpen}
+                    onClose={() => {
+                        setDeleteDialogOpen(false);
+                        setSelectedCustomer(null);
+                    }}
+                    onConfirm={handleDeleteConfirm}
+                    itemName={selectedCustomer?.name}
+                    isLoading={deleteMutation.isPending}
+                />
             </div>
-
-            <EditCustomerDialog
-                isOpen={editDialogOpen}
-                onClose={() => {
-                    setEditDialogOpen(false);
-                    setEditingCustomer(null);
-                }}
-                onSave={handleEditSave}
-                customer={editingCustomer}
-                isSaving={updateMutation.isPending}
-            />
-
-            <DeleteConfirmDialog
-                isOpen={deleteDialogOpen}
-                onClose={() => {
-                    setDeleteDialogOpen(false);
-                    setSelectedCustomer(null);
-                }}
-                onConfirm={handleDeleteConfirm}
-                itemName={selectedCustomer?.name}
-                isLoading={deleteMutation.isPending}
-            />
-        </div>
+        </>
     );
 }

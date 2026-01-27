@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import {
     Search, Calendar, ChevronDown, X, Filter, ChevronLeft, ChevronRight,
@@ -75,21 +76,23 @@ interface FiltersState {
     endDate?: string;
 }
 
-const filterLabels: Record<TimeFilterOption, string> = {
-    all: 'All Time',
-    today: 'Today',
-    yesterday: 'Yesterday',
-    this_week: 'This Week',
-    this_month: 'This Month',
-    this_year: 'This Year',
-    custom: 'Custom Range',
-};
 
-const paymentMethodConfig: Record<string, { color: string; bgColor: string; icon: React.ReactNode; label: string }> = {
-    cash: { color: 'text-green-700', bgColor: 'bg-green-100', icon: <Banknote className="h-4 w-4" />, label: 'Cash' },
-    card: { color: 'text-blue-700', bgColor: 'bg-blue-100', icon: <CreditCard className="h-4 w-4" />, label: 'Card' },
-    online: { color: 'text-purple-700', bgColor: 'bg-purple-100', icon: <Smartphone className="h-4 w-4" />, label: 'Online/UPI' },
-};
+// Helper for labels
+const getFilterLabels = (t: any): Record<TimeFilterOption, string> => ({
+    all: t('history.time_filters.all'),
+    today: t('history.time_filters.today'),
+    yesterday: t('history.time_filters.yesterday'),
+    this_week: t('history.time_filters.this_week'),
+    this_month: t('history.time_filters.this_month'),
+    this_year: t('history.time_filters.this_year'),
+    custom: t('history.time_filters.custom'),
+});
+
+const getPaymentMethodConfig = (t: any): Record<string, { color: string; bgColor: string; icon: React.ReactNode; label: string }> => ({
+    cash: { color: 'text-green-700', bgColor: 'bg-green-100', icon: <Banknote className="h-4 w-4" />, label: t('dashboard.cash') },
+    card: { color: 'text-blue-700', bgColor: 'bg-blue-100', icon: <CreditCard className="h-4 w-4" />, label: t('dashboard.card') },
+    online: { color: 'text-purple-700', bgColor: 'bg-purple-100', icon: <Smartphone className="h-4 w-4" />, label: t('dashboard.online') },
+});
 
 function formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-IN', {
@@ -142,6 +145,7 @@ function useDebounce<T>(value: T, delay: number): T {
 const ITEMS_PER_PAGE = 10;
 
 export default function NormalCustomersPage() {
+    const { t, i18n } = useTranslation();
     const router = useRouter();
     const [currentPage, setCurrentPage] = useState(1);
     const [isCustomDateOpen, setIsCustomDateOpen] = useState(false);
@@ -241,9 +245,13 @@ export default function NormalCustomersPage() {
 
     const getTimeFilterLabel = () => {
         if (filters.timeFilter === 'custom' && filters.startDate && filters.endDate) {
+            if (i18n.language === 'ml') {
+                const formatter = new Intl.DateTimeFormat('ml-IN', { day: 'numeric', month: 'short' });
+                return `${formatter.format(new Date(filters.startDate))} - ${formatter.format(new Date(filters.endDate))}`;
+            }
             return `${format(new Date(filters.startDate), 'dd MMM')} - ${format(new Date(filters.endDate), 'dd MMM')}`;
         }
-        return filterLabels[filters.timeFilter];
+        return getFilterLabels(t)[filters.timeFilter];
     };
 
     const hasActiveFilters = searchInput || filters.timeFilter !== 'all' || filters.paymentMethod !== 'all';
@@ -267,7 +275,7 @@ export default function NormalCustomersPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50/30 to-emerald-50/20">
-            <Header title="Normal Customers" />
+            <Header title={t('sidebar.normal_customers')} />
 
             <div className="p-3 md:p-6">
                 {/* Page Header - Mobile First */}
@@ -275,35 +283,44 @@ export default function NormalCustomersPage() {
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                                <span className="hidden sm:inline">Normal Customers</span>
-                                <span className="sm:hidden">Customers</span>
+                                <span className="hidden sm:inline">{t('sidebar.normal_customers')}</span>
+                                <span className="sm:hidden">{t('common.customers')}</span>
                             </h2>
                             <ShoppingBag className="h-5 w-5 md:h-8 md:w-8 text-green-600" />
                         </div>
                         <p className="text-gray-600 mt-0.5 md:mt-1 flex items-center gap-1.5 md:gap-2 text-xs md:text-base">
                             <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                            <span className="hidden md:inline">{format(new Date(), 'EEEE, MMMM d, yyyy')}</span>
-                            <span className="md:hidden">{format(new Date(), 'EEE, MMM d')}</span>
+                            {i18n.language === 'ml' ? (
+                                <>
+                                    <span className="hidden md:inline">{new Intl.DateTimeFormat('ml-IN', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(new Date())}</span>
+                                    <span className="md:hidden">{new Intl.DateTimeFormat('ml-IN', { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date())}</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="hidden md:inline">{format(new Date(), 'EEEE, MMMM d, yyyy')}</span>
+                                    <span className="md:hidden">{format(new Date(), 'EEE, MMM d')}</span>
+                                </>
+                            )}
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
                         <Link href="/shopkeeper/customers/dashboard" className="hidden lg:block">
                             <Button variant="outline" className="shadow-sm">
                                 <LayoutDashboard className="h-4 w-4 mr-2" />
-                                Dashboard
+                                {t('common.dashboard')}
                             </Button>
                         </Link>
                         <Link href="/shopkeeper/customers/due" className="hidden lg:block">
                             <Button variant="outline" className="shadow-sm">
                                 <CreditCard className="h-4 w-4 mr-2" />
-                                Due
+                                {t('billing.due')}
                             </Button>
                         </Link>
                         <Link href="/shopkeeper/billing">
                             <Button size="sm" className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25 h-9 md:h-10 px-3 md:px-4 text-xs md:text-sm">
                                 <Receipt className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2" />
-                                <span className="hidden sm:inline">New Bill</span>
-                                <span className="sm:hidden">Bill</span>
+                                <span className="hidden sm:inline">{t('billing.new_bill')}</span>
+                                <span className="sm:hidden">{t('billing.bill')}</span>
                             </Button>
                         </Link>
                     </div>
@@ -316,9 +333,9 @@ export default function NormalCustomersPage() {
                             <Users className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                         </div>
                         <div>
-                            <h3 className="font-semibold text-green-800 text-sm md:text-base">Walk-in Customers</h3>
+                            <h3 className="font-semibold text-green-800 text-sm md:text-base">{t('customers.normal.walk_in_title')}</h3>
                             <p className="text-xs md:text-sm text-green-700 mt-0.5 md:mt-1 hidden sm:block">
-                                One-time sales where customers pay immediately. No dues tracking required.
+                                {t('customers.normal.walk_in_desc')}
                             </p>
                         </div>
                     </div>
@@ -332,10 +349,10 @@ export default function NormalCustomersPage() {
                                 <div className="p-2 md:p-2.5 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
                                     <Receipt className="h-4 w-4 md:h-5 md:w-5" />
                                 </div>
-                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">Total</Badge>
+                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">{t('dashboard.total')}</Badge>
                             </div>
                             <h3 className="text-2xl md:text-3xl font-bold">{totalTransactions}</h3>
-                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Transactions</p>
+                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">{t('wholesaler_detail.transactions.title')}</p>
                         </CardContent>
                         <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />
                     </Card>
@@ -346,12 +363,12 @@ export default function NormalCustomersPage() {
                                 <div className="p-2 md:p-2.5 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
                                     <IndianRupee className="h-4 w-4 md:h-5 md:w-5" />
                                 </div>
-                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">Revenue</Badge>
+                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">{t('reports.revenue')}</Badge>
                             </div>
                             <h3 className="text-lg md:text-2xl font-bold">
                                 {formatCurrency(totalRevenue)}
                             </h3>
-                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Total Revenue</p>
+                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">{t('dashboard.total_revenue')}</p>
                         </CardContent>
                         <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />
                     </Card>
@@ -362,10 +379,10 @@ export default function NormalCustomersPage() {
                                 <div className="p-2 md:p-2.5 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
                                     <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />
                                 </div>
-                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">Today</Badge>
+                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">{t('history.time_filters.today')}</Badge>
                             </div>
                             <h3 className="text-2xl md:text-3xl font-bold">{todaySales}</h3>
-                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Today's Sales</p>
+                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">{t('dashboard.todays_sales')}</p>
                         </CardContent>
                         <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />
                     </Card>
@@ -376,12 +393,12 @@ export default function NormalCustomersPage() {
                                 <div className="p-2 md:p-2.5 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
                                     <Banknote className="h-4 w-4 md:h-5 md:w-5" />
                                 </div>
-                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">Today</Badge>
+                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">{t('history.time_filters.today')}</Badge>
                             </div>
                             <h3 className="text-lg md:text-2xl font-bold">
                                 {formatCurrency(todayRevenue)}
                             </h3>
-                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Today's Revenue</p>
+                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">{t('dashboard.todays_revenue')}</p>
                         </CardContent>
                         <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />
                     </Card>
@@ -398,8 +415,8 @@ export default function NormalCustomersPage() {
                                     <div className="p-1.5 md:p-2 rounded-lg bg-green-100">
                                         <Receipt className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                                     </div>
-                                    <span className="hidden sm:inline">Transactions</span>
-                                    <span className="sm:hidden">History</span>
+                                    <span className="hidden sm:inline">{t('wholesaler_detail.transactions.title')}</span>
+                                    <span className="sm:hidden">{t('history.title')}</span>
                                     <Badge variant="secondary" className="ml-1 md:ml-2 bg-green-50 text-green-700 text-[10px] md:text-xs px-1.5 md:px-2">
                                         {pagination.total}
                                     </Badge>
@@ -410,7 +427,7 @@ export default function NormalCustomersPage() {
                                 <div className="relative flex-1 max-w-[180px] md:max-w-[256px]">
                                     <Search className="absolute left-2.5 md:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
                                     <Input
-                                        placeholder="Search..."
+                                        placeholder={t('common.search')}
                                         value={searchInput}
                                         onChange={(e) => setSearchInput(e.target.value)}
                                         className="pl-8 md:pl-10 h-8 md:h-9 text-sm bg-white"
@@ -423,7 +440,7 @@ export default function NormalCustomersPage() {
                                 <div className="flex gap-2 md:gap-3 items-center min-w-max">
                                     <div className="hidden md:flex items-center gap-2 text-sm text-gray-600">
                                         <Filter className="h-4 w-4" />
-                                        <span className="font-medium">Filters:</span>
+                                        <span className="font-medium">{t('wholesalers_list.filters.filters_label')}</span>
                                     </div>
 
                                     {/* Date Filter */}
@@ -432,7 +449,7 @@ export default function NormalCustomersPage() {
                                             <Button variant="outline" className="h-8 md:h-9 flex items-center gap-1 md:gap-2 bg-white text-xs md:text-sm px-2 md:px-3">
                                                 <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-500" />
                                                 <span className="hidden sm:inline">{getTimeFilterLabel()}</span>
-                                                <span className="sm:hidden">{filters.timeFilter === 'all' ? 'All' : '...'}</span>
+                                                <span className="sm:hidden">{filters.timeFilter === 'all' ? t('history.time_filters.all') : '...'}</span>
                                                 <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
                                             </Button>
                                         </DropdownMenuTrigger>
@@ -443,12 +460,12 @@ export default function NormalCustomersPage() {
                                                     onClick={() => handleTimeFilterChange(option)}
                                                     className={filters.timeFilter === option ? 'bg-green-50 text-green-700' : ''}
                                                 >
-                                                    {filterLabels[option]}
+                                                    {getFilterLabels(t)[option]}
                                                 </DropdownMenuItem>
                                             ))}
                                             <DropdownMenuSeparator />
                                             <DropdownMenuItem onClick={() => handleTimeFilterChange('custom')}>
-                                                Custom Range...
+                                                {t('history.time_filters.custom')}...
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
@@ -461,26 +478,26 @@ export default function NormalCustomersPage() {
                                         }}
                                     >
                                         <SelectTrigger className="w-[90px] md:w-[140px] h-8 md:h-9 bg-white text-xs md:text-sm">
-                                            <SelectValue placeholder="Method" />
+                                            <SelectValue placeholder={t('wholesaler_payments.form.method')} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">All Methods</SelectItem>
+                                            <SelectItem value="all">{t('wholesaler_payments.filters.all_methods')}</SelectItem>
                                             <SelectItem value="cash">
                                                 <span className="flex items-center gap-2">
                                                     <Banknote className="h-3 w-3 text-green-600" />
-                                                    Cash
+                                                    {t('dashboard.cash')}
                                                 </span>
                                             </SelectItem>
                                             <SelectItem value="card">
                                                 <span className="flex items-center gap-2">
                                                     <CreditCard className="h-3 w-3 text-blue-600" />
-                                                    Card
+                                                    {t('dashboard.card')}
                                                 </span>
                                             </SelectItem>
                                             <SelectItem value="online">
                                                 <span className="flex items-center gap-2">
                                                     <Smartphone className="h-3 w-3 text-purple-600" />
-                                                    UPI
+                                                    {t('dashboard.online')}
                                                 </span>
                                             </SelectItem>
                                         </SelectContent>
@@ -495,8 +512,8 @@ export default function NormalCustomersPage() {
                                             className="h-8 md:h-9 text-red-600 hover:text-red-700 hover:bg-red-50 px-2 md:px-3 text-xs md:text-sm"
                                         >
                                             <X className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1" />
-                                            <span className="hidden md:inline">Clear All</span>
-                                            <span className="md:hidden">Clear</span>
+                                            <span className="hidden md:inline">{t('wholesalers_list.filters.clear_all')}</span>
+                                            <span className="md:hidden">{t('history.clear_filters')}</span>
                                         </Button>
                                     )}
                                 </div>
@@ -517,16 +534,16 @@ export default function NormalCustomersPage() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-                                                <TableHead className="font-semibold">Bill Number</TableHead>
-                                                <TableHead className="font-semibold">Customer</TableHead>
-                                                <TableHead className="font-semibold text-right">Amount</TableHead>
-                                                <TableHead className="font-semibold">Payment Method</TableHead>
-                                                <TableHead className="font-semibold">Date & Time</TableHead>
+                                                <TableHead className="font-semibold">{t('wholesaler_detail.transactions.bill_no')}</TableHead>
+                                                <TableHead className="font-semibold">{t('common.customer')}</TableHead>
+                                                <TableHead className="font-semibold text-right">{t('wholesaler_payments.form.amount')}</TableHead>
+                                                <TableHead className="font-semibold">{t('wholesaler_payments.form.method')}</TableHead>
+                                                <TableHead className="font-semibold">{t('wholesaler_payments.table.date_time')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {bills.map((bill) => {
-                                                const methodConfig = paymentMethodConfig[bill.paymentMethod] || paymentMethodConfig.cash;
+                                                const methodConfig = getPaymentMethodConfig(t)[bill.paymentMethod] || getPaymentMethodConfig(t).cash;
                                                 return (
                                                     <TableRow key={bill._id} className="hover:bg-green-50/30 transition-colors">
                                                         <TableCell>
@@ -539,7 +556,7 @@ export default function NormalCustomersPage() {
                                                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-sm font-semibold">
                                                                     {bill.entityName?.charAt(0)?.toUpperCase() || 'C'}
                                                                 </div>
-                                                                <span className="font-medium">{bill.entityName || 'Walk-in Customer'}</span>
+                                                                <span className="font-medium">{bill.entityName || t('customers.normal.walk_in')}</span>
                                                             </div>
                                                         </TableCell>
                                                         <TableCell className="text-right">
@@ -555,8 +572,8 @@ export default function NormalCustomersPage() {
                                                         </TableCell>
                                                         <TableCell>
                                                             <div>
-                                                                <p className="font-medium">{format(new Date(bill.createdAt), 'dd MMM yyyy')}</p>
-                                                                <p className="text-xs text-gray-500">{format(new Date(bill.createdAt), 'hh:mm a')}</p>
+                                                                <p className="font-medium">{i18n.language === 'ml' ? new Intl.DateTimeFormat('ml-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(bill.createdAt)) : format(new Date(bill.createdAt), 'dd MMM yyyy')}</p>
+                                                                <p className="text-xs text-gray-500">{i18n.language === 'ml' ? new Intl.DateTimeFormat('ml-IN', { hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(bill.createdAt)) : format(new Date(bill.createdAt), 'hh:mm a')}</p>
                                                             </div>
                                                         </TableCell>
                                                     </TableRow>
@@ -566,10 +583,9 @@ export default function NormalCustomersPage() {
                                     </Table>
                                 </div>
 
-                                {/* Mobile Cards */}
                                 <div className="md:hidden">
                                     {bills.map((bill, index) => {
-                                        const methodConfig = paymentMethodConfig[bill.paymentMethod] || paymentMethodConfig.cash;
+                                        const methodConfig = getPaymentMethodConfig(t)[bill.paymentMethod] || getPaymentMethodConfig(t).cash;
                                         return (
                                             <div key={bill._id} className={`p-3 hover:bg-green-50/30 active:scale-[0.99] transition-all ${index !== bills.length - 1 ? 'border-b-2 border-gray-200' : ''}`}>
                                                 <div className="flex items-start justify-between mb-2">
@@ -578,7 +594,7 @@ export default function NormalCustomersPage() {
                                                             {bill.entityName?.charAt(0)?.toUpperCase() || 'C'}
                                                         </div>
                                                         <div>
-                                                            <p className="font-semibold text-gray-900 text-sm truncate max-w-[140px]">{bill.entityName || 'Walk-in'}</p>
+                                                            <p className="font-semibold text-gray-900 text-sm truncate max-w-[140px]">{bill.entityName || t('customers.normal.walk_in')}</p>
                                                             <p className="text-[10px] text-gray-500 font-mono">{bill.billNumber}</p>
                                                         </div>
                                                     </div>
@@ -591,7 +607,7 @@ export default function NormalCustomersPage() {
                                                         {methodConfig.label}
                                                     </Badge>
                                                     <p className="text-[10px] text-gray-500">
-                                                        {format(new Date(bill.createdAt), 'dd MMM, hh:mm a')}
+                                                        {i18n.language === 'ml' ? new Intl.DateTimeFormat('ml-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: 'numeric', hour12: true }).format(new Date(bill.createdAt)) : format(new Date(bill.createdAt), 'dd MMM, hh:mm a')}
                                                     </p>
                                                 </div>
                                             </div>
@@ -705,24 +721,24 @@ export default function NormalCustomersPage() {
                                     <Receipt className="h-6 w-6 md:h-8 md:w-8 text-gray-400" />
                                 </div>
                                 <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">
-                                    {hasActiveFilters ? 'No transactions match' : 'No transactions'}
+                                    {hasActiveFilters ? t('wholesalers_list.empty.no_found') : t('customers.normal.no_transactions')}
                                 </h3>
                                 <p className="text-gray-500 mb-3 md:mb-4 text-sm">
                                     {hasActiveFilters
-                                        ? 'Try adjusting your filters'
-                                        : 'Create your first sale'
+                                        ? t('wholesalers_list.empty.adjust_filters')
+                                        : t('customers.normal.create_first')
                                     }
                                 </p>
                                 {hasActiveFilters ? (
                                     <Button onClick={clearFilters} variant="outline" size="sm">
                                         <X className="mr-2 h-4 w-4" />
-                                        Clear Filters
+                                        {t('wholesalers_list.filters.clear_all')}
                                     </Button>
                                 ) : (
                                     <Link href="/shopkeeper/billing">
                                         <Button size="sm" className="bg-gradient-to-r from-green-600 to-emerald-600">
                                             <Receipt className="mr-2 h-4 w-4" />
-                                            Create Bill
+                                            {t('billing.new_bill')}
                                         </Button>
                                     </Link>
                                 )}

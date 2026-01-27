@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, IndianRupee, User, Phone, MapPin, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ interface WholesalerFormProps {
 }
 
 function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
+    const { t } = useTranslation();
     const queryClient = useQueryClient();
     const createMutation = useMutation({
         mutationFn: async (data: any) => {
@@ -43,11 +45,11 @@ function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
             queryClient.invalidateQueries({ queryKey: ["wholesalers"] });
             queryClient.invalidateQueries({ queryKey: ["wholesaler-stats"] });
             onSuccess();
-            toast.success("Wholesaler created successfully");
+            toast.success(t("wholesalers_list.dialogs.success_add"));
         },
         onError: (error: any) => {
             toast.error(
-                error.response?.data?.message || "Failed to create wholesaler",
+                error.response?.data?.message || t("wholesalers_list.dialogs.error_add"),
             );
         },
     });
@@ -85,14 +87,14 @@ function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 mt-4 pb-4 md:pb-0">
             <div className="space-y-2">
                 <Label htmlFor="name" className="text-sm md:text-base">
-                    Wholesaler Name <span className="text-red-500">*</span>
+                    {t("wholesalers_list.dialogs.name")} <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                         id="name"
                         name="name"
-                        placeholder="Enter wholesaler name"
+                        placeholder={t("wholesalers_list.dialogs.name_placeholder")}
                         required
                         autoComplete="organization"
                         className="pl-10 h-10 md:h-11 text-base md:text-sm"
@@ -103,7 +105,7 @@ function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="phone" className="text-sm md:text-base">
-                        Phone Number <span className="text-red-500">*</span>
+                        {t("wholesalers_list.dialogs.phone")} <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -120,7 +122,7 @@ function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="whatsappNumber" className="text-sm md:text-base">WhatsApp</Label>
+                    <Label htmlFor="whatsappNumber" className="text-sm md:text-base">{t("wholesalers_list.dialogs.whatsapp")}</Label>
                     <div className="relative">
                         <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
@@ -138,14 +140,14 @@ function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
 
             <div className="space-y-2">
                 <Label htmlFor="address" className="text-sm md:text-base">
-                    Address <span className="text-red-500">*</span>
+                    {t("wholesalers_list.dialogs.address")} <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                         id="address"
                         name="address"
-                        placeholder="Enter complete address"
+                        placeholder={t("wholesalers_list.dialogs.address_placeholder")}
                         autoComplete="street-address"
                         required
                         className="pl-10 h-10 md:h-11 text-base md:text-sm"
@@ -155,14 +157,14 @@ function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
 
             <div className="space-y-2">
                 <Label htmlFor="place" className="text-sm md:text-base">
-                    Place / City
+                    {t("wholesalers_list.dialogs.place")}
                 </Label>
                 <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                         id="place"
                         name="place"
-                        placeholder="Enter place or city"
+                        placeholder={t("wholesalers_list.dialogs.place_placeholder")}
                         autoComplete="address-level2"
                         className="pl-10 h-10 md:h-11 text-base md:text-sm"
                     />
@@ -175,9 +177,9 @@ function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
                         htmlFor="initialPurchased"
                         className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2 text-sm md:text-base"
                     >
-                        Opening Balance (Optional)
+                        {t("wholesalers_list.dialogs.opening_balance")}
                         <span className="text-xs text-slate-500 font-normal">
-                            - Total purchased before using app
+                            {t("wholesalers_list.dialogs.opening_balance_desc")}
                         </span>
                     </Label>
                     <div className="relative">
@@ -203,14 +205,14 @@ function WholesalerForm({ onSuccess, onCancel }: WholesalerFormProps) {
                     onClick={onCancel}
                     className="flex-1 h-10 md:h-11 text-base md:text-sm"
                 >
-                    Cancel
+                    {t("wholesalers_list.dialogs.cancel")}
                 </Button>
                 <Button
                     type="submit"
                     className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 h-10 md:h-11 text-base md:text-sm font-medium"
                     disabled={createMutation.isPending}
                 >
-                    {createMutation.isPending ? "Creating..." : "Add Wholesaler"}
+                    {createMutation.isPending ? t("wholesalers_list.dialogs.creating") : t("wholesalers_list.dialogs.add_button")}
                 </Button>
             </div>
         </form>
@@ -222,6 +224,7 @@ interface AddWholesalerDialogProps {
 }
 
 export function AddWholesalerDialog({ trigger }: AddWholesalerDialogProps) {
+    const { t } = useTranslation();
     const queryClient = useQueryClient();
     const [isOpen, setIsOpen] = useState(false);
     const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -233,7 +236,7 @@ export function AddWholesalerDialog({ trigger }: AddWholesalerDialogProps) {
     const defaultTrigger = (
         <Button className="bg-gradient-to-r from-purple-600 to-pink-600 shadow-md hover:shadow-lg transition-all">
             <Plus className="mr-2 h-4 w-4" />
-            Add Wholesaler
+            {t("wholesalers_list.add_wholesaler")}
         </Button>
     );
 
@@ -245,9 +248,9 @@ export function AddWholesalerDialog({ trigger }: AddWholesalerDialogProps) {
                 </DialogTrigger>
                 <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Add New Wholesaler</DialogTitle>
+                        <DialogTitle>{t("wholesalers_list.dialogs.add_title")}</DialogTitle>
                         <DialogDescription>
-                            Create a new wholesaler account.
+                            {t("wholesalers_list.dialogs.add_desc")}
                         </DialogDescription>
                     </DialogHeader>
                     <WholesalerForm onSuccess={onSuccess} onCancel={() => setIsOpen(false)} />
@@ -263,9 +266,9 @@ export function AddWholesalerDialog({ trigger }: AddWholesalerDialogProps) {
             </SheetTrigger>
             <SheetContent side="bottom" className="rounded-t-[20px] max-h-[90vh] overflow-y-auto px-4 md:px-6 pb-6">
                 <SheetHeader className="text-left md:text-center mt-2">
-                    <SheetTitle>Add New Wholesaler</SheetTitle>
+                    <SheetTitle>{t("wholesalers_list.dialogs.add_title")}</SheetTitle>
                     <SheetDescription>
-                        Create a new wholesaler account and record initial balance.
+                        {t("wholesalers_list.dialogs.add_desc")}
                     </SheetDescription>
                 </SheetHeader>
                 <WholesalerForm onSuccess={onSuccess} onCancel={() => setIsOpen(false)} />

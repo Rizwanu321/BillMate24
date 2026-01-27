@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from 'react-i18next';
 import { Package, Phone, MapPin, MessageCircle, TrendingUp, Wallet, AlertTriangle, CheckCircle2, Sparkles, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -33,6 +34,7 @@ function formatCurrency(amount: number): string {
 
 
 export function WholesalerInfo({ wholesaler }: WholesalerInfoProps) {
+    const { t } = useTranslation();
     const paymentPercentage = wholesaler.totalPurchased > 0
         ? Math.round((wholesaler.totalPaid / wholesaler.totalPurchased) * 100)
         : 0;
@@ -78,19 +80,22 @@ export function WholesalerInfo({ wholesaler }: WholesalerInfoProps) {
                                     ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                                     : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
                                     }`}>
-                                    {wholesaler.isActive !== false ? '● Active' : '○ Inactive'}
+                                    {wholesaler.isActive !== false
+                                        ? t('wholesaler_detail.info.active')
+                                        : t('wholesaler_detail.info.inactive')
+                                    }
                                 </Badge>
                             </div>
 
                             <div className="flex items-center gap-2 mt-1.5">
                                 <Badge className="bg-teal-500/20 text-teal-300 border-teal-500/30 text-xs px-2.5 py-0.5 font-medium">
                                     <Sparkles className="h-3 w-3 mr-1.5" />
-                                    Wholesaler
+                                    {t('wholesaler_detail.info.wholesaler')}
                                 </Badge>
                                 <span className="text-slate-500 text-xs flex items-center gap-1">
                                     <Calendar className="h-3 w-3" />
-                                    <span className="md:hidden">Since {format(new Date(wholesaler.createdAt), 'MMM yy')}</span>
-                                    <span className="hidden md:inline">Since {format(new Date(wholesaler.createdAt), 'MMMM yyyy')}</span>
+                                    <span className="md:hidden">{t('wholesaler_detail.info.since', { date: format(new Date(wholesaler.createdAt), 'MMM yy') })}</span>
+                                    <span className="hidden md:inline">{t('wholesaler_detail.info.since', { date: format(new Date(wholesaler.createdAt), 'MMMM yyyy') })}</span>
                                 </span>
                             </div>
 
@@ -113,7 +118,7 @@ export function WholesalerInfo({ wholesaler }: WholesalerInfoProps) {
                                         className="flex items-center gap-2 px-3 py-2 bg-emerald-500/20 rounded-xl border border-emerald-500/30 hover:bg-emerald-500/30 transition-all active:scale-95 text-emerald-300"
                                     >
                                         <MessageCircle className="h-4 w-4" />
-                                        <span className="font-medium text-sm">WhatsApp</span>
+                                        <span className="font-medium text-sm">{t('wholesaler_payments.filters.upi')}</span>
                                     </a>
                                 )}
                             </div>
@@ -136,7 +141,7 @@ export function WholesalerInfo({ wholesaler }: WholesalerInfoProps) {
                         <div className="bg-slate-700/40 rounded-xl md:rounded-2xl p-3 md:p-4 border border-slate-600/30 text-center col-span-1">
                             <div className="flex items-center justify-center gap-1.5 mb-1.5">
                                 <TrendingUp className="h-3.5 w-3.5 md:h-4 md:w-4 text-sky-400" />
-                                <span className="text-[10px] md:text-xs text-slate-400 font-medium uppercase tracking-wide">Purchased</span>
+                                <span className="text-[10px] md:text-xs text-slate-400 font-medium uppercase tracking-wide">{t('wholesaler_detail.info.purchased')}</span>
                             </div>
                             <p className="text-lg md:text-xl font-bold text-white break-words">
                                 {formatCurrency(wholesaler.totalPurchased)}
@@ -147,7 +152,7 @@ export function WholesalerInfo({ wholesaler }: WholesalerInfoProps) {
                         <div className="bg-emerald-500/10 rounded-xl md:rounded-2xl p-3 md:p-4 border border-emerald-500/20 text-center col-span-1">
                             <div className="flex items-center justify-center gap-1.5 mb-1.5">
                                 <Wallet className="h-3.5 w-3.5 md:h-4 md:w-4 text-emerald-400" />
-                                <span className="text-[10px] md:text-xs text-emerald-400/80 font-medium uppercase tracking-wide">Paid</span>
+                                <span className="text-[10px] md:text-xs text-emerald-400/80 font-medium uppercase tracking-wide">{t('wholesaler_detail.info.paid')}</span>
                             </div>
                             <p className="text-lg md:text-xl font-bold text-emerald-400 break-words">
                                 {formatCurrency(wholesaler.totalPaid)}
@@ -163,18 +168,18 @@ export function WholesalerInfo({ wholesaler }: WholesalerInfoProps) {
                                 {wholesaler.outstandingDue > 0 ? (
                                     <>
                                         <AlertTriangle className="h-3.5 w-3.5 md:h-4 md:w-4 text-rose-400" />
-                                        <span className="text-[10px] md:text-xs text-rose-400/80 font-medium uppercase tracking-wide">Due</span>
+                                        <span className="text-[10px] md:text-xs text-rose-400/80 font-medium uppercase tracking-wide">{t('wholesaler_detail.info.due')}</span>
                                     </>
                                 ) : (
                                     <>
                                         <CheckCircle2 className="h-3.5 w-3.5 md:h-4 md:w-4 text-emerald-400" />
-                                        <span className="text-[10px] md:text-xs text-emerald-400/80 font-medium uppercase tracking-wide">Clear</span>
+                                        <span className="text-[10px] md:text-xs text-emerald-400/80 font-medium uppercase tracking-wide">{t('wholesaler_detail.info.clear')}</span>
                                     </>
                                 )}
                             </div>
                             <p className={`text-lg md:text-xl font-bold break-words ${wholesaler.outstandingDue > 0 ? 'text-rose-400' : 'text-emerald-400'
                                 }`}>
-                                {wholesaler.outstandingDue > 0 ? formatCurrency(Math.max(0, wholesaler.outstandingDue)) : '✓ Nil'}
+                                {wholesaler.outstandingDue > 0 ? formatCurrency(Math.max(0, wholesaler.outstandingDue)) : `✓ ${t('history.nil')}`}
                             </p>
                         </div>
                     </div>
@@ -182,7 +187,7 @@ export function WholesalerInfo({ wholesaler }: WholesalerInfoProps) {
                     {/* Payment Progress */}
                     <div className="bg-slate-700/40 rounded-xl p-3 md:p-4 border border-slate-600/30">
                         <div className="flex items-center justify-between mb-2.5">
-                            <span className="text-sm font-medium text-slate-300">Payment Progress</span>
+                            <span className="text-sm font-medium text-slate-300">{t('wholesaler_detail.info.progress')}</span>
                             <div className="flex items-center gap-1.5">
                                 <span className="text-xl md:text-2xl font-bold text-white">{paymentPercentage}</span>
                                 <span className="text-sm text-slate-400">%</span>

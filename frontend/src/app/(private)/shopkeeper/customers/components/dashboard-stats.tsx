@@ -3,6 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, IndianRupee, CreditCard, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface CustomerDashboardStatsProps {
     totalCustomers: number;
@@ -28,6 +29,7 @@ export function CustomerDashboardStats({
     totalPaid,
     totalOutstanding,
 }: CustomerDashboardStatsProps) {
+    const { t } = useTranslation();
 
     // Calculate percentage
     // Note: If using "All Time" stats, Sales = Paid + Outstanding
@@ -44,12 +46,12 @@ export function CustomerDashboardStats({
                             <Users className="h-4 w-4 md:h-5 md:w-5" />
                         </div>
                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                            Total
+                            {t('dashboard.total')}
                         </Badge>
                     </div>
                     <h3 className="text-2xl md:text-3xl font-bold">{totalCustomers}</h3>
                     <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
-                        Due Customers
+                        {t('sidebar.due_customers')}
                     </p>
                 </CardContent>
                 <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />
@@ -63,14 +65,14 @@ export function CustomerDashboardStats({
                             <IndianRupee className="h-4 w-4 md:h-5 md:w-5" />
                         </div>
                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                            Lifetime
+                            {t('dashboard.lifetime')}
                         </Badge>
                     </div>
                     <h3 className="text-lg md:text-2xl font-bold">
                         {formatCurrency(totalSales)}
                     </h3>
                     <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
-                        Total Sales
+                        {t('dashboard.total_sales')}
                     </p>
                 </CardContent>
                 <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />
@@ -91,7 +93,7 @@ export function CustomerDashboardStats({
                         {formatCurrency(totalPaid)}
                     </h3>
                     <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
-                        Amount Collected
+                        {t('dashboard.collected')}
                     </p>
                 </CardContent>
                 <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />
@@ -109,14 +111,14 @@ export function CustomerDashboardStats({
                         </div>
                         <Badge className={`border-0 text-[10px] md:text-xs px-1.5 md:px-2 ${totalOutstanding > 0 ? 'bg-white/20 text-white' : 'bg-white text-green-600'
                             }`}>
-                            {totalOutstanding > 0 ? 'Due' : '✓'}
+                            {totalOutstanding > 0 ? t('billing.due') : '✓'}
                         </Badge>
                     </div>
                     <h3 className="text-lg md:text-2xl font-bold">
                         {formatCurrency(totalOutstanding)}
                     </h3>
                     <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
-                        Total Outstanding
+                        {t('dashboard.total_due')}
                     </p>
                 </CardContent>
                 <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />

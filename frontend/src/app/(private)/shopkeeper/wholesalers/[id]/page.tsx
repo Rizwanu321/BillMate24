@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -65,6 +66,7 @@ interface PaginatedResponse<T> {
 const ITEMS_PER_PAGE = 10;
 
 export default function WholesalerDetailPage() {
+    const { t } = useTranslation();
     const params = useParams();
     const router = useRouter();
     const id = params.id as string;
@@ -150,11 +152,11 @@ export default function WholesalerDetailPage() {
     if (wholesalerLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/20">
-                <Header title="Details" />
+                <Header title={t('wholesaler_detail.header_loading')} />
                 <div className="p-4 md:p-6 flex items-center justify-center min-h-[60vh]">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-10 w-10 md:h-12 md:w-12 border-t-2 border-b-2 border-purple-500 mx-auto" />
-                        <p className="text-gray-500 mt-3 md:mt-4 text-sm md:text-base">Loading...</p>
+                        <p className="text-gray-500 mt-3 md:mt-4 text-sm md:text-base">{t('wholesalers_list.empty.loading')}</p>
                     </div>
                 </div>
             </div>
@@ -164,18 +166,18 @@ export default function WholesalerDetailPage() {
     if (!wholesaler) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/20">
-                <Header title="Not Found" />
+                <Header title={t('wholesaler_detail.not_found.title')} />
                 <div className="p-4 md:p-6">
                     <Card className="max-w-md mx-auto border-0 shadow-lg rounded-xl">
                         <CardContent className="pt-8 md:pt-12 pb-6 md:pb-8 text-center">
                             <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-3 md:mb-4">
                                 <Package className="h-6 w-6 md:h-8 md:w-8 text-red-400" />
                             </div>
-                            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-1 md:mb-2">Not found</h2>
-                            <p className="text-gray-500 mb-4 md:mb-6 text-sm md:text-base">This wholesaler doesn't exist or was removed.</p>
+                            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-1 md:mb-2">{t('wholesaler_detail.not_found.title')}</h2>
+                            <p className="text-gray-500 mb-4 md:mb-6 text-sm md:text-base">{t('wholesaler_detail.not_found.desc')}</p>
                             <Button onClick={() => router.push('/shopkeeper/wholesalers')} className="bg-purple-600 hover:bg-purple-700 h-9 text-sm">
                                 <ArrowLeft className="mr-1.5 h-4 w-4" />
-                                Back
+                                {t('wholesaler_detail.not_found.back')}
                             </Button>
                         </CardContent>
                     </Card>
@@ -199,12 +201,12 @@ export default function WholesalerDetailPage() {
                             size="sm"
                         >
                             <ArrowLeft className="lg:mr-2 h-4 w-4" />
-                            <span className="hidden lg:inline">Back</span>
+                            <span className="hidden lg:inline">{t('wholesaler_detail.not_found.back')}</span>
                         </Button>
                         <div className="hidden lg:block h-8 w-px bg-gray-200" />
                         <nav className="hidden lg:flex items-center gap-2 text-sm text-gray-500">
                             <Link href="/shopkeeper/wholesalers" className="hover:text-purple-600 transition-colors">
-                                Wholesalers
+                                {t('wholesaler_detail.breadcrumb.wholesalers')}
                             </Link>
                             <span>/</span>
                             <span className="text-gray-900 font-medium truncate max-w-[200px]">{wholesaler.name}</span>
@@ -215,13 +217,13 @@ export default function WholesalerDetailPage() {
                         <Link href="/shopkeeper/wholesalers/dashboard" className="hidden lg:block">
                             <Button variant="outline" size="sm" className="shadow-sm">
                                 <LayoutDashboard className="h-4 w-4 mr-2" />
-                                Dashboard
+                                {t('common.dashboard')}
                             </Button>
                         </Link>
                         <Link href="/shopkeeper/billing" className="hidden lg:block">
                             <Button variant="outline" size="sm" className="shadow-sm">
                                 <FileText className="h-4 w-4 mr-2" />
-                                New Purchase
+                                {t('wholesaler_detail.buttons.new_purchase')}
                             </Button>
                         </Link>
                         <RecordPaymentDialog wholesaler={wholesaler} />
@@ -239,7 +241,7 @@ export default function WholesalerDetailPage() {
                             className="flex items-center justify-center gap-1.5 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white px-2 md:px-6 py-2 md:py-2.5 text-xs md:text-sm rounded-lg"
                         >
                             <Receipt className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                            <span className="hidden sm:inline">Purchase</span> Bills
+                            <span className="hidden sm:inline">{t('history.purchases')}</span> {t('wholesaler_detail.tabs.purchase_bills')}
                             <Badge variant="secondary" className="ml-0.5 md:ml-1 bg-purple-100 text-purple-700 data-[state=active]:bg-white/20 data-[state=active]:text-white text-[10px] md:text-xs px-1.5">
                                 {billsPagination.total}
                             </Badge>
@@ -249,7 +251,7 @@ export default function WholesalerDetailPage() {
                             className="flex items-center justify-center gap-1.5 md:gap-2 data-[state=active]:bg-green-600 data-[state=active]:text-white px-2 md:px-6 py-2 md:py-2.5 text-xs md:text-sm rounded-lg"
                         >
                             <CreditCard className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                            Payments
+                            {t('wholesaler_detail.tabs.payments')}
                             <Badge variant="secondary" className="ml-0.5 md:ml-1 bg-green-100 text-green-700 data-[state=active]:bg-white/20 data-[state=active]:text-white text-[10px] md:text-xs px-1.5">
                                 {payments.length}
                             </Badge>
@@ -264,7 +266,7 @@ export default function WholesalerDetailPage() {
                                         <div className="p-1.5 md:p-2 rounded-lg bg-blue-100">
                                             <Receipt className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
                                         </div>
-                                        <span className="hidden sm:inline">Purchase</span> Transactions
+                                        {t('wholesaler_detail.transactions.title')}
                                     </CardTitle>
                                     <TransactionFilters
                                         filters={filters}
@@ -296,7 +298,7 @@ export default function WholesalerDetailPage() {
                                     <div className="p-1.5 md:p-2 rounded-lg bg-green-100">
                                         <CreditCard className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                                     </div>
-                                    Payment History
+                                    {t('wholesaler_detail.payments_table.title')}
                                     {payments.length > 0 && (
                                         <Badge className="ml-1 md:ml-2 bg-green-100 text-green-700 border-0 text-[10px] md:text-xs">
                                             {payments.length}

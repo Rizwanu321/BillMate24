@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { SidebarItem as SidebarItemType } from './sidebar-config';
 import { Features } from '@/types';
@@ -18,6 +19,13 @@ interface SidebarItemProps {
 
 export function SidebarItem({ item, hasFeature, isCollapsed, isOpen = false, onToggle }: SidebarItemProps) {
     const pathname = usePathname();
+    const { t } = useTranslation();
+
+    // Helper to get translation key from title
+    const getTranslationKey = (title: string) => {
+        if (title.startsWith('sidebar.')) return title;
+        return `sidebar.${title.toLowerCase().replace(/\s+/g, '_')}`;
+    };
 
     // Check if item should be visible based on feature
     if (item.feature && !hasFeature(item.feature)) {
@@ -66,7 +74,7 @@ export function SidebarItem({ item, hasFeature, isCollapsed, isOpen = false, onT
                         ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
                         : 'text-gray-400 hover:text-white hover:bg-white/10'
                 )}
-                title={item.title}
+                title={t(getTranslationKey(item.title))}
             >
                 <Icon className="h-5 w-5" />
             </Link>
@@ -87,9 +95,9 @@ export function SidebarItem({ item, hasFeature, isCollapsed, isOpen = false, onT
                             : 'text-gray-400 hover:text-white hover:bg-white/10'
                     )}
                 >
-                    <div className="flex items-center gap-3">
-                        <Icon className="h-5 w-5" />
-                        <span className="font-medium">{item.title}</span>
+                    <div className="flex items-center gap-3 min-w-0">
+                        <Icon className="h-5 w-5 flex-shrink-0" />
+                        <span className="font-medium truncate">{t(getTranslationKey(item.title))}</span>
                     </div>
                     <div className={cn(
                         'transition-transform duration-200',
@@ -123,8 +131,8 @@ export function SidebarItem({ item, hasFeature, isCollapsed, isOpen = false, onT
                                             : 'text-gray-400 hover:text-white hover:bg-white/5'
                                     )}
                                 >
-                                    <ChildIcon className="h-4 w-4" />
-                                    <span>{child.title}</span>
+                                    <ChildIcon className="h-4 w-4 flex-shrink-0" />
+                                    <span className="truncate">{t(getTranslationKey(child.title))}</span>
                                 </Link>
                             );
                         })}
@@ -145,8 +153,8 @@ export function SidebarItem({ item, hasFeature, isCollapsed, isOpen = false, onT
                     : 'text-gray-400 hover:text-white hover:bg-white/10'
             )}
         >
-            <Icon className="h-5 w-5" />
-            <span className="font-medium">{item.title}</span>
+            <Icon className="h-5 w-5 flex-shrink-0" />
+            <span className="font-medium truncate">{t(getTranslationKey(item.title))}</span>
         </Link>
     );
 }

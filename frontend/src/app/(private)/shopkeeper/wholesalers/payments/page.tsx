@@ -1,6 +1,7 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -9,6 +10,7 @@ import {
     Package, TrendingUp, CreditCard, Banknote, Smartphone, Wallet,
     LayoutDashboard, Users, Plus, CheckCircle
 } from 'lucide-react';
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 
 import { Header } from '@/components/app/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,7 +50,6 @@ import {
 import { Combobox, ComboboxOption } from '@/components/ui/combobox';
 import api from '@/config/axios';
 import { toast } from 'sonner';
-import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 
 interface Wholesaler {
     _id: string;
@@ -86,35 +87,35 @@ interface FiltersState {
 }
 
 const filterLabels: Record<TimeFilterOption, string> = {
-    all: 'All Time',
-    today: 'Today',
-    this_week: 'This Week',
-    this_month: 'This Month',
-    this_year: 'This Year',
-    custom: 'Custom Range',
+    all: 'history.time_filters.all',
+    today: 'history.time_filters.today',
+    this_week: 'history.time_filters.this_week',
+    this_month: 'history.time_filters.this_month',
+    this_year: 'history.time_filters.this_year',
+    custom: 'history.time_filters.custom',
 };
 
-const paymentMethodConfig: Record<string, { color: string; bgColor: string; icon: React.ReactNode; iconSmall: React.ReactNode; label: string }> = {
+const paymentMethodConfig: Record<string, { color: string; bgColor: string; icon: React.ReactNode; iconSmall: React.ReactNode; labelKey: string }> = {
     cash: {
         color: 'text-green-700',
         bgColor: 'bg-green-100',
         icon: <Banknote className="h-4 w-4" />,
         iconSmall: <Banknote className="h-3.5 w-3.5" />,
-        label: 'Cash'
+        labelKey: 'wholesaler_payments.filters.cash'
     },
     card: {
         color: 'text-blue-700',
         bgColor: 'bg-blue-100',
         icon: <CreditCard className="h-4 w-4" />,
         iconSmall: <CreditCard className="h-3.5 w-3.5" />,
-        label: 'Card'
+        labelKey: 'wholesaler_payments.filters.card'
     },
     online: {
         color: 'text-purple-700',
         bgColor: 'bg-purple-100',
         icon: <Smartphone className="h-4 w-4" />,
         iconSmall: <Smartphone className="h-3.5 w-3.5" />,
-        label: 'Online/UPI'
+        labelKey: 'wholesaler_payments.filters.upi'
     },
 };
 
@@ -150,6 +151,7 @@ function getDateRangeForFilter(option: TimeFilterOption): { startDate?: string; 
 const ITEMS_PER_PAGE = 10;
 
 export default function WholesalerPaymentsPage() {
+    const { t, i18n } = useTranslation();
     const queryClient = useQueryClient();
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const [selectedWholesaler, setSelectedWholesaler] = useState<string>('');
@@ -214,10 +216,10 @@ export default function WholesalerPaymentsPage() {
             setIsPaymentOpen(false);
             setSelectedWholesaler('');
             setPaymentMethod('cash');
-            toast.success('Payment recorded successfully');
+            toast.success(t('wholesaler_payments.messages.success'));
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Failed to record payment');
+            toast.error(error.response?.data?.message || t('wholesaler_payments.messages.error'));
         },
     });
 
@@ -231,13 +233,13 @@ export default function WholesalerPaymentsPage() {
         const wholesaler = wholesalers?.find(w => w._id === selectedWholesaler);
 
         if (!wholesaler) {
-            toast.error('Please select a wholesaler');
+            toast.error(t('wholesaler_payments.messages.select_wholesaler'));
             return;
         }
 
         const amount = parseFloat(formData.get('amount') as string);
         if (!amount || amount <= 0) {
-            toast.error('Please enter a valid amount');
+            toast.error(t('wholesaler_payments.messages.invalid_amount'));
             return;
         }
 
@@ -292,9 +294,13 @@ export default function WholesalerPaymentsPage() {
 
     const getTimeFilterLabel = () => {
         if (filters.timeFilter === 'custom' && filters.startDate && filters.endDate) {
+            if (i18n.language === 'ml') {
+                const formatter = new Intl.DateTimeFormat('ml-IN', { day: 'numeric', month: 'short' });
+                return `${formatter.format(new Date(filters.startDate))} - ${formatter.format(new Date(filters.endDate))}`;
+            }
             return `${format(new Date(filters.startDate), 'dd MMM')} - ${format(new Date(filters.endDate), 'dd MMM')}`;
         }
-        return filterLabels[filters.timeFilter];
+        return t(filterLabels[filters.timeFilter]);
     };
 
     const hasActiveFilters = filters.search || filters.timeFilter !== 'all' || filters.paymentMethod !== 'all';
@@ -307,9 +313,9 @@ export default function WholesalerPaymentsPage() {
         return allWholesalers.map((w) => ({
             value: w._id,
             label: w.name,
-            subLabel: w.outstandingDue > 0 ? `Due: ${formatCurrency(w.outstandingDue)}` : undefined,
+            subLabel: w.outstandingDue > 0 ? `${t('wholesaler_payments.stats.due')}: ${formatCurrency(w.outstandingDue)}` : undefined,
         }));
-    }, [allWholesalers]);
+    }, [allWholesalers, t]);
 
     const payments = paymentsData?.data || [];
     const pagination = paymentsData?.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 };
@@ -336,7 +342,7 @@ export default function WholesalerPaymentsPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/20">
-            <Header title="Payments" />
+            <Header title={t('wholesaler_payments.subtitle')} />
 
             <div className="p-3 md:p-6">
                 {/* Page Header */}
@@ -344,36 +350,45 @@ export default function WholesalerPaymentsPage() {
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                                <span className="hidden sm:inline">Payment Management</span>
-                                <span className="sm:hidden">Payments</span>
+                                <span className="hidden sm:inline">{t('wholesaler_payments.title')}</span>
+                                <span className="sm:hidden">{t('wholesaler_payments.subtitle')}</span>
                             </h2>
                             <CreditCard className="h-5 w-5 md:h-8 md:w-8 text-emerald-600" />
                         </div>
                         <p className="text-gray-600 mt-0.5 md:mt-1 flex items-center gap-1.5 md:gap-2 text-xs md:text-base">
                             <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                            <span className="hidden md:inline">{format(new Date(), 'EEEE, MMMM d, yyyy')}</span>
-                            <span className="md:hidden">{format(new Date(), 'EEE, MMM d')}</span>
+                            {i18n.language === 'ml' ? (
+                                <>
+                                    <span className="hidden md:inline">{new Intl.DateTimeFormat('ml-IN', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(new Date())}</span>
+                                    <span className="md:hidden">{new Intl.DateTimeFormat('ml-IN', { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date())}</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="hidden md:inline">{format(new Date(), 'EEEE, MMMM d, yyyy')}</span>
+                                    <span className="md:hidden">{format(new Date(), 'EEE, MMM d')}</span>
+                                </>
+                            )}
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
                         <Link href="/shopkeeper/wholesalers/dashboard" className="hidden lg:block">
                             <Button variant="outline" className="shadow-sm">
                                 <LayoutDashboard className="h-4 w-4 mr-2" />
-                                Dashboard
+                                {t('common.dashboard')}
                             </Button>
                         </Link>
                         <Link href="/shopkeeper/wholesalers" className="hidden lg:block">
                             <Button variant="outline" className="shadow-sm">
                                 <Users className="h-4 w-4 mr-2" />
-                                Wholesalers
+                                {t('common.wholesalers')}
                             </Button>
                         </Link>
                         <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
                             <DialogTrigger asChild>
                                 <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25 h-9 md:h-10 px-3 md:px-4 text-sm">
                                     <Plus className="mr-1.5 md:mr-2 h-4 w-4" />
-                                    <span className="hidden sm:inline">Record Payment</span>
-                                    <span className="sm:hidden">Record</span>
+                                    <span className="hidden sm:inline">{t('wholesaler_payments.record_payment')}</span>
+                                    <span className="sm:hidden">{t('wholesaler_payments.record_payment_short')}</span>
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-lg">
@@ -383,8 +398,8 @@ export default function WholesalerPaymentsPage() {
                                             <IndianRupee className="h-5 w-5 md:h-6 md:w-6" />
                                         </div>
                                         <div>
-                                            <DialogTitle className="text-lg md:text-xl">Record Payment</DialogTitle>
-                                            <p className="text-xs md:text-sm text-gray-500 mt-0.5">Pay outstanding dues</p>
+                                            <DialogTitle className="text-lg md:text-xl">{t('wholesaler_payments.record_payment')}</DialogTitle>
+                                            <p className="text-xs md:text-sm text-gray-500 mt-0.5">{t('wholesaler_payments.record_desc')}</p>
                                         </div>
                                     </div>
                                 </DialogHeader>
@@ -392,24 +407,24 @@ export default function WholesalerPaymentsPage() {
                                     <div className="space-y-2">
                                         <Label className="flex items-center gap-2 text-sm">
                                             <Package className="h-4 w-4 text-gray-400" />
-                                            Wholesaler <span className="text-red-500">*</span>
+                                            {t('wholesaler_payments.form.wholesaler')} <span className="text-red-500">*</span>
                                         </Label>
                                         <Combobox
                                             options={wholesalerOptions}
                                             value={selectedWholesaler}
                                             onValueChange={handleWholesalerSelect}
-                                            placeholder="Search wholesaler..."
-                                            emptyMessage="No wholesaler found"
+                                            placeholder={t('wholesaler_payments.messages.select_wholesaler')}
+                                            emptyMessage={t('wholesaler_payments.messages.no_wholesaler_found')}
                                             className="w-full"
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="amount" className="flex items-center gap-2 text-sm">
                                             <IndianRupee className="h-4 w-4 text-gray-400" />
-                                            Amount <span className="text-red-500">*</span>
+                                            {t('wholesaler_payments.form.amount')} <span className="text-red-500">*</span>
                                         </Label>
                                         <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">â‚¹</span>
                                             <Input
                                                 id="amount"
                                                 name="amount"
@@ -424,7 +439,7 @@ export default function WholesalerPaymentsPage() {
                                     <div className="space-y-2">
                                         <Label className="flex items-center gap-2 text-sm">
                                             <CreditCard className="h-4 w-4 text-gray-400" />
-                                            Method <span className="text-red-500">*</span>
+                                            {t('wholesaler_payments.form.method')} <span className="text-red-500">*</span>
                                         </Label>
                                         <div className="grid grid-cols-3 gap-2 md:gap-3">
                                             {Object.entries(paymentMethodConfig).map(([key, config]) => (
@@ -439,14 +454,14 @@ export default function WholesalerPaymentsPage() {
                                                     onClick={() => setPaymentMethod(key)}
                                                 >
                                                     {config.iconSmall}
-                                                    <span className="ml-1.5">{config.label.split('/')[0]}</span>
+                                                    <span className="ml-1.5">{t(config.labelKey).split('/')[0]}</span>
                                                 </Button>
                                             ))}
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="notes" className="text-sm">Notes (Optional)</Label>
-                                        <Input id="notes" name="notes" placeholder="Add a note..." className="h-10 md:h-11" />
+                                        <Label htmlFor="notes" className="text-sm">{t('wholesaler_payments.form.notes')}</Label>
+                                        <Input id="notes" name="notes" placeholder={t('wholesaler_payments.form.notes_placeholder')} className="h-10 md:h-11" />
                                     </div>
                                     <div className="flex gap-2 md:gap-3 pt-2">
                                         <Button
@@ -455,7 +470,7 @@ export default function WholesalerPaymentsPage() {
                                             onClick={() => setIsPaymentOpen(false)}
                                             className="flex-1 h-10"
                                         >
-                                            Cancel
+                                            {t('common.cancel')}
                                         </Button>
                                         <Button
                                             type="submit"
@@ -465,13 +480,13 @@ export default function WholesalerPaymentsPage() {
                                             {paymentMutation.isPending ? (
                                                 <span className="flex items-center gap-2">
                                                     <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                                                    <span className="hidden sm:inline">Recording...</span>
+                                                    <span className="hidden sm:inline">{t('wholesaler_payments.form.recording')}</span>
                                                 </span>
                                             ) : (
                                                 <span className="flex items-center gap-2">
                                                     <CheckCircle className="h-4 w-4" />
-                                                    <span className="hidden sm:inline">Record Payment</span>
-                                                    <span className="sm:hidden">Record</span>
+                                                    <span className="hidden sm:inline">{t('wholesaler_payments.record_payment')}</span>
+                                                    <span className="sm:hidden">{t('wholesaler_payments.record_payment_short')}</span>
                                                 </span>
                                             )}
                                         </Button>
@@ -490,15 +505,18 @@ export default function WholesalerPaymentsPage() {
                                 <div className="p-1.5 md:p-2.5 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
                                     <IndianRupee className="h-4 w-4 md:h-5 md:w-5" />
                                 </div>
-                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5">Due</Badge>
+                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5">{t('wholesaler_payments.stats.due')}</Badge>
                             </div>
                             <h3 className="text-lg md:text-2xl lg:text-3xl font-bold">
                                 <span className="md:hidden">{formatCurrency(totalOutstanding)}</span>
                                 <span className="hidden md:inline">{formatCurrency(totalOutstanding)}</span>
                             </h3>
-                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Outstanding</p>
+                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">{t('wholesaler_payments.stats.outstanding')}</p>
                             <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 text-[10px] md:text-sm text-white/70">
-                                From {wholesalersWithDues.length} wholesaler{wholesalersWithDues.length !== 1 ? 's' : ''}
+                                {wholesalersWithDues.length === 1
+                                    ? t('wholesaler_payments.stats.from_count', { count: wholesalersWithDues.length })
+                                    : t('wholesaler_payments.stats.from_count_plural', { count: wholesalersWithDues.length })
+                                }
                             </div>
                         </CardContent>
                         <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />
@@ -510,12 +528,12 @@ export default function WholesalerPaymentsPage() {
                                 <div className="p-1.5 md:p-2.5 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
                                     <Building2 className="h-4 w-4 md:h-5 md:w-5" />
                                 </div>
-                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5">Pending</Badge>
+                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5">{t('wholesaler_payments.stats.pending')}</Badge>
                             </div>
                             <h3 className="text-lg md:text-2xl lg:text-3xl font-bold">{wholesalersWithDues.length}</h3>
-                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">With Dues</p>
+                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">{t('wholesaler_payments.stats.with_dues')}</p>
                             <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 text-[10px] md:text-sm text-white/70">
-                                Of {allWholesalers.length} total
+                                {t('wholesaler_payments.stats.of_total', { total: allWholesalers.length })}
                             </div>
                         </CardContent>
                         <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />
@@ -527,15 +545,15 @@ export default function WholesalerPaymentsPage() {
                                 <div className="p-1.5 md:p-2.5 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
                                     <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />
                                 </div>
-                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5">Page</Badge>
+                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5">{t('wholesaler_payments.stats.page_paid')}</Badge>
                             </div>
                             <h3 className="text-lg md:text-2xl lg:text-3xl font-bold">
                                 <span className="md:hidden">{formatCurrency(totalPaidInPeriod)}</span>
                                 <span className="hidden md:inline">{formatCurrency(totalPaidInPeriod)}</span>
                             </h3>
-                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Paid</p>
+                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">{t('wholesaler_payments.stats.paid')}</p>
                             <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 text-[10px] md:text-sm text-white/70">
-                                {payments.length} payment{payments.length !== 1 ? 's' : ''}
+                                {payments.length} {t('wholesaler_payments.stats.total_payments')}
                             </div>
                         </CardContent>
                         <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />
@@ -547,10 +565,10 @@ export default function WholesalerPaymentsPage() {
                                 <div className="p-1.5 md:p-2.5 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
                                     <Calendar className="h-4 w-4 md:h-5 md:w-5" />
                                 </div>
-                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5">Total</Badge>
+                                <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5">{t('wholesaler_payments.stats.total')}</Badge>
                             </div>
                             <h3 className="text-lg md:text-2xl lg:text-3xl font-bold">{pagination.total}</h3>
-                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">Payments</p>
+                            <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">{t('wholesaler_payments.stats.total_payments')}</p>
                             <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 text-[10px] md:text-sm text-white/70">
                                 {getTimeFilterLabel()}
                             </div>
@@ -569,8 +587,8 @@ export default function WholesalerPaymentsPage() {
                                     <div className="p-1.5 md:p-2 rounded-lg bg-green-100">
                                         <CreditCard className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                                     </div>
-                                    <span className="hidden sm:inline">Payment History</span>
-                                    <span className="sm:hidden">Payments</span>
+                                    <span className="hidden sm:inline">{t('wholesaler_payments.table.title')}</span>
+                                    <span className="sm:hidden">{t('wholesaler_payments.subtitle')}</span>
                                     <Badge variant="secondary" className="ml-1 md:ml-2 bg-green-50 text-green-700 text-[10px] md:text-xs">
                                         {pagination.total}
                                     </Badge>
@@ -581,7 +599,7 @@ export default function WholesalerPaymentsPage() {
                                 <div className="relative flex-1 max-w-[180px] md:max-w-[256px]">
                                     <Search className="absolute left-2.5 md:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
                                     <Input
-                                        placeholder="Search..."
+                                        placeholder={t('wholesaler_payments.filters.search')}
                                         value={filters.search}
                                         onChange={(e) => {
                                             setFilters(prev => ({ ...prev, search: e.target.value }));
@@ -596,7 +614,7 @@ export default function WholesalerPaymentsPage() {
                             <div className="flex gap-2 items-center overflow-x-auto pb-1 -mx-1 px-1">
                                 <div className="hidden md:flex items-center gap-2 text-sm text-gray-600 flex-shrink-0">
                                     <Filter className="h-4 w-4" />
-                                    <span className="font-medium">Filters:</span>
+                                    <span className="font-medium">{t('wholesalers_list.filters.filters_label')}</span>
                                 </div>
 
                                 {/* Date Filter */}
@@ -605,7 +623,7 @@ export default function WholesalerPaymentsPage() {
                                         <Button variant="outline" size="sm" className="h-8 bg-white text-xs md:text-sm px-2 md:px-3 flex-shrink-0">
                                             <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2 text-purple-500" />
                                             <span className="hidden sm:inline">{getTimeFilterLabel()}</span>
-                                            <span className="sm:hidden">{filters.timeFilter === 'all' ? 'All' : '...'}</span>
+                                            <span className="sm:hidden">{filters.timeFilter === 'all' ? t('wholesalers_list.stats.all_badge') : '...'}</span>
                                             <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4 ml-1 md:ml-2 text-gray-400" />
                                         </Button>
                                     </DropdownMenuTrigger>
@@ -616,12 +634,12 @@ export default function WholesalerPaymentsPage() {
                                                 onClick={() => handleTimeFilterChange(option)}
                                                 className={filters.timeFilter === option ? 'bg-purple-50 text-purple-700' : ''}
                                             >
-                                                {filterLabels[option]}
+                                                {t(filterLabels[option])}
                                             </DropdownMenuItem>
                                         ))}
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem onClick={() => handleTimeFilterChange('custom')}>
-                                            Custom Range...
+                                            {t('history.time_filters.custom')}...
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -635,26 +653,26 @@ export default function WholesalerPaymentsPage() {
                                     }}
                                 >
                                     <SelectTrigger className="w-[100px] md:w-[140px] h-8 bg-white text-xs md:text-sm flex-shrink-0">
-                                        <SelectValue placeholder="Method" />
+                                        <SelectValue placeholder={t('wholesaler_payments.form.method')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Methods</SelectItem>
+                                        <SelectItem value="all">{t('wholesaler_payments.filters.all_methods')}</SelectItem>
                                         <SelectItem value="cash">
                                             <span className="flex items-center gap-2">
                                                 <Banknote className="h-3 w-3 text-green-600" />
-                                                Cash
+                                                {t('wholesaler_payments.filters.cash')}
                                             </span>
                                         </SelectItem>
                                         <SelectItem value="card">
                                             <span className="flex items-center gap-2">
                                                 <CreditCard className="h-3 w-3 text-blue-600" />
-                                                Card
+                                                {t('wholesaler_payments.filters.card')}
                                             </span>
                                         </SelectItem>
                                         <SelectItem value="online">
                                             <span className="flex items-center gap-2">
                                                 <Smartphone className="h-3 w-3 text-purple-600" />
-                                                UPI
+                                                {t('wholesaler_payments.filters.upi')}
                                             </span>
                                         </SelectItem>
                                     </SelectContent>
@@ -669,7 +687,7 @@ export default function WholesalerPaymentsPage() {
                                         className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 px-2 flex-shrink-0"
                                     >
                                         <X className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                        <span className="hidden sm:inline ml-1">Clear</span>
+                                        <span className="hidden sm:inline ml-1">{t('wholesalers_list.filters.clear_dues')}</span>
                                     </Button>
                                 )}
                             </div>
@@ -679,7 +697,7 @@ export default function WholesalerPaymentsPage() {
                         {isLoading ? (
                             <div className="p-8 md:p-12 text-center">
                                 <div className="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-t-2 border-b-2 border-green-500 mx-auto" />
-                                <p className="text-gray-500 mt-3 md:mt-4 text-sm md:text-base">Loading...</p>
+                                <p className="text-gray-500 mt-3 md:mt-4 text-sm md:text-base">{t('wholesalers_list.empty.loading')}</p>
                             </div>
                         ) : payments && payments.length > 0 ? (
                             <>
@@ -688,11 +706,11 @@ export default function WholesalerPaymentsPage() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-                                                <TableHead className="font-semibold">Wholesaler</TableHead>
-                                                <TableHead className="font-semibold">Amount</TableHead>
-                                                <TableHead className="font-semibold">Method</TableHead>
-                                                <TableHead className="font-semibold">Date & Time</TableHead>
-                                                <TableHead className="font-semibold">Notes</TableHead>
+                                                <TableHead className="font-semibold">{t('wholesaler_payments.table.wholesaler')}</TableHead>
+                                                <TableHead className="font-semibold">{t('wholesaler_payments.table.amount')}</TableHead>
+                                                <TableHead className="font-semibold">{t('wholesaler_payments.table.method')}</TableHead>
+                                                <TableHead className="font-semibold">{t('wholesaler_payments.table.date_time')}</TableHead>
+                                                <TableHead className="font-semibold">{t('wholesaler_payments.table.notes')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -701,7 +719,7 @@ export default function WholesalerPaymentsPage() {
                                                     color: 'text-gray-700',
                                                     bgColor: 'bg-gray-100',
                                                     icon: <Wallet className="h-4 w-4" />,
-                                                    label: payment.paymentMethod
+                                                    labelKey: 'wholesaler_payments.filters.method_placeholder'
                                                 };
 
                                                 return (
@@ -722,7 +740,7 @@ export default function WholesalerPaymentsPage() {
                                                         <TableCell>
                                                             <Badge className={`border-0 flex items-center gap-1.5 w-fit ${config.bgColor} ${config.color}`}>
                                                                 {config.icon}
-                                                                {config.label}
+                                                                {t(config.labelKey)}
                                                             </Badge>
                                                         </TableCell>
                                                         <TableCell className="text-gray-600">
@@ -756,7 +774,7 @@ export default function WholesalerPaymentsPage() {
                                             color: 'text-gray-700',
                                             bgColor: 'bg-gray-100',
                                             iconSmall: <Wallet className="h-3.5 w-3.5" />,
-                                            label: payment.paymentMethod
+                                            labelKey: 'wholesaler_payments.filters.method_placeholder'
                                         };
 
                                         return (
@@ -782,14 +800,14 @@ export default function WholesalerPaymentsPage() {
                                                     {/* Payment Method Badge */}
                                                     <Badge className={`border-0 flex items-center gap-1 text-[10px] px-2 py-0.5 flex-shrink-0 ${config.bgColor} ${config.color}`}>
                                                         {config.iconSmall}
-                                                        {config.label.split('/')[0]}
+                                                        {t(config.labelKey).split('/')[0]}
                                                     </Badge>
                                                 </div>
 
                                                 {/* Amount Row */}
                                                 <div className="bg-gray-50 rounded-lg p-2">
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-[10px] text-gray-500 font-medium">Amount Paid</span>
+                                                        <span className="text-[10px] text-gray-500 font-medium">{t('wholesaler_payments.table.amount_paid')}</span>
                                                         <span className="text-base font-bold text-green-600">
                                                             {formatCurrency(payment.amount)}
                                                         </span>
@@ -798,7 +816,7 @@ export default function WholesalerPaymentsPage() {
 
                                                 {/* Notes */}
                                                 {payment.notes && (
-                                                    <p className="text-xs text-gray-500 mt-2 line-clamp-1 italic">📝 {payment.notes}</p>
+                                                    <p className="text-xs text-gray-500 mt-2 line-clamp-1 italic">ðŸ“ {payment.notes}</p>
                                                 )}
                                             </div>
                                         );
@@ -818,7 +836,7 @@ export default function WholesalerPaymentsPage() {
                                                 className="h-9 px-3"
                                             >
                                                 <ChevronLeft className="h-4 w-4 mr-1" />
-                                                Prev
+                                                {t('wholesaler_payments.pagination.prev')}
                                             </Button>
                                             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-sm font-medium">
                                                 <span>{page}</span>
@@ -832,7 +850,7 @@ export default function WholesalerPaymentsPage() {
                                                 disabled={page === pagination.totalPages}
                                                 className="h-9 px-3"
                                             >
-                                                Next
+                                                {t('wholesaler_payments.pagination.next')}
                                                 <ChevronRight className="h-4 w-4 ml-1" />
                                             </Button>
                                         </div>
@@ -840,9 +858,11 @@ export default function WholesalerPaymentsPage() {
                                         {/* Desktop Pagination */}
                                         <div className="hidden md:flex items-center justify-between gap-4 px-6 py-4 border-t bg-gray-50/50">
                                             <p className="text-sm text-gray-600">
-                                                Showing <span className="font-semibold">{(page - 1) * ITEMS_PER_PAGE + 1}</span> to{' '}
-                                                <span className="font-semibold">{Math.min(page * ITEMS_PER_PAGE, pagination.total)}</span> of{' '}
-                                                <span className="font-semibold">{pagination.total}</span> payments
+                                                {t('wholesaler_payments.pagination.showing_info', {
+                                                    start: (page - 1) * ITEMS_PER_PAGE + 1,
+                                                    end: Math.min(page * ITEMS_PER_PAGE, pagination.total),
+                                                    total: pagination.total
+                                                })}
                                             </p>
                                             <div className="flex items-center gap-1">
                                                 <Button
@@ -908,14 +928,14 @@ export default function WholesalerPaymentsPage() {
                                 <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 md:mb-4">
                                     <CreditCard className="h-6 w-6 md:h-8 md:w-8 text-gray-400" />
                                 </div>
-                                <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">No payments found</h3>
+                                <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 md:mb-2">{t('wholesaler_payments.empty.no_found')}</h3>
                                 <p className="text-gray-500 mb-3 md:mb-4 text-sm md:text-base">
-                                    {hasActiveFilters ? 'Try adjusting filters' : 'Record your first payment'}
+                                    {hasActiveFilters ? t('wholesaler_payments.empty.adjust_filters') : t('wholesaler_payments.empty.record_first')}
                                 </p>
                                 {hasActiveFilters ? (
                                     <Button onClick={clearFilters} variant="outline" className="h-9 text-sm">
                                         <X className="mr-1.5 h-4 w-4" />
-                                        Clear Filters
+                                        {t('wholesalers_list.filters.clear_all')}
                                     </Button>
                                 ) : (
                                     <Button
@@ -923,7 +943,7 @@ export default function WholesalerPaymentsPage() {
                                         className="bg-gradient-to-r from-green-600 to-emerald-600 h-9 text-sm"
                                     >
                                         <Plus className="mr-1.5 h-4 w-4" />
-                                        Record Payment
+                                        {t('wholesaler_payments.record_payment')}
                                     </Button>
                                 )}
                             </div>
@@ -940,15 +960,15 @@ export default function WholesalerPaymentsPage() {
                                     <Calendar className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <DialogTitle className="text-xl">Select Date Range</DialogTitle>
-                                    <p className="text-sm text-gray-500 mt-0.5">Choose start and end dates</p>
+                                    <DialogTitle className="text-xl">{t('wholesaler_payments.custom_date.title')}</DialogTitle>
+                                    <p className="text-sm text-gray-500 mt-0.5">{t('wholesaler_payments.custom_date.desc')}</p>
                                 </div>
                             </div>
                         </DialogHeader>
                         <div className="space-y-4 mt-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="startDate">Start Date</Label>
+                                    <Label htmlFor="startDate">{t('wholesaler_payments.custom_date.start')}</Label>
                                     <Input
                                         id="startDate"
                                         type="date"
@@ -958,7 +978,7 @@ export default function WholesalerPaymentsPage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="endDate">End Date</Label>
+                                    <Label htmlFor="endDate">{t('wholesaler_payments.custom_date.end')}</Label>
                                     <Input
                                         id="endDate"
                                         type="date"
@@ -971,14 +991,14 @@ export default function WholesalerPaymentsPage() {
                             </div>
                             <div className="flex gap-3">
                                 <Button variant="outline" onClick={() => setIsCustomDateOpen(false)} className="flex-1">
-                                    Cancel
+                                    {t('common.cancel')}
                                 </Button>
                                 <Button
                                     onClick={handleCustomDateApply}
                                     className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600"
                                     disabled={!customStartDate || !customEndDate}
                                 >
-                                    Apply Range
+                                    {t('wholesaler_payments.custom_date.apply')}
                                 </Button>
                             </div>
                         </div>

@@ -30,6 +30,7 @@ function formatCurrency(amount: number): string {
 }
 
 
+import { useTranslation } from 'react-i18next';
 
 export function CustomerDashboardStats({
     totalCustomers,
@@ -42,6 +43,7 @@ export function CustomerDashboardStats({
     timeFilter = 'today',
     statsData
 }: CustomerDashboardStatsProps) {
+    const { t } = useTranslation();
     const growth = lastMonthSales > 0
         ? ((thisMonthSales - lastMonthSales) / lastMonthSales * 100).toFixed(1)
         : thisMonthSales > 0 ? 100 : 0;
@@ -106,9 +108,9 @@ export function CustomerDashboardStats({
 
             {/* Customers */}
             <StatCard
-                title="Customers"
+                title={t('customer_dashboard.total_customers')}
                 value={displayCustomers}
-                subtext={isAllTime ? 'Total Due Customers' : 'In selected period'}
+                subtext={isAllTime ? t('customer_dashboard.total_customers') : t('wholesaler_dashboard.previous')}
                 icon={Users}
                 gradient="bg-gradient-to-br from-indigo-500 to-purple-600"
                 subtextColor="text-indigo-100"
@@ -116,9 +118,9 @@ export function CustomerDashboardStats({
 
             {/* Sales */}
             <StatCard
-                title="Sales"
+                title={t('customer_dashboard.total_sales')}
                 value={formatCurrency(displaySales)}
-                subtext={isAllTime ? 'Incl. Opening Bal' : 'Total sales'}
+                subtext={isAllTime ? t('wholesaler_dashboard.incl_opening') : t('customer_dashboard.total_sales')}
                 icon={IndianRupee}
                 gradient="bg-gradient-to-br from-emerald-500 to-green-600"
                 subtextColor="text-emerald-100"
@@ -126,14 +128,14 @@ export function CustomerDashboardStats({
 
             {/* Collected */}
             <StatCard
-                title="Collected"
+                title={t('customer_dashboard.total_collected')}
                 value={formatCurrency(totalCollected)}
-                subtext={`${collectionRate}% Collection Rate`}
+                subtext={`${collectionRate}% ${t('wholesaler_dashboard.payment_rate')}`}
                 icon={CreditCard}
                 gradient="bg-gradient-to-br from-cyan-500 to-blue-600"
                 subtextColor="text-cyan-100"
                 extra={
-                    <div className="h-1 sm:h-1.5 w-full bg-black/20 rounded-full overflow-hidden mt-1 mb-1">
+                    <div className="h-1 sm:h-1.5 w-full bg-black/20 rounded-full overflow-hidden mt-1 mb-1 text-right">
                         <div
                             className="h-full bg-white/90 rounded-full transition-all duration-500"
                             style={{ width: `${Math.min(100, Number(collectionRate))}%` }}
@@ -144,9 +146,9 @@ export function CustomerDashboardStats({
 
             {/* Outstanding */}
             <StatCard
-                title="Outstanding"
+                title={t('customer_dashboard.total_outstanding')}
                 value={formatCurrency(displayOutstanding)}
-                subtext={displayOutstanding > 0 ? 'Pending collection' : 'All cleared!'}
+                subtext={displayOutstanding > 0 ? t('billing.status_due') : t('wholesaler_dashboard.network')}
                 icon={AlertCircle}
                 gradient={displayOutstanding > 0 ? 'bg-gradient-to-br from-rose-500 to-red-600' : 'bg-gradient-to-br from-green-500 to-emerald-600'}
                 subtextColor={displayOutstanding > 0 ? 'text-rose-100' : 'text-green-100'}
@@ -154,9 +156,9 @@ export function CustomerDashboardStats({
 
             {/* Bills */}
             <StatCard
-                title="Bills"
+                title={t('billing.bills')}
                 value={transactionCount}
-                subtext="Sales in period"
+                subtext={t('customer_dashboard.recent_sales')}
                 icon={Receipt}
                 gradient="bg-gradient-to-br from-amber-500 to-orange-600"
                 subtextColor="text-amber-100"
@@ -164,9 +166,9 @@ export function CustomerDashboardStats({
 
             {/* Growth */}
             <StatCard
-                title="Growth"
+                title={t('wholesaler_dashboard.network')}
                 value={`${isPositiveGrowth ? '+' : ''}${growth}%`}
-                subtext="vs previous period"
+                subtext={t('wholesaler_dashboard.growth_vs_previous')}
                 icon={isPositiveGrowth ? TrendingUp : TrendingDown}
                 gradient={isPositiveGrowth ? 'bg-gradient-to-br from-teal-500 to-cyan-600' : 'bg-gradient-to-br from-slate-500 to-gray-600'}
                 subtextColor={isPositiveGrowth ? 'text-teal-100' : 'text-slate-200'}

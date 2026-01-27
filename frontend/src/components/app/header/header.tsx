@@ -17,6 +17,8 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Logo } from '../logo';
+import { LanguageSwitcher } from './language-switcher';
+import { useTranslation } from 'react-i18next';
 
 interface HeaderProps {
     title?: string;
@@ -27,6 +29,7 @@ interface HeaderProps {
 export function Header({ title, onMenuClick, className }: HeaderProps) {
     const { user, logout } = useAuth();
     const { toggleMobileMenu } = useUIStore();
+    const { t } = useTranslation();
     const router = useRouter();
 
     const handleLogout = () => {
@@ -65,14 +68,17 @@ export function Header({ title, onMenuClick, className }: HeaderProps) {
                 </div>
 
                 {/* Right Section */}
-                <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
+                <div className="flex items-center gap-1 md:gap-3 flex-shrink-0">
+                    {/* Language Switcher */}
+                    <LanguageSwitcher />
+
                     {/* Desktop Search */}
-                    <div className="hidden lg:flex items-center relative">
+                    <div className="hidden lg:flex items-center relative ml-2">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
                             type="search"
-                            placeholder="Search..."
-                            className="pl-10 w-64 h-10 bg-gray-50 border-gray-200 rounded-lg"
+                            placeholder={t('common.search')}
+                            className="pl-10 w-64 h-10 bg-gray-50 border-gray-200 rounded-lg focus:bg-white transition-all shadow-sm"
                         />
                     </div>
 
@@ -80,13 +86,14 @@ export function Header({ title, onMenuClick, className }: HeaderProps) {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-10 w-10 text-gray-500 hover:text-gray-700 rounded-lg"
+                        className="h-10 w-10 text-gray-500 hover:text-gray-700 rounded-lg relative"
+                        title={t('common.notifications')}
                     >
                         <Bell className="h-5 w-5" />
                         <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
                     </Button>
 
-                    <div className="hidden sm:block w-px h-6 bg-gray-200 mx-1" />
+                    <div className="hidden xs:block w-px h-6 bg-gray-200 mx-1" />
 
                     {/* User Menu */}
                     <DropdownMenu>
@@ -115,7 +122,7 @@ export function Header({ title, onMenuClick, className }: HeaderProps) {
                                 className="cursor-pointer"
                             >
                                 <Settings className="h-4 w-4 mr-2" />
-                                Settings
+                                {t('common.settings')}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -123,7 +130,7 @@ export function Header({ title, onMenuClick, className }: HeaderProps) {
                                 className="cursor-pointer text-red-600"
                             >
                                 <LogOut className="h-4 w-4 mr-2" />
-                                Logout
+                                {t('common.logout')}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

@@ -19,6 +19,7 @@ import {
     Pagination,
     FilterState
 } from './components';
+import { useTranslation } from 'react-i18next';
 
 interface Customer {
     _id: string;
@@ -63,6 +64,7 @@ interface PaginatedResponse<T> {
 const ITEMS_PER_PAGE = 10;
 
 export default function DueCustomerDetailPage() {
+    const { t } = useTranslation();
     const params = useParams();
     const router = useRouter();
     const id = params.id as string;
@@ -148,7 +150,7 @@ export default function DueCustomerDetailPage() {
     if (customerLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50/30 to-purple-50/20">
-                <Header title="Customer Details" />
+                <Header title={t('wholesalers_list.table.view_details')} />
                 <div className="p-3 md:p-6 flex items-center justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500" />
                 </div>
@@ -159,12 +161,12 @@ export default function DueCustomerDetailPage() {
     if (!customer) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50/30 to-purple-50/20">
-                <Header title="Customer Not Found" />
+                <Header title={t('wholesaler_payments.messages.no_wholesaler_found').replace(t('wholesalers_list.table.wholesaler'), t('common.customer'))} />
                 <div className="p-3 md:p-6 text-center">
-                    <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4">Customer not found</h2>
+                    <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4">{t('wholesaler_payments.messages.no_wholesaler_found').replace(t('wholesalers_list.table.wholesaler'), t('common.customer'))}</h2>
                     <Button onClick={() => router.push('/shopkeeper/customers/due')} size="sm">
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Due Customers
+                        {t('sidebar.due_customers')}
                     </Button>
                 </div>
             </div>
@@ -173,7 +175,7 @@ export default function DueCustomerDetailPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50/30 to-purple-50/20">
-            <Header title="Customer Details" />
+            <Header title={t('wholesalers_list.table.view_details')} />
 
             <div className="p-3 md:p-6">
                 {/* Back Button & Actions - Mobile First */}
@@ -185,8 +187,8 @@ export default function DueCustomerDetailPage() {
                         className="text-xs md:text-sm h-8 md:h-9"
                     >
                         <ArrowLeft className="mr-1 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
-                        <span className="hidden sm:inline">Back to Due Customers</span>
-                        <span className="sm:hidden">Back</span>
+                        <span className="hidden sm:inline">{t('sidebar.due_customers')}</span>
+                        <span className="sm:hidden">{t('common.cancel')}</span>
                     </Button>
 
                     {customer.outstandingDue > 0 && (
@@ -206,7 +208,7 @@ export default function DueCustomerDetailPage() {
                                 className="flex items-center gap-1 md:gap-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white px-2.5 md:px-6 py-2 md:py-2.5 text-xs md:text-sm"
                             >
                                 <Receipt className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                Sales
+                                {t('history.sales')}
                                 <Badge variant="secondary" className="ml-0.5 md:ml-1 bg-emerald-100 text-emerald-700 data-[state=active]:bg-white/20 data-[state=active]:text-white text-[10px] md:text-xs px-1 md:px-2">
                                     {billsPagination.total}
                                 </Badge>
@@ -216,7 +218,7 @@ export default function DueCustomerDetailPage() {
                                 className="flex items-center gap-1 md:gap-2 data-[state=active]:bg-green-600 data-[state=active]:text-white px-2.5 md:px-6 py-2 md:py-2.5 text-xs md:text-sm"
                             >
                                 <CreditCard className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                Payments
+                                {t('sidebar.payments')}
                                 <Badge variant="secondary" className="ml-0.5 md:ml-1 bg-green-100 text-green-700 data-[state=active]:bg-white/20 data-[state=active]:text-white text-[10px] md:text-xs px-1 md:px-2">
                                     {payments.length}
                                 </Badge>
@@ -231,8 +233,8 @@ export default function DueCustomerDetailPage() {
                                     <div className="p-1.5 md:p-2 rounded-lg bg-emerald-100">
                                         <Receipt className="h-4 w-4 md:h-5 md:w-5 text-emerald-600" />
                                     </div>
-                                    <span className="hidden sm:inline">Sales Transactions</span>
-                                    <span className="sm:hidden">Sales</span>
+                                    <span className="hidden sm:inline">{t('history.sale_bills')}</span>
+                                    <span className="sm:hidden">{t('history.sales')}</span>
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-2 md:p-6">
@@ -261,8 +263,8 @@ export default function DueCustomerDetailPage() {
                                     <div className="p-1.5 md:p-2 rounded-lg bg-green-100">
                                         <CreditCard className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                                     </div>
-                                    <span className="hidden sm:inline">Payment History</span>
-                                    <span className="sm:hidden">Payments</span>
+                                    <span className="hidden sm:inline">{t('wholesaler_payments.table.title')}</span>
+                                    <span className="sm:hidden">{t('sidebar.payments')}</span>
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-0">

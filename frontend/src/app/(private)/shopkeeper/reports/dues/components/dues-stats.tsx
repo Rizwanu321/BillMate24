@@ -32,6 +32,8 @@ function formatCurrency(amount: number): string {
 
 
 
+import { useTranslation } from 'react-i18next';
+
 export function DuesStats({
     totalOutstanding,
     customerDues,
@@ -40,6 +42,7 @@ export function DuesStats({
     customerCount = 0,
     wholesalerCount = 0,
 }: DuesStatsProps) {
+    const { t } = useTranslation();
     const netPosition = customerDues - wholesalerDues;
     const isNetPositive = netPosition >= 0;
 
@@ -55,15 +58,15 @@ export function DuesStats({
                                 <ArrowDownRight className="h-4 w-4 md:h-5 md:w-5" />
                             </div>
                             <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2.5">
-                                To Collect
+                                {t('reports.to_collect_badge')}
                             </Badge>
                         </div>
                         <h3 className="text-xl md:text-3xl font-bold">{formatCurrency(customerDues)}</h3>
-                        <p className="text-white/80 text-[10px] md:text-sm mt-1">From Customers</p>
+                        <p className="text-white/80 text-[10px] md:text-sm mt-1">{t('reports.from_customers_label')}</p>
                         <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 flex items-center justify-between">
                             <span className="text-[10px] md:text-xs text-white/70">
                                 <Users className="h-3 w-3 inline mr-1" />
-                                {customerCount} count
+                                {customerCount} {t('reports.count_suffix')}
                             </span>
                         </div>
                     </CardContent>
@@ -78,15 +81,15 @@ export function DuesStats({
                                 <ArrowUpRight className="h-4 w-4 md:h-5 md:w-5" />
                             </div>
                             <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2.5">
-                                To Pay
+                                {t('reports.to_pay_badge')}
                             </Badge>
                         </div>
                         <h3 className="text-xl md:text-3xl font-bold">{formatCurrency(wholesalerDues)}</h3>
-                        <p className="text-white/80 text-[10px] md:text-sm mt-1">To Wholesalers</p>
+                        <p className="text-white/80 text-[10px] md:text-sm mt-1">{t('reports.to_wholesalers_label')}</p>
                         <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 flex items-center justify-between">
                             <span className="text-[10px] md:text-xs text-white/70">
                                 <Package className="h-3 w-3 inline mr-1" />
-                                {wholesalerCount} count
+                                {wholesalerCount} {t('reports.count_suffix')}
                             </span>
                         </div>
                     </CardContent>
@@ -108,18 +111,18 @@ export function DuesStats({
                                 )}
                             </div>
                             <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2.5">
-                                {isNetPositive ? 'Net +ve' : 'Net -ve'}
+                                {isNetPositive ? t('reports.net_positive') : t('reports.net_negative')}
                             </Badge>
                         </div>
                         <h3 className="text-xl md:text-3xl font-bold">{formatCurrency(Math.abs(netPosition))}</h3>
                         <p className="text-white/80 text-[10px] md:text-sm mt-1">
-                            {isNetPositive ? 'Receivable' : 'Payable'}
+                            {isNetPositive ? t('reports.receivable_caps') : t('reports.payable_caps')}
                         </p>
                         <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
                             <span className="text-[10px] md:text-xs text-white/70 truncate block">
                                 {isNetPositive
-                                    ? '↑ More incoming'
-                                    : '↓ More outgoing'
+                                    ? t('reports.more_incoming')
+                                    : t('reports.more_outgoing')
                                 }
                             </span>
                         </div>
@@ -138,18 +141,18 @@ export function DuesStats({
                                 <AlertCircle className="h-4 w-4 md:h-5 md:w-5" />
                             </div>
                             <Badge className={`${overdueCount > 0 ? 'bg-white text-red-600' : 'bg-white/20 text-white'} border-0 text-[10px] md:text-xs px-1.5 md:px-2.5`}>
-                                {overdueCount > 0 ? 'Urgent' : 'Good'}
+                                {overdueCount > 0 ? t('reports.overdue_alert_urgent') : t('reports.overdue_alert_good')}
                             </Badge>
                         </div>
                         <h3 className="text-xl md:text-3xl font-bold">{overdueCount}</h3>
                         <p className="text-white/80 text-[10px] md:text-sm mt-1">
-                            {overdueCount > 0 ? 'Overdue (7+ days)' : 'No Overdue'}
+                            {overdueCount > 0 ? t('reports.overdue_desc') : t('reports.no_overdue')}
                         </p>
                         <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
                             <span className="text-[10px] md:text-xs text-white/70 truncate block">
                                 {overdueCount > 0
-                                    ? '⚠️ Action needed'
-                                    : '✓ On track'
+                                    ? t('reports.action_needed')
+                                    : t('reports.on_track_check')
                                 }
                             </span>
                         </div>
@@ -165,23 +168,23 @@ export function DuesStats({
                         <div className="flex items-center gap-2 text-white w-full md:w-auto justify-between md:justify-start">
                             <div className="flex items-center gap-2">
                                 <IndianRupee className="h-4 w-4 md:h-5 md:w-5 text-yellow-400" />
-                                <span className="text-sm">Total Outstanding:</span>
+                                <span className="text-sm">{t('reports.total_outstanding')}:</span>
                             </div>
                             <span className="text-lg md:text-xl font-bold text-yellow-400">{formatCurrency(totalOutstanding)}</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs md:text-sm w-full md:w-auto">
                             <div className="flex items-center gap-1.5">
                                 <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
-                                <span className="text-gray-300">Receivables: {formatCurrency(customerDues)}</span>
+                                <span className="text-gray-300">{t('reports.receivable_caps')}: {formatCurrency(customerDues)}</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <div className="w-2.5 h-2.5 rounded-full bg-orange-400"></div>
-                                <span className="text-gray-300">Payables: {formatCurrency(wholesalerDues)}</span>
+                                <span className="text-gray-300">{t('reports.payable_caps')}: {formatCurrency(wholesalerDues)}</span>
                             </div>
                             {overdueCount > 0 && (
                                 <div className="flex items-center gap-1.5">
                                     <div className="w-2.5 h-2.5 rounded-full bg-red-400 animate-pulse"></div>
-                                    <span className="text-red-300">{overdueCount} Overdue</span>
+                                    <span className="text-red-300">{overdueCount} {t('reports.overdue')}</span>
                                 </div>
                             )}
                         </div>

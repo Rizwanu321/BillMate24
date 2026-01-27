@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { useTranslation } from 'react-i18next';
 
 interface NavItem {
     href: string;
@@ -22,20 +23,21 @@ interface NavItem {
 }
 
 const shopkeeperItems: NavItem[] = [
-    { href: '/shopkeeper/dashboard', label: 'Home', icon: LayoutDashboard },
-    { href: '/shopkeeper/billing', label: 'Bill', icon: Receipt },
-    { href: '/shopkeeper/customers/dashboard', label: 'Customers', icon: Users, activePrefix: '/shopkeeper/customers' },
-    { href: '/shopkeeper/wholesalers/dashboard', label: 'Wholesalers', icon: Package, activePrefix: '/shopkeeper/wholesalers' },
-    { href: '/shopkeeper/reports/daily', label: 'Reports', icon: BarChart3, activePrefix: '/shopkeeper/reports' },
+    { href: '/shopkeeper/dashboard', label: 'bottom_nav.home', icon: LayoutDashboard },
+    { href: '/shopkeeper/billing', label: 'bottom_nav.bill', icon: Receipt },
+    { href: '/shopkeeper/customers/dashboard', label: 'bottom_nav.customers', icon: Users, activePrefix: '/shopkeeper/customers' },
+    { href: '/shopkeeper/wholesalers/dashboard', label: 'bottom_nav.wholesalers', icon: Package, activePrefix: '/shopkeeper/wholesalers' },
+    { href: '/shopkeeper/reports/daily', label: 'bottom_nav.reports', icon: BarChart3, activePrefix: '/shopkeeper/reports' },
 ];
 
 const adminItems: NavItem[] = [
-    { href: '/admin/dashboard', label: 'Home', icon: LayoutDashboard },
-    { href: '/admin/shopkeepers', label: 'Shops', icon: Store },
-    { href: '/admin/settings', label: 'Settings', icon: Settings },
+    { href: '/admin/dashboard', label: 'bottom_nav.home', icon: LayoutDashboard },
+    { href: '/admin/shopkeepers', label: 'bottom_nav.shops', icon: Store },
+    { href: '/admin/settings', label: 'bottom_nav.settings', icon: Settings },
 ];
 
 export function BottomNav() {
+    const { t } = useTranslation();
     const pathname = usePathname();
     const { user, isAdmin } = useAuth();
 
@@ -84,7 +86,7 @@ export function BottomNav() {
                                 'text-[10px] mt-0.5 font-medium transition-all duration-200 truncate max-w-full px-0.5',
                                 isActive && 'font-semibold text-purple-600'
                             )}>
-                                {item.label}
+                                {t(item.label)}
                             </span>
                         </Link>
                     );

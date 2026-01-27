@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,29 +23,10 @@ import { Loader2, User, Lock, Store, Settings, Calendar, Shield, Smartphone, Mai
 import axios from '@/config/axios';
 import { Header } from '@/components/app/header';
 import { format } from 'date-fns';
-
-// --- Validation Schemas ---
-
-const profileSchema = z.object({
-    name: z.string().min(2, 'Name must be at least 2 characters'),
-    phone: z.string().optional(),
-    businessName: z.string().optional(),
-    address: z.string().optional(),
-});
-
-const passwordSchema = z.object({
-    currentPassword: z.string().min(6, 'Current password is required'),
-    newPassword: z.string().min(6, 'New password must be at least 6 characters'),
-    confirmNewPassword: z.string().min(6, 'Confirm password is required'),
-}).refine((data) => data.newPassword === data.confirmNewPassword, {
-    message: "Passwords don't match",
-    path: ["confirmNewPassword"],
-});
-
-type ProfileFormValues = z.infer<typeof profileSchema>;
-type PasswordFormValues = z.infer<typeof passwordSchema>;
+import { useTranslation } from 'react-i18next';
 
 export default function SettingsPage() {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const { updateUser } = useAuthStore();
     const [isProfileUpdating, setIsProfileUpdating] = useState(false);
@@ -53,6 +34,26 @@ export default function SettingsPage() {
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    // --- Validation Schemas ---
+    const profileSchema = useMemo(() => z.object({
+        name: z.string().min(2, t('settings_page.name_min')),
+        phone: z.string().optional(),
+        businessName: z.string().optional(),
+        address: z.string().optional(),
+    }), [t]);
+
+    const passwordSchema = useMemo(() => z.object({
+        currentPassword: z.string().min(6, t('settings_page.password_required')),
+        newPassword: z.string().min(6, t('settings_page.new_password_min')),
+        confirmNewPassword: z.string().min(6, t('settings_page.confirm_password_required')),
+    }).refine((data) => data.newPassword === data.confirmNewPassword, {
+        message: t('settings_page.passwords_mismatch'),
+        path: ["confirmNewPassword"],
+    }), [t]);
+
+    type ProfileFormValues = z.infer<typeof profileSchema>;
+    type PasswordFormValues = z.infer<typeof passwordSchema>;
 
     // Profile Form
     const profileForm = useForm<ProfileFormValues>({
@@ -80,9 +81,9 @@ export default function SettingsPage() {
         try {
             const response = await axios.patch('/auth/profile', data);
             updateUser(response.data.data);
-            toast.success('Profile updated successfully');
+            toast.success(t('settings_page.update_success'));
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to update profile');
+            toast.error(error.response?.data?.message || t('settings_page.update_failed'));
         } finally {
             setIsProfileUpdating(false);
         }
@@ -95,10 +96,10 @@ export default function SettingsPage() {
                 currentPassword: data.currentPassword,
                 newPassword: data.newPassword,
             });
-            toast.success('Password changed successfully');
+            toast.success(t('settings_page.password_success'));
             passwordForm.reset();
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to change password');
+            toast.error(error.response?.data?.message || t('settings_page.password_failed'));
         } finally {
             setIsPasswordUpdating(false);
         }
@@ -106,7 +107,7 @@ export default function SettingsPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-purple-50">
-            <Header title="Settings" />
+            <Header title={t('common.settings')} />
 
             <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
                 {/* Page Header */}
@@ -114,7 +115,7 @@ export default function SettingsPage() {
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 via-purple-900 to-gray-900 bg-clip-text text-transparent">
-                                Account Settings
+                                {t('settings_page.account_settings')}
                             </h2>
                             <Settings className="h-5 w-5 md:h-8 md:w-8 text-purple-900" />
                         </div>
@@ -131,11 +132,11 @@ export default function SettingsPage() {
                         <TabsList className="grid w-full md:w-[400px] grid-cols-2 bg-white/50 backdrop-blur border shadow-sm">
                             <TabsTrigger value="profile" className="data-[state=active]:bg-white data-[state=active]:text-purple-900 data-[state=active]:shadow-sm">
                                 <User className="h-4 w-4 mr-2" />
-                                Profile
+                                {t('common.profile')}
                             </TabsTrigger>
                             <TabsTrigger value="security" className="data-[state=active]:bg-white data-[state=active]:text-purple-900 data-[state=active]:shadow-sm">
                                 <Shield className="h-4 w-4 mr-2" />
-                                Security
+                                {t('settings_page.security')}
                             </TabsTrigger>
                         </TabsList>
                     </div>
@@ -148,17 +149,17 @@ export default function SettingsPage() {
                                     <div className="p-2 rounded-lg bg-purple-100">
                                         <User className="h-5 w-5 text-purple-700" />
                                     </div>
-                                    Personal Information
+                                    {t('settings_page.personal_info')}
                                 </CardTitle>
                                 <CardDescription>
-                                    Update your personal details and business information visible to others.
+                                    {t('settings_page.personal_info_desc')}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="p-6">
                                 <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
                                     <div className="grid gap-6 md:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label htmlFor="name" className="text-gray-700">Full Name</Label>
+                                            <Label htmlFor="name" className="text-gray-700">{t('settings_page.full_name')}</Label>
                                             <div className="relative">
                                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                                 <Input
@@ -176,7 +177,7 @@ export default function SettingsPage() {
                                             )}
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="phone" className="text-gray-700">Phone Number</Label>
+                                            <Label htmlFor="phone" className="text-gray-700">{t('settings_page.phone_number')}</Label>
                                             <div className="relative">
                                                 <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                                 <Input
@@ -196,7 +197,7 @@ export default function SettingsPage() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="email" className="text-gray-700">Email Address</Label>
+                                        <Label htmlFor="email" className="text-gray-700">{t('settings_page.email_address')}</Label>
                                         <div className="relative">
                                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                             <Input
@@ -208,7 +209,7 @@ export default function SettingsPage() {
                                         </div>
                                         <p className="text-[11px] text-gray-500 flex items-center gap-1">
                                             <Lock className="h-3 w-3" />
-                                            Email address cannot be changed. Contact support for assistance.
+                                            {t('settings_page.email_locked_desc')}
                                         </p>
                                     </div>
 
@@ -217,13 +218,13 @@ export default function SettingsPage() {
                                             <span className="w-full border-t border-purple-100" />
                                         </div>
                                         <div className="relative flex justify-center text-xs uppercase">
-                                            <span className="bg-white px-2 text-gray-500 font-medium tracking-wider">Business Details</span>
+                                            <span className="bg-white px-2 text-gray-500 font-medium tracking-wider">{t('settings_page.business_details')}</span>
                                         </div>
                                     </div>
 
                                     <div className="grid gap-6 md:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label htmlFor="businessName" className="text-gray-700">Business Name</Label>
+                                            <Label htmlFor="businessName" className="text-gray-700">{t('settings_page.business_name')}</Label>
                                             <div className="relative">
                                                 <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                                 <Input
@@ -235,7 +236,7 @@ export default function SettingsPage() {
                                             </div>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="address" className="text-gray-700">Address</Label>
+                                            <Label htmlFor="address" className="text-gray-700">{t('settings_page.address')}</Label>
                                             <Input
                                                 id="address"
                                                 placeholder="123 Main St, City"
@@ -252,7 +253,7 @@ export default function SettingsPage() {
                                             className="bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 shadow-md transition-all active:scale-95"
                                         >
                                             {isProfileUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            Save Changes
+                                            {t('common.save_changes')}
                                         </Button>
                                     </div>
                                 </form>
@@ -268,16 +269,16 @@ export default function SettingsPage() {
                                     <div className="p-2 rounded-lg bg-orange-100">
                                         <Lock className="h-5 w-5 text-orange-600" />
                                     </div>
-                                    Password Security
+                                    {t('settings_page.password_security')}
                                 </CardTitle>
                                 <CardDescription>
-                                    Ensure your account is using a long, random password to stay secure.
+                                    {t('settings_page.password_security_desc')}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="p-6">
                                 <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6 max-w-2xl">
                                     <div className="space-y-2">
-                                        <Label htmlFor="currentPassword">Current Password</Label>
+                                        <Label htmlFor="currentPassword">{t('settings_page.current_password')}</Label>
                                         <div className="relative">
                                             <Input
                                                 id="currentPassword"
@@ -307,7 +308,7 @@ export default function SettingsPage() {
                                     </div>
                                     <div className="grid gap-6 md:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label htmlFor="newPassword">New Password</Label>
+                                            <Label htmlFor="newPassword">{t('settings_page.new_password')}</Label>
                                             <div className="relative">
                                                 <Input
                                                     id="newPassword"
@@ -336,7 +337,7 @@ export default function SettingsPage() {
                                             )}
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
+                                            <Label htmlFor="confirmNewPassword">{t('settings_page.confirm_new_password')}</Label>
                                             <div className="relative">
                                                 <Input
                                                     id="confirmNewPassword"
@@ -369,7 +370,7 @@ export default function SettingsPage() {
                                     <div className="bg-blue-50 p-4 rounded-lg flex gap-3 text-sm text-blue-700">
                                         <Shield className="h-5 w-5 flex-shrink-0" />
                                         <p>
-                                            Password requirements: Minimum 6 characters. Make sure it's something unrelated to your personal information.
+                                            {t('settings_page.password_requirements')}
                                         </p>
                                     </div>
 
@@ -380,7 +381,7 @@ export default function SettingsPage() {
                                             className="bg-gradient-to-r from-orange-500 to-pink-600 hover:from-orange-600 hover:to-pink-700 shadow-md transition-all active:scale-95"
                                         >
                                             {isPasswordUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            Update Password
+                                            {t('settings_page.update_password')}
                                         </Button>
                                     </div>
                                 </form>

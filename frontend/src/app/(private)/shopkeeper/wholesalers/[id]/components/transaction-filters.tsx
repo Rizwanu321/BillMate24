@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, Calendar, ChevronDown, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,12 +37,12 @@ interface TransactionFiltersProps {
 }
 
 const filterLabels: Record<TimeFilterOption, string> = {
-    all: 'All Time',
-    today: 'Today',
-    this_week: 'This Week',
-    this_month: 'This Month',
-    this_year: 'This Year',
-    custom: 'Custom Range',
+    all: 'history.time_filters.all',
+    today: 'history.time_filters.today',
+    this_week: 'history.time_filters.this_week',
+    this_month: 'history.time_filters.this_month',
+    this_year: 'history.time_filters.this_year',
+    custom: 'history.time_filters.custom',
 };
 
 export function getDateRangeForFilter(option: TimeFilterOption, customStart?: string, customEnd?: string): { startDate?: string; endDate?: string } {
@@ -78,6 +79,7 @@ export function getDateRangeForFilter(option: TimeFilterOption, customStart?: st
 }
 
 export function TransactionFilters({ filters, onFiltersChange }: TransactionFiltersProps) {
+    const { t } = useTranslation();
     const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false);
     const [customStartDate, setCustomStartDate] = useState(filters.startDate || '');
     const [customEndDate, setCustomEndDate] = useState(filters.endDate || '');
@@ -129,7 +131,7 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
         if (filters.timeFilter === 'custom' && filters.startDate && filters.endDate) {
             return `${format(new Date(filters.startDate), 'dd MMM')} - ${format(new Date(filters.endDate), 'dd MMM')}`;
         }
-        return filterLabels[filters.timeFilter];
+        return t(filterLabels[filters.timeFilter]);
     };
 
     return (
@@ -139,7 +141,7 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
                 <div className="relative flex-1">
                     <Search className="absolute left-2.5 md:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
                     <Input
-                        placeholder="Search..."
+                        placeholder={t('wholesaler_payments.filters.search')}
                         value={filters.search}
                         onChange={(e) => handleSearchChange(e.target.value)}
                         className="pl-8 md:pl-10 h-8 md:h-9 text-sm"
@@ -152,7 +154,7 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
                         <Button variant="outline" className="flex items-center gap-1 md:gap-2 h-8 md:h-9 text-xs md:text-sm px-2 md:px-3">
                             <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 text-purple-500" />
                             <span className="hidden sm:inline">{getTimeFilterLabel()}</span>
-                            <span className="sm:hidden">{filters.timeFilter === 'all' ? 'All' : '...'}</span>
+                            <span className="sm:hidden">{filters.timeFilter === 'all' ? t('wholesalers_list.stats.all_badge') : '...'}</span>
                             <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -165,7 +167,7 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
                             >
                                 <span className="flex items-center gap-2">
                                     {filters.timeFilter === option && <span className="w-2 h-2 rounded-full bg-purple-500" />}
-                                    {filterLabels[option]}
+                                    {t(filterLabels[option])}
                                 </span>
                             </DropdownMenuItem>
                         ))}
@@ -176,7 +178,7 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
                         >
                             <span className="flex items-center gap-2">
                                 {filters.timeFilter === 'custom' && <span className="w-2 h-2 rounded-full bg-purple-500" />}
-                                Custom Range...
+                                {t('history.time_filters.custom')}...
                             </span>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -186,7 +188,7 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
                 {hasActiveFilters && (
                     <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 md:h-9 px-2 md:px-3">
                         <X className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                        <span className="hidden sm:inline ml-1">Clear</span>
+                        <span className="hidden sm:inline ml-1">{t('wholesalers_list.filters.clear_dues')}</span>
                     </Button>
                 )}
             </div>
@@ -196,7 +198,7 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
                 <div className="hidden sm:flex gap-2 mt-3">
                     {filters.search && (
                         <Badge variant="secondary" className="flex items-center gap-1 text-xs">
-                            Search: {filters.search}
+                            {t('wholesaler_payments.filters.search')}: {filters.search}
                             <X
                                 className="h-3 w-3 cursor-pointer"
                                 onClick={() => handleSearchChange('')}
@@ -221,13 +223,13 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Calendar className="h-5 w-5 text-purple-500" />
-                            Select Date Range
+                            {t('wholesaler_payments.custom_date.title')}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="startDate">Start Date</Label>
+                                <Label htmlFor="startDate">{t('wholesaler_payments.custom_date.start')}</Label>
                                 <Input
                                     id="startDate"
                                     type="date"
@@ -236,7 +238,7 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="endDate">End Date</Label>
+                                <Label htmlFor="endDate">{t('wholesaler_payments.custom_date.end')}</Label>
                                 <Input
                                     id="endDate"
                                     type="date"
@@ -265,14 +267,14 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
                                 onClick={() => setIsCustomDialogOpen(false)}
                                 className="flex-1"
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </Button>
                             <Button
                                 onClick={handleCustomApply}
                                 className="flex-1 bg-purple-600 hover:bg-purple-700"
                                 disabled={!customStartDate || !customEndDate}
                             >
-                                Apply
+                                {t('wholesaler_payments.custom_date.apply')}
                             </Button>
                         </div>
                     </div>

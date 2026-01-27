@@ -33,6 +33,8 @@ function formatCurrency(amount: number): string {
 
 
 
+import { useTranslation } from 'react-i18next';
+
 export function WholesalerDashboardStats({
     totalWholesalers,
     totalPurchases,
@@ -44,6 +46,7 @@ export function WholesalerDashboardStats({
     timeFilter = 'today',
     duesData
 }: WholesalerDashboardStatsProps) {
+    const { t } = useTranslation();
     const growth = lastMonthPurchases > 0
         ? ((thisMonthPurchases - lastMonthPurchases) / lastMonthPurchases * 100).toFixed(1)
         : thisMonthPurchases > 0 ? 100 : 0;
@@ -71,19 +74,19 @@ export function WholesalerDashboardStats({
                             <IndianRupee className="h-4 w-4 md:h-5 md:w-5" />
                         </div>
                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                            {billCount} bills
+                            {billCount} {t('billing.bills')}
                         </Badge>
                     </div>
                     <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(displayPurchases)}</h3>
                     <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">
-                        Total Purchases{isAllTime ? '' : ''}
+                        {t('wholesaler_dashboard.total_purchases')}
                     </p>
                     <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
                         <span className="text-white/70">
-                            {isAllTime ? 'All Time' : 'Previous'}
+                            {isAllTime ? t('wholesaler_dashboard.all_time') : t('wholesaler_dashboard.previous')}
                         </span>
-                        <span className="font-semibold">
-                            {isAllTime ? '(incl. opening)' : formatCurrency(lastMonthPurchases)}
+                        <span className="font-semibold text-right">
+                            {isAllTime ? t('wholesaler_dashboard.incl_opening') : formatCurrency(lastMonthPurchases)}
                         </span>
                     </div>
                 </CardContent>
@@ -103,10 +106,10 @@ export function WholesalerDashboardStats({
                     </div>
                     <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(totalPaid)}</h3>
                     <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">
-                        Amount Paid{isAllTime ? ' (bills)' : ''}
+                        {t('wholesaler_dashboard.amount_paid')}{isAllTime ? ` ${t('wholesaler_dashboard.incl_bills')}` : ''}
                     </p>
                     <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
-                        <span className="text-white/70">Payment Rate</span>
+                        <span className="text-white/70">{t('wholesaler_dashboard.payment_rate')}</span>
                         <span className="font-semibold">{paymentPercentage}%</span>
                     </div>
                 </CardContent>
@@ -121,19 +124,19 @@ export function WholesalerDashboardStats({
                             <AlertCircle className="h-4 w-4 md:h-5 md:w-5" />
                         </div>
                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                            Due
+                            {t('billing.status_due')}
                         </Badge>
                     </div>
                     <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(Math.max(0, displayOutstanding))}</h3>
                     <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">
-                        Outstanding{isAllTime ? ' (All Time)' : ''}
+                        {t('wholesaler_dashboard.outstanding')}{isAllTime ? ` (${t('wholesaler_dashboard.all_time')})` : ''}
                     </p>
                     <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
                         <span className="text-white/70">
-                            {isAllTime ? 'Total Due' : 'Pending'}
+                            {isAllTime ? t('wholesaler_dashboard.outstanding') : t('wholesaler_dashboard.previous')}
                         </span>
-                        <span className="font-semibold">
-                            {isAllTime ? '(incl. opening)' : `${totalWholesalers} wholesalers`}
+                        <span className="font-semibold text-right">
+                            {isAllTime ? t('wholesaler_dashboard.incl_opening') : `${totalWholesalers} ${t('common.wholesalers').toLowerCase()}`}
                         </span>
                     </div>
                 </CardContent>
@@ -157,21 +160,21 @@ export function WholesalerDashboardStats({
                             )}
                         </div>
                         <Badge className={`border-0 text-[10px] md:text-xs px-1.5 md:px-2 ${isAllTime ? 'bg-white/20 text-white' : (isPositiveGrowth ? 'bg-white/20 text-white' : 'bg-white text-gray-600')}`}>
-                            {isAllTime ? 'Network' : (isPositiveGrowth ? '↑' : '↓')}
+                            {isAllTime ? t('wholesaler_dashboard.network') : (isPositiveGrowth ? '↑' : '↓')}
                         </Badge>
                     </div>
                     <h3 className="text-lg md:text-3xl font-bold">
                         {isAllTime ? totalWholesalers : `${isPositiveGrowth ? '+' : ''}${growth}%`}
                     </h3>
                     <p className="text-white/80 text-xs md:text-sm mt-0.5 md:mt-1">
-                        {isAllTime ? 'Total Wholesalers' : 'vs Previous'}
+                        {isAllTime ? t('wholesaler_dashboard.total_wholesalers') : t('wholesaler_dashboard.growth_vs_previous')}
                     </p>
                     <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
                         <span className="text-white/70">
-                            {isAllTime ? 'Active Vendors' : 'Wholesalers'}
+                            {isAllTime ? t('wholesaler_dashboard.active_vendors') : t('common.wholesalers')}
                         </span>
-                        <span className="font-semibold">
-                            {isAllTime ? '(Lifetime)' : `${totalWholesalers} active`}
+                        <span className="font-semibold text-right">
+                            {isAllTime ? t('wholesaler_dashboard.lifetime') : `${totalWholesalers} ${t('wholesaler_dashboard.previous').toLowerCase()}`}
                         </span>
                     </div>
                 </CardContent>

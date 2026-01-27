@@ -35,6 +35,7 @@ import api from '@/config/axios';
 import { Wholesaler, Customer } from '@/types';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
+import { useTranslation } from 'react-i18next';
 
 const billSchema = z.object({
     billType: z.enum(['purchase', 'sale']),
@@ -58,6 +59,7 @@ const billSchema = z.object({
 type BillFormData = z.infer<typeof billSchema>;
 
 export default function BillingPage() {
+    const { t } = useTranslation();
     const queryClient = useQueryClient();
     const { hasFeature } = useAuth();
     const [billType, setBillType] = useState<'purchase' | 'sale'>('sale');
@@ -139,7 +141,7 @@ export default function BillingPage() {
         return (wholesalers || []).map((w) => ({
             value: w._id,
             label: w.name,
-            subLabel: w.outstandingDue > 0 ? `Due: ₹${w.outstandingDue.toLocaleString('en-IN')}` : undefined,
+            subLabel: w.outstandingDue > 0 ? `${t('dashboard.total_due')}: ₹${w.outstandingDue.toLocaleString('en-IN')}` : undefined,
         }));
     }, [wholesalers]);
 
@@ -148,7 +150,7 @@ export default function BillingPage() {
         return (dueCustomers || []).map((c) => ({
             value: c._id,
             label: c.name,
-            subLabel: c.outstandingDue > 0 ? `Due: ₹${c.outstandingDue.toLocaleString('en-IN')}` : undefined,
+            subLabel: c.outstandingDue > 0 ? `${t('dashboard.total_due')}: ₹${c.outstandingDue.toLocaleString('en-IN')}` : undefined,
         }));
     }, [dueCustomers]);
 
@@ -185,7 +187,7 @@ export default function BillingPage() {
             queryClient.invalidateQueries({ queryKey: ['wholesaler-dues'] });
             queryClient.invalidateQueries({ queryKey: ['purchases-filtered'] });
 
-            toast.success('Bill created successfully!');
+            toast.success(t('billing.bill_success'));
 
             // Increment reset key to force-refresh interactive components (clears search inputs)
             setResetKey(prev => prev + 1);
@@ -208,7 +210,7 @@ export default function BillingPage() {
             setSelectedEntityId('');
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Failed to create bill');
+            toast.error(error.response?.data?.message || t('billing.bill_error'));
         },
     });
 
@@ -249,13 +251,13 @@ export default function BillingPage() {
 
     return (
         <div className="min-h-screen bg-slate-100">
-            <Header title="New Bill" />
+            <Header title={t('billing.new_transaction')} />
 
             <div className="max-w-4xl mx-auto p-3 md:p-6 lg:p-8">
                 {/* Page Title - High contrast */}
                 <div className="mb-4 md:mb-6">
-                    <h1 className="text-lg md:text-2xl font-bold text-slate-900">New Transaction</h1>
-                    <p className="text-xs md:text-sm text-slate-600 mt-0.5 md:mt-1">Create a new sale or purchase bill</p>
+                    <h1 className="text-lg md:text-2xl font-bold text-slate-900">{t('billing.new_transaction')}</h1>
+                    <p className="text-xs md:text-sm text-slate-600 mt-0.5 md:mt-1">{t('billing.create_bill_desc')}</p>
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)}>
@@ -264,7 +266,7 @@ export default function BillingPage() {
                         {/* Transaction Type Toggle - Clear selection colors */}
                         <div className="p-3 md:p-6 border-b-2 border-slate-100 bg-slate-50">
                             <label className="text-xs md:text-sm font-bold text-slate-800 mb-2 md:mb-3 block uppercase tracking-wide">
-                                Transaction Type
+                                {t('billing.transaction_type')}
                             </label>
                             <div className="flex bg-white p-1 rounded-xl border-2 border-slate-200 shadow-inner">
                                 <button
@@ -276,7 +278,7 @@ export default function BillingPage() {
                                         }`}
                                 >
                                     <Users className="h-4 w-4 md:h-5 md:w-5" />
-                                    Sale
+                                    {t('billing.sale')}
                                 </button>
                                 {hasFeature('wholesalers') && (
                                     <button
@@ -288,7 +290,7 @@ export default function BillingPage() {
                                             }`}
                                     >
                                         <Package className="h-4 w-4 md:h-5 md:w-5" />
-                                        Purchase
+                                        {t('billing.purchase')}
                                     </button>
                                 )}
                             </div>
@@ -299,7 +301,7 @@ export default function BillingPage() {
                             {billType === 'sale' ? (
                                 <div className="space-y-4 md:space-y-5">
                                     <label className="text-xs md:text-sm font-bold text-slate-800 block uppercase tracking-wide">
-                                        Select Customer
+                                        {t('billing.select_customer')}
                                     </label>
                                     <div className="flex gap-2 md:gap-3">
                                         {hasFeature('dueCustomers') && (
@@ -320,10 +322,10 @@ export default function BillingPage() {
                                                     </div>
                                                     <div>
                                                         <p className={`font-bold text-sm md:text-base ${customerType === 'due_customer' ? 'text-blue-700' : 'text-slate-700'}`}>
-                                                            Due Customer
+                                                            {t('billing.due_customer')}
                                                         </p>
                                                         <p className={`text-[10px] md:text-xs ${customerType === 'due_customer' ? 'text-blue-600' : 'text-slate-500'}`}>
-                                                            Credit Sale
+                                                            {t('billing.credit_sale')}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -347,10 +349,10 @@ export default function BillingPage() {
                                                     </div>
                                                     <div>
                                                         <p className={`font-bold text-sm md:text-base ${customerType === 'normal_customer' ? 'text-green-700' : 'text-slate-700'}`}>
-                                                            Walk-in
+                                                            {t('billing.normal_customer')}
                                                         </p>
                                                         <p className={`text-[10px] md:text-xs ${customerType === 'normal_customer' ? 'text-green-600' : 'text-slate-500'}`}>
-                                                            Cash Sale
+                                                            {t('billing.cash_sale')}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -363,14 +365,14 @@ export default function BillingPage() {
                                         <div className="pt-2">
                                             <label className="text-xs md:text-sm font-semibold text-slate-700 mb-2 block flex items-center gap-1.5">
                                                 <Search className="h-3.5 w-3.5 text-blue-500" />
-                                                Search Customer
+                                                {t('billing.search_customer')}
                                             </label>
                                             <Combobox
                                                 options={customerOptions}
                                                 value={selectedEntityId}
                                                 onValueChange={handleEntitySelect}
-                                                placeholder="Type customer name..."
-                                                emptyMessage="No customers found"
+                                                placeholder={t('common.search_placeholder')}
+                                                emptyMessage={t('common.search')}
                                             />
                                         </div>
                                     )}
@@ -379,10 +381,10 @@ export default function BillingPage() {
                                     {customerType === 'normal_customer' && (
                                         <div className="pt-2">
                                             <label className="text-xs md:text-sm font-semibold text-slate-700 mb-2 block">
-                                                Customer Name (Optional)
+                                                {t('billing.customer_name_optional')}
                                             </label>
                                             <Input
-                                                placeholder="Leave blank for Walk-in Customer"
+                                                placeholder={t('billing.walkin_placeholder')}
                                                 {...register('entityName')}
                                                 className="h-11 md:h-12 text-sm md:text-base border-2 border-slate-200 focus:border-green-500 focus:ring-green-500/20"
                                             />
@@ -392,19 +394,19 @@ export default function BillingPage() {
                             ) : (
                                 <div className="space-y-4 md:space-y-5">
                                     <label className="text-xs md:text-sm font-bold text-slate-800 block uppercase tracking-wide">
-                                        Select Wholesaler
+                                        {t('billing.select_wholesaler')}
                                     </label>
                                     <div className="relative">
                                         <label className="text-xs md:text-sm font-semibold text-slate-700 mb-2 block flex items-center gap-1.5">
                                             <Search className="h-3.5 w-3.5 text-orange-500" />
-                                            Search Wholesaler
+                                            {t('billing.search_wholesaler')}
                                         </label>
                                         <Combobox
                                             options={wholesalerOptions}
                                             value={selectedEntityId}
                                             onValueChange={handleEntitySelect}
-                                            placeholder="Type wholesaler name..."
-                                            emptyMessage="No wholesalers found"
+                                            placeholder={t('common.search_placeholder')}
+                                            emptyMessage={t('common.search')}
                                         />
                                     </div>
                                 </div>
@@ -414,7 +416,7 @@ export default function BillingPage() {
                         {/* Amount Section - HIGH VISIBILITY - Most important */}
                         <div className={`p-3 md:p-6 border-b-2 border-slate-100 ${billType === 'sale' ? 'bg-blue-50/50' : 'bg-orange-50/50'}`}>
                             <label className="text-xs md:text-sm font-bold text-slate-800 mb-4 block uppercase tracking-wide">
-                                Enter Amount
+                                {t('billing.enter_amount')}
                             </label>
 
                             {/* For Walk-in customers - only show Total Amount */}
@@ -422,7 +424,7 @@ export default function BillingPage() {
                                 <div className="bg-white p-4 md:p-5 rounded-xl border-2 border-green-200 shadow-sm">
                                     <label className="text-xs md:text-sm font-bold text-green-700 mb-2 block flex items-center gap-2">
                                         <IndianRupee className="h-4 w-4" />
-                                        Total Amount (Full Payment)
+                                        {t('billing.total_amount_full')}
                                     </label>
                                     <div className="relative">
                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-green-600 font-bold text-2xl md:text-3xl">₹</span>
@@ -443,7 +445,7 @@ export default function BillingPage() {
                                     <div className="mt-3 p-2 bg-green-100 rounded-lg">
                                         <p className="text-xs md:text-sm text-green-700 font-medium flex items-center gap-2">
                                             <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white text-xs">✓</span>
-                                            Full payment - No dues
+                                            {t('billing.fully_paid')} - {t('billing.no_dues')}
                                         </p>
                                     </div>
                                 </div>
@@ -454,7 +456,7 @@ export default function BillingPage() {
                                         {/* Total Amount - Primary */}
                                         <div className="bg-white p-3 md:p-4 rounded-xl border-2 border-slate-200 shadow-sm">
                                             <label className="text-[10px] md:text-xs font-bold text-slate-700 mb-1.5 md:mb-2 block uppercase">
-                                                Total Bill
+                                                {t('billing.total_bill')}
                                             </label>
                                             <div className="relative">
                                                 <span className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-lg md:text-2xl">₹</span>
@@ -474,7 +476,7 @@ export default function BillingPage() {
                                         {/* Paid Amount - Success color */}
                                         <div className="bg-white p-3 md:p-4 rounded-xl border-2 border-green-200 shadow-sm">
                                             <label className="text-[10px] md:text-xs font-bold text-green-700 mb-1.5 md:mb-2 block uppercase">
-                                                Paid Now
+                                                {t('billing.paid_now')}
                                             </label>
                                             <div className="relative">
                                                 <span className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-green-600 font-bold text-lg md:text-2xl">₹</span>
@@ -497,7 +499,7 @@ export default function BillingPage() {
                                                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/20 flex items-center justify-center">
                                                         <IndianRupee className="h-4 w-4 md:h-5 md:w-5 text-white" />
                                                     </div>
-                                                    <span className="text-white font-bold text-sm md:text-base">Balance Due</span>
+                                                    <span className="text-white font-bold text-sm md:text-base">{t('billing.balance_due')}</span>
                                                 </div>
                                                 <span className="text-2xl md:text-3xl font-bold text-white">₹{dueAmount.toLocaleString('en-IN')}</span>
                                             </div>
@@ -512,9 +514,9 @@ export default function BillingPage() {
                                                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-bold">
                                                         ✓
                                                     </div>
-                                                    <span className="text-white font-bold text-sm md:text-base">Fully Paid</span>
+                                                    <span className="text-white font-bold text-sm md:text-base">{t('billing.fully_paid')}</span>
                                                 </div>
-                                                <span className="text-xl md:text-2xl font-bold text-white">No Dues</span>
+                                                <span className="text-xl md:text-2xl font-bold text-white">{t('billing.no_dues')}</span>
                                             </div>
                                         </div>
                                     )}
@@ -529,7 +531,7 @@ export default function BillingPage() {
                                                         <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm">
                                                             ✓
                                                         </div>
-                                                        <span className="text-white font-bold text-sm">Bill Fully Paid</span>
+                                                        <span className="text-white font-bold text-sm">{t('billing.bill_fully_paid')}</span>
                                                     </div>
                                                     <span className="text-lg md:text-xl font-bold text-white">₹{totalAmount.toLocaleString('en-IN')}</span>
                                                 </div>
@@ -543,7 +545,7 @@ export default function BillingPage() {
                                                             <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/20 flex items-center justify-center">
                                                                 <ArrowRight className="h-4 w-4 md:h-5 md:w-5 text-white" />
                                                             </div>
-                                                            <span className="text-white font-bold text-sm md:text-base">Extra Payment</span>
+                                                            <span className="text-white font-bold text-sm md:text-base">{t('billing.extra_payment')}</span>
                                                         </div>
                                                         <span className="text-2xl md:text-3xl font-bold text-white">₹{excessPayment.toLocaleString('en-IN')}</span>
                                                     </div>
@@ -552,17 +554,17 @@ export default function BillingPage() {
                                                     {selectedEntity && entityOutstandingDue > 0 && (
                                                         <div className="mt-3 pt-3 border-t border-white/20">
                                                             <div className="flex items-center justify-between text-sm">
-                                                                <span className="text-white/80">Current Outstanding:</span>
+                                                                <span className="text-white/80">{t('billing.current_outstanding')}:</span>
                                                                 <span className="text-white font-semibold">₹{entityOutstandingDue.toLocaleString('en-IN')}</span>
                                                             </div>
                                                             <div className="flex items-center justify-between text-sm mt-1">
-                                                                <span className="text-white/80">After this payment:</span>
+                                                                <span className="text-white/80">{t('billing.after_payment')}:</span>
                                                                 <span className="text-white font-bold">₹{newOutstandingDue.toLocaleString('en-IN')}</span>
                                                             </div>
                                                             {excessPayment > entityOutstandingDue && (
                                                                 <div className="mt-2 p-2 bg-yellow-400/20 rounded-lg">
                                                                     <p className="text-yellow-200 text-xs font-medium">
-                                                                        ⚠️ Extra ₹{(excessPayment - entityOutstandingDue).toLocaleString('en-IN')} will create advance balance
+                                                                        ⚠️ {t('billing.advance_balance_warning', { amount: (excessPayment - entityOutstandingDue).toLocaleString('en-IN') })}
                                                                     </p>
                                                                 </div>
                                                             )}
@@ -572,7 +574,7 @@ export default function BillingPage() {
                                                     {/* Show message when no entity selected */}
                                                     {!selectedEntity && (
                                                         <p className="text-white/80 text-xs mt-2">
-                                                            This extra amount will reduce {billType === 'purchase' ? "wholesaler's" : "customer's"} existing outstanding balance
+                                                            {t('billing.extra_amount_desc', { type: billType === 'purchase' ? t('common.wholesalers') : t('common.customers') })}
                                                         </p>
                                                     )}
                                                 </div>
@@ -587,13 +589,13 @@ export default function BillingPage() {
                         {effectivePaidAmount > 0 && (
                             <div className="p-3 md:p-6 border-b-2 border-slate-100">
                                 <label className="text-xs md:text-sm font-bold text-slate-800 mb-3 block uppercase tracking-wide">
-                                    Payment Method
+                                    {t('billing.payment_method')}
                                 </label>
                                 <div className="flex gap-2 md:gap-3">
                                     {[
-                                        { value: 'cash', label: 'Cash', icon: <Banknote className="h-5 w-5 md:h-6 md:w-6" />, color: 'green' },
-                                        { value: 'card', label: 'Card', icon: <CreditCard className="h-5 w-5 md:h-6 md:w-6" />, color: 'blue' },
-                                        { value: 'online', label: 'UPI', icon: <Smartphone className="h-5 w-5 md:h-6 md:w-6" />, color: 'purple' },
+                                        { value: 'cash', label: t('billing.cash'), icon: <Banknote className="h-5 w-5 md:h-6 md:w-6" />, color: 'green' },
+                                        { value: 'card', label: t('billing.card'), icon: <CreditCard className="h-5 w-5 md:h-6 md:w-6" />, color: 'blue' },
+                                        { value: 'online', label: t('billing.upi'), icon: <Smartphone className="h-5 w-5 md:h-6 md:w-6" />, color: 'purple' },
                                     ].map((method) => (
                                         <button
                                             key={method.value}
@@ -622,10 +624,10 @@ export default function BillingPage() {
                         {/* Notes - Subtle */}
                         <div className="p-3 md:p-6 border-b-2 border-slate-100 bg-slate-50">
                             <label className="text-xs md:text-sm font-semibold text-slate-600 mb-2 block">
-                                Notes (Optional)
+                                {t('billing.notes')}
                             </label>
                             <Input
-                                placeholder="Add any notes about this bill..."
+                                placeholder={t('billing.notes_placeholder')}
                                 {...register('notes')}
                                 className="h-11 md:h-12 text-sm md:text-base border-2 border-slate-200 focus:border-slate-400 bg-white"
                             />
@@ -636,18 +638,18 @@ export default function BillingPage() {
                             {/* Quick Summary */}
                             <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/20">
                                 <div>
-                                    <p className="text-xs md:text-sm text-white/80 font-medium">Total Bill</p>
+                                    <p className="text-xs md:text-sm text-white/80 font-medium">{t('billing.total_bill')}</p>
                                     <p className="text-2xl md:text-3xl font-bold text-white">₹{totalAmount.toLocaleString('en-IN')}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-xs md:text-sm text-white/80 font-medium">Status</p>
+                                    <p className="text-xs md:text-sm text-white/80 font-medium">{t('billing.status')}</p>
                                     {dueAmount <= 0 ? (
                                         <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-green-400 text-green-900 text-sm md:text-base font-bold shadow-lg">
-                                            ✓ Paid
+                                            ✓ {t('billing.paid')}
                                         </span>
                                     ) : (
                                         <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-orange-300 text-orange-900 text-sm md:text-base font-bold shadow-lg">
-                                            Due: ₹{dueAmount.toLocaleString('en-IN')}
+                                            {t('billing.due', { amount: dueAmount.toLocaleString('en-IN') })}
                                         </span>
                                     )}
                                 </div>
@@ -662,12 +664,12 @@ export default function BillingPage() {
                                 {createBillMutation.isPending ? (
                                     <>
                                         <Loader2 className="mr-2 h-5 w-5 md:h-6 md:w-6 animate-spin" />
-                                        Processing...
+                                        {t('billing.processing')}
                                     </>
                                 ) : (
                                     <>
                                         <Receipt className="mr-2 h-5 w-5 md:h-6 md:w-6" />
-                                        {billType === 'sale' ? 'Create Sale Bill' : 'Create Purchase Bill'}
+                                        {billType === 'sale' ? t('billing.create_sale_bill') : t('billing.create_purchase_bill')}
                                     </>
                                 )}
                             </Button>
