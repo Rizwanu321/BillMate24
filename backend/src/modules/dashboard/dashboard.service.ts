@@ -37,6 +37,7 @@ export class DashboardService {
         topWholesalersDue: any[];
         alerts: { type: string; message: string; count: number }[];
         totalLifetimeSales: number;
+        totalLifetimePurchases: number;
         totalCollected: number;
     }> {
         const today = new Date();
