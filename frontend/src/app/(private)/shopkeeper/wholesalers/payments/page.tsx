@@ -11,6 +11,8 @@ import {
     LayoutDashboard, Users, Plus, CheckCircle
 } from 'lucide-react';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { WholesalerAllPaymentsPdfModal } from './components/wholesaler-all-payments-pdf-modal';
+import { Printer } from 'lucide-react';
 
 import { Header } from '@/components/app/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -166,6 +168,8 @@ export default function WholesalerPaymentsPage() {
         timeFilter: 'all',
         paymentMethod: 'all',
     });
+
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
     // Build query params
     const buildQueryParams = () => {
@@ -346,31 +350,24 @@ export default function WholesalerPaymentsPage() {
 
             <div className="p-3 md:p-6">
                 {/* Page Header */}
-                <div className="mb-4 md:mb-8 flex flex-row items-center justify-between gap-3">
+                <div className="mb-4 md:mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                                <span className="hidden sm:inline">{t('wholesaler_payments.title')}</span>
-                                <span className="sm:hidden">{t('wholesaler_payments.subtitle')}</span>
+                                {t('wholesaler_payments.title')}
                             </h2>
                             <CreditCard className="h-5 w-5 md:h-8 md:w-8 text-emerald-600" />
                         </div>
                         <p className="text-gray-600 mt-0.5 md:mt-1 flex items-center gap-1.5 md:gap-2 text-xs md:text-base">
                             <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4" />
                             {i18n.language === 'ml' ? (
-                                <>
-                                    <span className="hidden md:inline">{new Intl.DateTimeFormat('ml-IN', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(new Date())}</span>
-                                    <span className="md:hidden">{new Intl.DateTimeFormat('ml-IN', { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date())}</span>
-                                </>
+                                <span>{new Intl.DateTimeFormat('ml-IN', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(new Date())}</span>
                             ) : (
-                                <>
-                                    <span className="hidden md:inline">{format(new Date(), 'EEEE, MMMM d, yyyy')}</span>
-                                    <span className="md:hidden">{format(new Date(), 'EEE, MMM d')}</span>
-                                </>
+                                <span>{format(new Date(), 'EEEE, MMMM d, yyyy')}</span>
                             )}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                         <Link href="/shopkeeper/wholesalers/dashboard" className="hidden lg:block">
                             <Button variant="outline" className="shadow-sm">
                                 <LayoutDashboard className="h-4 w-4 mr-2" />
@@ -383,12 +380,19 @@ export default function WholesalerPaymentsPage() {
                                 {t('common.wholesalers')}
                             </Button>
                         </Link>
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsExportModalOpen(true)}
+                            className="shadow-sm border-sky-200 hover:border-sky-300 hover:bg-sky-50 text-sky-700 flex-1 md:flex-none h-9 md:h-10 justify-center"
+                        >
+                            <Printer className="h-4 w-4 mr-1.5 md:mr-2" />
+                            {t('Export PDF')}
+                        </Button>
                         <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
                             <DialogTrigger asChild>
-                                <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25 h-9 md:h-10 px-3 md:px-4 text-sm">
+                                <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25 h-9 md:h-10 px-3 md:px-4 text-sm flex-1 md:flex-none justify-center">
                                     <Plus className="mr-1.5 md:mr-2 h-4 w-4" />
-                                    <span className="hidden sm:inline">{t('wholesaler_payments.record_payment')}</span>
-                                    <span className="sm:hidden">{t('wholesaler_payments.record_payment_short')}</span>
+                                    <span>{t('wholesaler_payments.record_payment')}</span>
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-lg">
@@ -424,7 +428,7 @@ export default function WholesalerPaymentsPage() {
                                             {t('wholesaler_payments.form.amount')} <span className="text-red-500">*</span>
                                         </Label>
                                         <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">â‚¹</span>
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₹</span>
                                             <Input
                                                 id="amount"
                                                 name="amount"
@@ -454,7 +458,7 @@ export default function WholesalerPaymentsPage() {
                                                     onClick={() => setPaymentMethod(key)}
                                                 >
                                                     {config.iconSmall}
-                                                    <span className="ml-1.5">{t(config.labelKey).split('/')[0]}</span>
+                                                    <span className="ml-1.5">{t(config.labelKey)}</span>
                                                 </Button>
                                             ))}
                                         </div>
@@ -485,8 +489,7 @@ export default function WholesalerPaymentsPage() {
                                             ) : (
                                                 <span className="flex items-center gap-2">
                                                     <CheckCircle className="h-4 w-4" />
-                                                    <span className="hidden sm:inline">{t('wholesaler_payments.record_payment')}</span>
-                                                    <span className="sm:hidden">{t('wholesaler_payments.record_payment_short')}</span>
+                                                    <span>{t('wholesaler_payments.record_payment')}</span>
                                                 </span>
                                             )}
                                         </Button>
@@ -508,8 +511,7 @@ export default function WholesalerPaymentsPage() {
                                 <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5">{t('wholesaler_payments.stats.due')}</Badge>
                             </div>
                             <h3 className="text-lg md:text-2xl lg:text-3xl font-bold">
-                                <span className="md:hidden">{formatCurrency(totalOutstanding)}</span>
-                                <span className="hidden md:inline">{formatCurrency(totalOutstanding)}</span>
+                                {formatCurrency(totalOutstanding)}
                             </h3>
                             <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">{t('wholesaler_payments.stats.outstanding')}</p>
                             <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 text-[10px] md:text-sm text-white/70">
@@ -548,8 +550,7 @@ export default function WholesalerPaymentsPage() {
                                 <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5">{t('wholesaler_payments.stats.page_paid')}</Badge>
                             </div>
                             <h3 className="text-lg md:text-2xl lg:text-3xl font-bold">
-                                <span className="md:hidden">{formatCurrency(totalPaidInPeriod)}</span>
-                                <span className="hidden md:inline">{formatCurrency(totalPaidInPeriod)}</span>
+                                {formatCurrency(totalPaidInPeriod)}
                             </h3>
                             <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">{t('wholesaler_payments.stats.paid')}</p>
                             <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 text-[10px] md:text-sm text-white/70">
@@ -622,8 +623,7 @@ export default function WholesalerPaymentsPage() {
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline" size="sm" className="h-8 bg-white text-xs md:text-sm px-2 md:px-3 flex-shrink-0">
                                             <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2 text-purple-500" />
-                                            <span className="hidden sm:inline">{getTimeFilterLabel()}</span>
-                                            <span className="sm:hidden">{filters.timeFilter === 'all' ? t('wholesalers_list.stats.all_badge') : '...'}</span>
+                                            <span>{getTimeFilterLabel()}</span>
                                             <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4 ml-1 md:ml-2 text-gray-400" />
                                         </Button>
                                     </DropdownMenuTrigger>
@@ -687,7 +687,7 @@ export default function WholesalerPaymentsPage() {
                                         className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 px-2 flex-shrink-0"
                                     >
                                         <X className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                        <span className="hidden sm:inline ml-1">{t('wholesalers_list.filters.clear_dues')}</span>
+                                        <span className="ml-1">{t('wholesalers_list.filters.clear_dues')}</span>
                                     </Button>
                                 )}
                             </div>
@@ -791,7 +791,7 @@ export default function WholesalerPaymentsPage() {
 
                                                     {/* Name */}
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="font-semibold text-gray-900 text-sm truncate">{payment.entityName}</p>
+                                                        <p className="font-semibold text-gray-900 text-sm line-clamp-2">{payment.entityName}</p>
                                                         <p className="text-[11px] text-gray-400">
                                                             {format(new Date(payment.createdAt), 'dd MMM yyyy, hh:mm a')}
                                                         </p>
@@ -800,7 +800,7 @@ export default function WholesalerPaymentsPage() {
                                                     {/* Payment Method Badge */}
                                                     <Badge className={`border-0 flex items-center gap-1 text-[10px] px-2 py-0.5 flex-shrink-0 ${config.bgColor} ${config.color}`}>
                                                         {config.iconSmall}
-                                                        {t(config.labelKey).split('/')[0]}
+                                                        {t(config.labelKey)}
                                                     </Badge>
                                                 </div>
 
@@ -816,7 +816,7 @@ export default function WholesalerPaymentsPage() {
 
                                                 {/* Notes */}
                                                 {payment.notes && (
-                                                    <p className="text-xs text-gray-500 mt-2 line-clamp-1 italic">ðŸ“ {payment.notes}</p>
+                                                    <p className="text-xs text-gray-500 mt-2 line-clamp-1 italic">📝 {payment.notes}</p>
                                                 )}
                                             </div>
                                         );
@@ -1005,6 +1005,17 @@ export default function WholesalerPaymentsPage() {
                     </DialogContent>
                 </Dialog>
             </div>
+
+            <WholesalerAllPaymentsPdfModal
+                open={isExportModalOpen}
+                onOpenChange={setIsExportModalOpen}
+                filters={{
+                    search: filters.search,
+                    paymentMethod: filters.paymentMethod,
+                    startDate: filters.startDate,
+                    endDate: filters.endDate
+                }}
+            />
         </div>
     );
 }

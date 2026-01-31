@@ -7,7 +7,7 @@ export const createWholesalerSchema = z.object({
     address: z.string().min(1, 'Address is required'),
     place: z.string().optional(),
     whatsappNumber: z.string().optional(),
-    initialPurchased: z.number().min(0, 'Amount must be positive').optional(),
+    initialPurchased: z.number().optional(),
 });
 
 export const updateWholesalerSchema = z.object({
@@ -17,6 +17,7 @@ export const updateWholesalerSchema = z.object({
     address: z.string().optional(),
     place: z.string().optional(),
     whatsappNumber: z.string().optional(),
+    initialPurchased: z.number().optional(),
     isActive: z.boolean().optional(),
 });
 

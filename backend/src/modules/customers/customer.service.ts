@@ -13,9 +13,12 @@ export class CustomerService {
             // If there's an initial sales amount, it represents:
             // - Total sales to this customer before using the app
             // - This becomes the outstanding debt (totalPaid = 0 initially)
-            totalSales: initialSales || 0,
-            totalPaid: 0,
-            outstandingDue: initialSales || 0,  // Positive value = customer owes shopkeeper
+            // Handle opening balance
+            // If initialSales > 0: Customer owes money (Past Sales)
+            // If initialSales < 0: Customer paid in advance (Advance Payment)
+            totalSales: (initialSales && initialSales > 0) ? initialSales : 0,
+            totalPaid: (initialSales && initialSales < 0) ? Math.abs(initialSales) : 0,
+            outstandingDue: initialSales || 0,
         });
 
         try {

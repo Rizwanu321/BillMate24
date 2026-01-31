@@ -269,30 +269,37 @@ export default function WholesalerDashboardPage() {
             <div className="p-3 md:p-6">
                 {/* Welcome Section - Compact on mobile */}
                 <div className="mb-4 md:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
-                    <div>
+                    <div className="w-full md:w-auto">
                         <div className="flex items-center gap-2">
                             <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
                                 {t('wholesaler_dashboard.title')}
                             </h2>
                             <LayoutDashboard className="h-5 w-5 md:h-8 md:w-8 text-indigo-600" />
                         </div>
-                        <p className="text-gray-600 text-xs md:text-base mt-0.5 md:mt-1 flex items-center gap-1.5 md:gap-2">
-                            <Calendar className="h-3 w-3 md:h-4 md:w-4" />
-                            {format(new Date(), 'EEE, MMM d, yyyy')}
-                        </p>
+                        <div className="flex items-center justify-between mt-0.5 md:mt-1">
+                            <p className="text-gray-600 text-xs md:text-base flex items-center gap-1.5 md:gap-2">
+                                <Calendar className="h-3 w-3 md:h-4 md:w-4" />
+                                {format(new Date(), 'EEE, MMM d, yyyy')}
+                            </p>
+                            <div className="md:hidden min-w-[140px] max-w-[50%] flex justify-end">
+                                <TimeFilter value={timeFilter} onChange={handleTimeFilterChange} className="w-full" />
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2 md:gap-3">
-                        <TimeFilter value={timeFilter} onChange={handleTimeFilterChange} />
-                        <Link href="/shopkeeper/wholesalers">
-                            <Button variant="outline" size="sm" className="shadow-sm px-2 sm:px-4">
-                                <Package className="h-4 w-4 sm:mr-2" />
-                                <span className="hidden sm:inline">{t('wholesaler_dashboard.all_wholesalers')}</span>
+                    <div className="grid grid-cols-2 md:flex md:items-center gap-2 md:gap-3 w-full md:w-auto">
+                        <div className="hidden md:block">
+                            <TimeFilter value={timeFilter} onChange={handleTimeFilterChange} />
+                        </div>
+                        <Link href="/shopkeeper/wholesalers" className="w-full md:w-auto">
+                            <Button variant="outline" size="sm" className="shadow-sm w-full md:w-auto px-3 sm:px-4 h-9">
+                                <Package className="h-4 w-4 mr-2" />
+                                <span>{t('wholesaler_dashboard.all_wholesalers')}</span>
                             </Button>
                         </Link>
-                        <Link href="/shopkeeper/wholesalers/payments">
-                            <Button size="sm" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg shadow-purple-500/25 px-2 sm:px-4">
-                                <CreditCard className="h-4 w-4 sm:mr-2" />
-                                <span className="hidden sm:inline">{t('wholesaler_dashboard.make_payment')}</span>
+                        <Link href="/shopkeeper/wholesalers/payments" className="w-full md:w-auto">
+                            <Button size="sm" className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg shadow-purple-500/25 px-3 sm:px-4 h-9">
+                                <CreditCard className="h-4 w-4 mr-2" />
+                                <span>{t('wholesaler_dashboard.make_payment')}</span>
                             </Button>
                         </Link>
                     </div>

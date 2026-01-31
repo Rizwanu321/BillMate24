@@ -46,6 +46,8 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import api from '@/config/axios';
+import { CustomerAllSalesPdfModal } from '../components';
+import { Printer } from 'lucide-react';
 
 interface Bill {
     _id: string;
@@ -158,6 +160,8 @@ export default function NormalCustomersPage() {
         timeFilter: 'all',
         paymentMethod: 'all',
     });
+
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
     // Debounce search
     const debouncedSearch = useDebounce(searchInput, 500);
@@ -279,12 +283,11 @@ export default function NormalCustomersPage() {
 
             <div className="p-3 md:p-6">
                 {/* Page Header - Mobile First */}
-                <div className="mb-4 md:mb-8 flex flex-row items-center justify-between gap-3">
+                <div className="mb-4 md:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                                <span className="hidden sm:inline">{t('sidebar.normal_customers')}</span>
-                                <span className="sm:hidden">{t('common.customers')}</span>
+                                {t('sidebar.normal_customers')}
                             </h2>
                             <ShoppingBag className="h-5 w-5 md:h-8 md:w-8 text-green-600" />
                         </div>
@@ -303,24 +306,31 @@ export default function NormalCustomersPage() {
                             )}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Link href="/shopkeeper/customers/dashboard" className="hidden lg:block">
+                    <div className="grid grid-cols-2 md:flex md:items-center gap-2 md:gap-3 w-full md:w-auto">
+                        <Link href="/shopkeeper/customers/dashboard" className="hidden md:block">
                             <Button variant="outline" className="shadow-sm">
                                 <LayoutDashboard className="h-4 w-4 mr-2" />
                                 {t('common.dashboard')}
                             </Button>
                         </Link>
-                        <Link href="/shopkeeper/customers/due" className="hidden lg:block">
+                        <Link href="/shopkeeper/customers/due" className="hidden md:block">
                             <Button variant="outline" className="shadow-sm">
                                 <CreditCard className="h-4 w-4 mr-2" />
-                                {t('billing.due')}
+                                {t('sidebar.due_customers')}
                             </Button>
                         </Link>
-                        <Link href="/shopkeeper/billing">
-                            <Button size="sm" className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25 h-9 md:h-10 px-3 md:px-4 text-xs md:text-sm">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsExportModalOpen(true)}
+                            className="w-full md:w-auto h-9 md:h-10 px-3 md:px-4 text-xs md:text-sm shadow-sm border-green-200 hover:border-green-300 hover:bg-green-50 text-green-700"
+                        >
+                            <Printer className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5 md:mr-2" />
+                            <span className="truncate">{t('Export PDF')}</span>
+                        </Button>
+                        <Link href="/shopkeeper/billing" className="w-full md:w-auto">
+                            <Button size="sm" className="w-full md:w-auto bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25 h-9 md:h-10 px-3 md:px-4 text-xs md:text-sm">
                                 <Receipt className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1 md:mr-2" />
-                                <span className="hidden sm:inline">{t('billing.new_bill')}</span>
-                                <span className="sm:hidden">{t('billing.bill')}</span>
+                                <span className="truncate">{t('billing.new_bill')}</span>
                             </Button>
                         </Link>
                     </div>
@@ -410,8 +420,9 @@ export default function NormalCustomersPage() {
                     <CardHeader className="border-b bg-gray-50/80 p-3 md:py-4 md:px-6">
                         <div className="space-y-2 md:space-y-4">
                             {/* First Row - Title and Search */}
-                            <div className="flex flex-row gap-2 md:gap-4 justify-between items-center">
-                                <CardTitle className="text-sm md:text-lg flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+                            {/* First Row - Title and Search */}
+                            <div className="flex flex-col md:flex-row gap-3 md:items-center justify-between">
+                                <CardTitle className="text-sm md:text-lg flex items-center gap-1.5 md:gap-2">
                                     <div className="p-1.5 md:p-2 rounded-lg bg-green-100">
                                         <Receipt className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                                     </div>
@@ -424,13 +435,13 @@ export default function NormalCustomersPage() {
                                         <div className="animate-spin rounded-full h-3 w-3 md:h-4 md:w-4 border-2 border-green-500 border-t-transparent" />
                                     )}
                                 </CardTitle>
-                                <div className="relative flex-1 max-w-[180px] md:max-w-[256px]">
+                                <div className="relative w-full md:w-auto md:min-w-[280px]">
                                     <Search className="absolute left-2.5 md:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
                                     <Input
                                         placeholder={t('common.search')}
                                         value={searchInput}
                                         onChange={(e) => setSearchInput(e.target.value)}
-                                        className="pl-8 md:pl-10 h-8 md:h-9 text-sm bg-white"
+                                        className="pl-8 md:pl-10 h-9 md:h-10 text-sm bg-white w-full"
                                     />
                                 </div>
                             </div>
@@ -795,6 +806,17 @@ export default function NormalCustomersPage() {
                         </div>
                     </DialogContent>
                 </Dialog>
+                <CustomerAllSalesPdfModal
+                    open={isExportModalOpen}
+                    onOpenChange={setIsExportModalOpen}
+                    entityType="normal_customer"
+                    filters={{
+                        search: debouncedSearch,
+                        paymentMethod: filters.paymentMethod,
+                        startDate: filters.startDate,
+                        endDate: filters.endDate
+                    }}
+                />
             </div>
         </div>
     );

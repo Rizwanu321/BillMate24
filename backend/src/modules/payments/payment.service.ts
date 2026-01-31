@@ -112,9 +112,24 @@ export class PaymentService {
     async getByEntity(
         shopkeeperId: string,
         entityType: 'wholesaler' | 'customer',
-        entityId: string
+        entityId: string,
+        filters?: { startDate?: string; endDate?: string }
     ): Promise<any[]> {
-        const payments = await Payment.find({ shopkeeperId, entityType, entityId })
+        const query: any = { shopkeeperId, entityType, entityId };
+
+        if (filters?.startDate || filters?.endDate) {
+            query.createdAt = {};
+            if (filters.startDate) {
+                query.createdAt.$gte = new Date(filters.startDate);
+            }
+            if (filters.endDate) {
+                const endDate = new Date(filters.endDate);
+                endDate.setHours(23, 59, 59, 999);
+                query.createdAt.$lte = endDate;
+            }
+        }
+
+        const payments = await Payment.find(query)
             .sort({ createdAt: -1 });
         return payments.map(p => p.toObject());
     }

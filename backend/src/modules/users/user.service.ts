@@ -5,6 +5,8 @@ import { IUser, Features } from '../../types';
 import { Bill } from '../bills/bill.model';
 import { Customer } from '../customers/customer.model';
 import { Wholesaler } from '../wholesalers/wholesaler.model';
+import { Payment } from '../payments/payment.model';
+import { Transaction } from '../dashboard/transaction.model';
 import mongoose from 'mongoose';
 
 export class UserService {
@@ -176,6 +178,12 @@ export class UserService {
             totalBills,
             purchaseBills,
             saleBills,
+            totalPayments,
+            customerPayments,
+            wholesalerPayments,
+            totalTransactions,
+            incomeTransactions,
+            expenseTransactions,
             totalRevenue,
             totalExpenses,
         ] = await Promise.all([
@@ -186,6 +194,12 @@ export class UserService {
             Bill.countDocuments({ shopkeeperId: shopkeeperObjectId }),
             Bill.countDocuments({ shopkeeperId: shopkeeperObjectId, billType: 'purchase' }),
             Bill.countDocuments({ shopkeeperId: shopkeeperObjectId, billType: 'sale' }),
+            Payment.countDocuments({ shopkeeperId: shopkeeperObjectId }),
+            Payment.countDocuments({ shopkeeperId: shopkeeperObjectId, entityType: 'customer' }),
+            Payment.countDocuments({ shopkeeperId: shopkeeperObjectId, entityType: 'wholesaler' }),
+            Transaction.countDocuments({ shopkeeperId: shopkeeperObjectId }),
+            Transaction.countDocuments({ shopkeeperId: shopkeeperObjectId, type: 'income' }),
+            Transaction.countDocuments({ shopkeeperId: shopkeeperObjectId, type: 'expense' }),
             Bill.aggregate([
                 { $match: { shopkeeperId: shopkeeperObjectId, billType: 'sale' } },
                 { $group: { _id: null, total: { $sum: '$totalAmount' } } }
@@ -198,13 +212,19 @@ export class UserService {
 
         // Estimate storage size (approximate calculation)
         // Average document sizes in MongoDB:
+        // - User/Shopkeeper: ~300 bytes (basic profile data)
         // - Customer: ~500 bytes
         // - Wholesaler: ~500 bytes
         // - Bill: ~1KB (1024 bytes) due to items array
+        // - Payment: ~400 bytes
+        // - Transaction: ~350 bytes
         const estimatedStorageBytes =
+            300 + // Shopkeeper account itself
             (totalCustomers * 500) +
             (totalWholesalers * 500) +
-            (totalBills * 1024);
+            (totalBills * 1024) +
+            (totalPayments * 400) +
+            (totalTransactions * 350);
 
         // Convert to human-readable format
         const formatBytes = (bytes: number): string => {
@@ -221,6 +241,10 @@ export class UserService {
                 totalBytes: estimatedStorageBytes,
                 formatted: formatBytes(estimatedStorageBytes),
             },
+            users: {
+                shopkeeperAccount: 1,
+                estimatedBytes: 300,
+            },
             customers: {
                 total: totalCustomers,
                 due: dueCustomers,
@@ -233,6 +257,16 @@ export class UserService {
                 total: totalBills,
                 purchase: purchaseBills,
                 sale: saleBills,
+            },
+            payments: {
+                total: totalPayments,
+                toCustomers: customerPayments,
+                toWholesalers: wholesalerPayments,
+            },
+            transactions: {
+                total: totalTransactions,
+                income: incomeTransactions,
+                expense: expenseTransactions,
             },
             revenue: {
                 total: totalRevenue[0]?.total || 0,
@@ -270,6 +304,236 @@ export class UserService {
             total,
             totalPages: Math.ceil(total / limit),
         };
+    }
+
+    /**
+     * Get total storage statistics for all shopkeepers combined
+     */
+    async getTotalStorageStats() {
+        const shopkeepers = await User.find({ role: 'shopkeeper' }).select('_id');
+
+        let totalStorage = 0;
+        let totalUsers = shopkeepers.length;
+        let totalCustomers = 0;
+        let totalWholesalers = 0;
+        let totalBills = 0;
+        let totalPayments = 0;
+        let totalTransactions = 0;
+        let totalRevenue = 0;
+        let totalExpenses = 0;
+
+        // Calculate totals across all shopkeepers
+        for (const shopkeeper of shopkeepers) {
+            const stats = await this.getShopkeeperStorageStats(shopkeeper._id.toString());
+            totalStorage += stats.storage.totalBytes;
+            totalCustomers += stats.customers.total;
+            totalWholesalers += stats.wholesalers.total;
+            totalBills += stats.bills.total;
+            totalPayments += stats.payments.total;
+            totalTransactions += stats.transactions.total;
+            totalRevenue += stats.revenue.total;
+            totalExpenses += stats.revenue.expenses;
+        }
+
+        const formatBytes = (bytes: number): string => {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        };
+
+        return {
+            totalShopkeepers: shopkeepers.length,
+            storage: {
+                totalBytes: totalStorage,
+                formatted: formatBytes(totalStorage),
+                breakdown: {
+                    users: {
+                        count: totalUsers,
+                        bytes: totalUsers * 300,
+                        formatted: formatBytes(totalUsers * 300),
+                        percentage: totalStorage > 0 ? ((totalUsers * 300) / totalStorage * 100).toFixed(2) : '0'
+                    },
+                    customers: {
+                        count: totalCustomers,
+                        bytes: totalCustomers * 500,
+                        formatted: formatBytes(totalCustomers * 500),
+                        percentage: totalStorage > 0 ? ((totalCustomers * 500) / totalStorage * 100).toFixed(2) : '0'
+                    },
+                    wholesalers: {
+                        count: totalWholesalers,
+                        bytes: totalWholesalers * 500,
+                        formatted: formatBytes(totalWholesalers * 500),
+                        percentage: totalStorage > 0 ? ((totalWholesalers * 500) / totalStorage * 100).toFixed(2) : '0'
+                    },
+                    bills: {
+                        count: totalBills,
+                        bytes: totalBills * 1024,
+                        formatted: formatBytes(totalBills * 1024),
+                        percentage: totalStorage > 0 ? ((totalBills * 1024) / totalStorage * 100).toFixed(2) : '0'
+                    },
+                    payments: {
+                        count: totalPayments,
+                        bytes: totalPayments * 400,
+                        formatted: formatBytes(totalPayments * 400),
+                        percentage: totalStorage > 0 ? ((totalPayments * 400) / totalStorage * 100).toFixed(2) : '0'
+                    },
+                    transactions: {
+                        count: totalTransactions,
+                        bytes: totalTransactions * 350,
+                        formatted: formatBytes(totalTransactions * 350),
+                        percentage: totalStorage > 0 ? ((totalTransactions * 350) / totalStorage * 100).toFixed(2) : '0'
+                    }
+                }
+            },
+            aggregates: {
+                users: totalUsers,
+                customers: totalCustomers,
+                wholesalers: totalWholesalers,
+                bills: totalBills,
+                payments: totalPayments,
+                transactions: totalTransactions,
+                revenue: totalRevenue,
+                expenses: totalExpenses,
+                profit: totalRevenue - totalExpenses
+            }
+        };
+    }
+
+    /**
+     * Get detailed storage breakdown for a specific shopkeeper
+     */
+    async getDetailedStorageStats(shopkeeperId: string) {
+        const stats = await this.getShopkeeperStorageStats(shopkeeperId);
+
+        const formatBytes = (bytes: number): string => {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        };
+
+        const totalBytes = stats.storage.totalBytes;
+
+        return {
+            ...stats,
+            breakdown: {
+                users: {
+                    shopkeeperAccount: stats.users.shopkeeperAccount,
+                    estimatedBytes: stats.users.estimatedBytes,
+                    formatted: formatBytes(stats.users.estimatedBytes),
+                    percentage: totalBytes > 0 ? ((stats.users.estimatedBytes) / totalBytes * 100).toFixed(2) : '0',
+                    avgSizePerItem: 300
+                },
+                customers: {
+                    total: stats.customers.total,
+                    due: stats.customers.due,
+                    normal: stats.customers.normal,
+                    estimatedBytes: stats.customers.total * 500,
+                    formatted: formatBytes(stats.customers.total * 500),
+                    percentage: totalBytes > 0 ? ((stats.customers.total * 500) / totalBytes * 100).toFixed(2) : '0',
+                    avgSizePerItem: 500
+                },
+                wholesalers: {
+                    total: stats.wholesalers.total,
+                    estimatedBytes: stats.wholesalers.total * 500,
+                    formatted: formatBytes(stats.wholesalers.total * 500),
+                    percentage: totalBytes > 0 ? ((stats.wholesalers.total * 500) / totalBytes * 100).toFixed(2) : '0',
+                    avgSizePerItem: 500
+                },
+                bills: {
+                    total: stats.bills.total,
+                    purchase: stats.bills.purchase,
+                    sale: stats.bills.sale,
+                    estimatedBytes: stats.bills.total * 1024,
+                    formatted: formatBytes(stats.bills.total * 1024),
+                    percentage: totalBytes > 0 ? ((stats.bills.total * 1024) / totalBytes * 100).toFixed(2) : '0',
+                    avgSizePerItem: 1024
+                },
+                payments: {
+                    total: stats.payments.total,
+                    toCustomers: stats.payments.toCustomers,
+                    toWholesalers: stats.payments.toWholesalers,
+                    estimatedBytes: stats.payments.total * 400,
+                    formatted: formatBytes(stats.payments.total * 400),
+                    percentage: totalBytes > 0 ? ((stats.payments.total * 400) / totalBytes * 100).toFixed(2) : '0',
+                    avgSizePerItem: 400
+                },
+                transactions: {
+                    total: stats.transactions.total,
+                    income: stats.transactions.income,
+                    expense: stats.transactions.expense,
+                    estimatedBytes: stats.transactions.total * 350,
+                    formatted: formatBytes(stats.transactions.total * 350),
+                    percentage: totalBytes > 0 ? ((stats.transactions.total * 350) / totalBytes * 100).toFixed(2) : '0',
+                    avgSizePerItem: 350
+                }
+            },
+            limits: {
+                used: totalBytes,
+                usedFormatted: stats.storage.formatted,
+                // You can set limits per shopkeeper here if needed
+                limit: 100 * 1024 * 1024, // 100 MB default limit
+                limitFormatted: '100 MB',
+                percentage: ((totalBytes / (100 * 1024 * 1024)) * 100).toFixed(2),
+                remaining: (100 * 1024 * 1024) - totalBytes,
+                remainingFormatted: formatBytes((100 * 1024 * 1024) - totalBytes)
+            }
+        };
+    }
+
+    /**
+     * Get storage comparison across all shopkeepers
+     */
+    async getStorageComparison() {
+        const shopkeepers = await User.find({ role: 'shopkeeper' })
+            .select('_id name email businessName')
+            .sort({ createdAt: -1 });
+
+        const comparisons = await Promise.all(
+            shopkeepers.map(async (shopkeeper) => {
+                const stats = await this.getShopkeeperStorageStats(shopkeeper._id.toString());
+                return {
+                    shopkeeperId: shopkeeper._id,
+                    name: shopkeeper.name,
+                    email: shopkeeper.email,
+                    businessName: shopkeeper.businessName,
+                    storage: stats.storage,
+                    counts: {
+                        customers: stats.customers.total,
+                        wholesalers: stats.wholesalers.total,
+                        bills: stats.bills.total,
+                        payments: stats.payments.total,
+                        transactions: stats.transactions.total
+                    }
+                };
+            })
+        );
+
+        // Sort by storage usage (highest first)
+        comparisons.sort((a, b) => b.storage.totalBytes - a.storage.totalBytes);
+
+        return {
+            shopkeepers: comparisons,
+            summary: {
+                totalShopkeepers: comparisons.length,
+                highestUsage: comparisons[0]?.storage.formatted || '0 Bytes',
+                lowestUsage: comparisons[comparisons.length - 1]?.storage.formatted || '0 Bytes',
+                averageUsage: comparisons.length > 0
+                    ? this.formatBytes(comparisons.reduce((sum, s) => sum + s.storage.totalBytes, 0) / comparisons.length)
+                    : '0 Bytes'
+            }
+        };
+    }
+
+    private formatBytes(bytes: number): string {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 }
 

@@ -18,6 +18,7 @@ import Link from 'next/link';
 interface Wholesaler {
     totalPurchased: number;
     outstandingDue: number;
+    initialPurchased: number;
 }
 
 interface Bill {
@@ -53,9 +54,7 @@ const paymentMethodColors: Record<string, string> = {
 
 export function TransactionsTable({ bills, wholesaler, isLoading }: TransactionsTableProps) {
     const { t } = useTranslation();
-    // Calculate opening balance (total purchased that came from before using the app)
-    const billsTotal = bills.reduce((sum, bill) => sum + bill.totalAmount, 0);
-    const openingBalance = wholesaler ? Math.max(0, wholesaler.totalPurchased - billsTotal) : 0;
+    const openingBalance = wholesaler?.initialPurchased || 0;
 
     if (isLoading) {
         return (
@@ -67,7 +66,7 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
     }
 
     // Show empty state only if no bills AND no opening balance
-    if ((!bills || bills.length === 0) && openingBalance <= 0) {
+    if ((!bills || bills.length === 0) && openingBalance === 0) {
         return (
             <div className="p-8 md:p-12 text-center">
                 <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 md:mb-4">
@@ -101,7 +100,7 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {/* Opening Balance Row */}
+                        {/* Opening Balance Row - Only show if it's a debt/due to the wholesaler */}
                         {openingBalance > 0 && (
                             <TableRow className="bg-blue-50/50 border-b-2 border-blue-200">
                                 <TableCell className="text-gray-600 font-medium">
@@ -116,7 +115,7 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                                     {formatCurrency(openingBalance)}
                                 </TableCell>
                                 <TableCell className="text-right font-semibold text-gray-400">
-                                    ₹0
+                                    {formatCurrency(0)}
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <span className="font-semibold text-orange-600">
@@ -184,7 +183,7 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
 
             {/* Mobile Cards - App-like with colored borders */}
             <div className="md:hidden p-2 space-y-2 bg-gray-50/50">
-                {/* Opening Balance Card */}
+                {/* Opening Balance Card - Only show if it's a debt/due to the wholesaler */}
                 {openingBalance > 0 && (
                     <div className="p-3 bg-blue-50 rounded-xl shadow-sm border-l-4 border-l-blue-500 border-2 border-blue-200">
                         {/* Header Row */}
@@ -211,11 +210,13 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                                 </div>
                                 <div>
                                     <p className="text-[10px] text-gray-500">{t('wholesaler_detail.info.paid')}</p>
-                                    <p className="text-xs font-bold text-gray-400">₹0</p>
+                                    <p className="text-xs font-bold text-gray-600">{formatCurrency(0)}</p>
                                 </div>
                                 <div>
                                     <p className="text-[10px] text-gray-500">{t('wholesaler_detail.info.due')}</p>
-                                    <p className="text-xs font-bold text-orange-600">{formatCurrency(openingBalance)}</p>
+                                    <p className="text-xs font-bold text-orange-600">
+                                        {formatCurrency(openingBalance)}
+                                    </p>
                                 </div>
                             </div>
                         </div>

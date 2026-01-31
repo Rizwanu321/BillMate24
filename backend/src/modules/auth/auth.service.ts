@@ -150,7 +150,7 @@ export class AuthService {
         return user.toObject() as Omit<IUser, 'password' | 'refreshToken'>;
     }
 
-    async updateProfile(userId: string, data: { name?: string; phone?: string; businessName?: string; address?: string }): Promise<Omit<IUser, 'password' | 'refreshToken'>> {
+    async updateProfile(userId: string, data: { name?: string; phone?: string; businessName?: string; address?: string; place?: string }): Promise<Omit<IUser, 'password' | 'refreshToken'>> {
         const user = await User.findById(userId);
 
         if (!user) {
@@ -158,9 +158,10 @@ export class AuthService {
         }
 
         if (data.name) user.name = data.name;
-        if (data.phone) user.phone = data.phone;
-        if (data.businessName) user.businessName = data.businessName;
-        if (data.address) user.address = data.address;
+        if (data.hasOwnProperty('phone')) user.phone = data.phone;
+        if (data.hasOwnProperty('businessName')) user.businessName = data.businessName;
+        if (data.hasOwnProperty('address')) user.address = data.address;
+        if (data.hasOwnProperty('place')) user.place = data.place;
 
         await user.save();
 

@@ -170,6 +170,11 @@ export function WholesalerInfo({ wholesaler }: WholesalerInfoProps) {
                                         <AlertTriangle className="h-3.5 w-3.5 md:h-4 md:w-4 text-rose-400" />
                                         <span className="text-[10px] md:text-xs text-rose-400/80 font-medium uppercase tracking-wide">{t('wholesaler_detail.info.due')}</span>
                                     </>
+                                ) : wholesaler.outstandingDue < 0 ? (
+                                    <>
+                                        <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4 text-emerald-400" />
+                                        <span className="text-[10px] md:text-xs text-emerald-400/80 font-medium uppercase tracking-wide">{t('wholesaler_payments.detail.advance')}</span>
+                                    </>
                                 ) : (
                                     <>
                                         <CheckCircle2 className="h-3.5 w-3.5 md:h-4 md:w-4 text-emerald-400" />
@@ -179,7 +184,11 @@ export function WholesalerInfo({ wholesaler }: WholesalerInfoProps) {
                             </div>
                             <p className={`text-lg md:text-xl font-bold break-words ${wholesaler.outstandingDue > 0 ? 'text-rose-400' : 'text-emerald-400'
                                 }`}>
-                                {wholesaler.outstandingDue > 0 ? formatCurrency(Math.max(0, wholesaler.outstandingDue)) : `✓ ${t('history.nil')}`}
+                                {wholesaler.outstandingDue > 0
+                                    ? formatCurrency(wholesaler.outstandingDue)
+                                    : wholesaler.outstandingDue < 0
+                                        ? formatCurrency(Math.abs(wholesaler.outstandingDue))
+                                        : `✓ ${t('history.nil')}`}
                             </p>
                         </div>
                     </div>

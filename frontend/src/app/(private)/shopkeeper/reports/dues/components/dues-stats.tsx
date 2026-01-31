@@ -51,18 +51,22 @@ export function DuesStats({
             {/* Main Stats Row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 {/* Receivables - From Customers */}
-                <Card className="relative overflow-hidden border-0 shadow-xl bg-gradient-to-br from-emerald-500 to-green-600 text-white">
+                <Card className={`relative overflow-hidden border-0 shadow-xl text-white ${customerDues >= 0
+                    ? 'bg-gradient-to-br from-emerald-500 to-green-600'
+                    : 'bg-gradient-to-br from-rose-500 to-red-600'}`}>
                     <CardContent className="p-3 md:p-6">
                         <div className="flex items-center justify-between mb-2 md:mb-3">
                             <div className="p-1.5 md:p-2.5 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
                                 <ArrowDownRight className="h-4 w-4 md:h-5 md:w-5" />
                             </div>
                             <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2.5">
-                                {t('reports.to_collect_badge')}
+                                {customerDues >= 0 ? t('reports.to_collect_badge') : t('reports.to_pay_badge')}
                             </Badge>
                         </div>
-                        <h3 className="text-xl md:text-3xl font-bold">{formatCurrency(customerDues)}</h3>
-                        <p className="text-white/80 text-[10px] md:text-sm mt-1">{t('reports.from_customers_label')}</p>
+                        <h3 className="text-xl md:text-3xl font-bold">{formatCurrency(Math.abs(customerDues))}</h3>
+                        <p className="text-white/80 text-[10px] md:text-sm mt-1">
+                            {customerDues >= 0 ? t('reports.from_customers_label') : t('reports.total_to_pay_to_customer')}
+                        </p>
                         <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 flex items-center justify-between">
                             <span className="text-[10px] md:text-xs text-white/70">
                                 <Users className="h-3 w-3 inline mr-1" />
@@ -74,18 +78,22 @@ export function DuesStats({
                 </Card>
 
                 {/* Payables - To Wholesalers */}
-                <Card className="relative overflow-hidden border-0 shadow-xl bg-gradient-to-br from-orange-500 to-amber-600 text-white">
+                <Card className={`relative overflow-hidden border-0 shadow-xl text-white ${wholesalerDues >= 0
+                    ? 'bg-gradient-to-br from-orange-500 to-amber-600'
+                    : 'bg-gradient-to-br from-blue-500 to-indigo-600'}`}>
                     <CardContent className="p-3 md:p-6">
                         <div className="flex items-center justify-between mb-2 md:mb-3">
                             <div className="p-1.5 md:p-2.5 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
                                 <ArrowUpRight className="h-4 w-4 md:h-5 md:w-5" />
                             </div>
                             <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2.5">
-                                {t('reports.to_pay_badge')}
+                                {wholesalerDues >= 0 ? t('reports.to_pay_badge') : t('reports.to_collect_badge')}
                             </Badge>
                         </div>
-                        <h3 className="text-xl md:text-3xl font-bold">{formatCurrency(wholesalerDues)}</h3>
-                        <p className="text-white/80 text-[10px] md:text-sm mt-1">{t('reports.to_wholesalers_label')}</p>
+                        <h3 className="text-xl md:text-3xl font-bold">{formatCurrency(Math.abs(wholesalerDues))}</h3>
+                        <p className="text-white/80 text-[10px] md:text-sm mt-1">
+                            {wholesalerDues >= 0 ? t('reports.to_wholesalers_label') : t('reports.total_to_receive_from_wholesaler')}
+                        </p>
                         <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 flex items-center justify-between">
                             <span className="text-[10px] md:text-xs text-white/70">
                                 <Package className="h-3 w-3 inline mr-1" />
@@ -168,18 +176,26 @@ export function DuesStats({
                         <div className="flex items-center gap-2 text-white w-full md:w-auto justify-between md:justify-start">
                             <div className="flex items-center gap-2">
                                 <IndianRupee className="h-4 w-4 md:h-5 md:w-5 text-yellow-400" />
-                                <span className="text-sm">{t('reports.total_outstanding')}:</span>
+                                <span className="text-sm">
+                                    {totalOutstanding >= 0 ? t('reports.total_outstanding') : t('reports.payable_caps')}:
+                                </span>
                             </div>
-                            <span className="text-lg md:text-xl font-bold text-yellow-400">{formatCurrency(totalOutstanding)}</span>
+                            <span className="text-lg md:text-xl font-bold text-yellow-400">
+                                {formatCurrency(Math.abs(totalOutstanding))}
+                            </span>
                         </div>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs md:text-sm w-full md:w-auto">
                             <div className="flex items-center gap-1.5">
-                                <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
-                                <span className="text-gray-300">{t('reports.receivable_caps')}: {formatCurrency(customerDues)}</span>
+                                <div className={`w-2.5 h-2.5 rounded-full ${customerDues >= 0 ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                                <span className="text-gray-300">
+                                    {customerDues >= 0 ? t('reports.receivable_caps') : t('reports.payable_caps')}: {formatCurrency(Math.abs(customerDues))}
+                                </span>
                             </div>
                             <div className="flex items-center gap-1.5">
-                                <div className="w-2.5 h-2.5 rounded-full bg-orange-400"></div>
-                                <span className="text-gray-300">{t('reports.payable_caps')}: {formatCurrency(wholesalerDues)}</span>
+                                <div className={`w-2.5 h-2.5 rounded-full ${wholesalerDues >= 0 ? 'bg-orange-400' : 'bg-blue-400'}`}></div>
+                                <span className="text-gray-300">
+                                    {wholesalerDues >= 0 ? t('reports.payable_caps') : t('reports.receivable_caps')}: {formatCurrency(Math.abs(wholesalerDues))}
+                                </span>
                             </div>
                             {overdueCount > 0 && (
                                 <div className="flex items-center gap-1.5">

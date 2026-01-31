@@ -91,6 +91,8 @@ export default function ShopkeepersPage() {
             name: formData.get('name'),
             phone: formData.get('phone'),
             businessName: formData.get('businessName'),
+            address: formData.get('address'),
+            place: formData.get('place'),
         });
     };
 
@@ -141,6 +143,14 @@ export default function ShopkeepersPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="businessName">Business Name</Label>
                                     <Input id="businessName" name="businessName" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="address">Address</Label>
+                                    <Input id="address" name="address" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="place">Place</Label>
+                                    <Input id="place" name="place" />
                                 </div>
                                 <Button type="submit" className="w-full" disabled={createMutation.isPending}>
                                     {createMutation.isPending ? 'Creating...' : 'Create Shopkeeper'}

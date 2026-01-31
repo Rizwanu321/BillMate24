@@ -1,7 +1,9 @@
 'use client';
 
+
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Wholesaler } from '@/types';
 import {
     Dialog,
     DialogContent,
@@ -19,24 +21,16 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Package, User, Phone, MessageCircle, MapPin, Save, CheckCircle, XCircle } from 'lucide-react';
+import { Package, User, Phone, MessageCircle, MapPin, Save, CheckCircle, XCircle, IndianRupee } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
-interface WholesalerData {
-    _id: string;
-    name: string;
-    phone?: string;
-    whatsappNumber?: string;
-    address?: string;
-    place?: string;
-    isActive?: boolean;
-}
+
 
 interface EditWholesalerDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: Partial<WholesalerData>) => void;
-    wholesaler: WholesalerData | null;
+    onSave: (data: Partial<Wholesaler>) => void;
+    wholesaler: Wholesaler | null;
     isSaving?: boolean;
 }
 
@@ -46,8 +40,8 @@ function EditWholesalerForm({
     onClose,
     isSaving
 }: {
-    wholesaler: WholesalerData | null;
-    onSave: (data: Partial<WholesalerData>) => void;
+    wholesaler: Wholesaler | null;
+    onSave: (data: Partial<Wholesaler>) => void;
     onClose: () => void;
     isSaving: boolean;
 }) {
@@ -58,6 +52,7 @@ function EditWholesalerForm({
         whatsappNumber: '',
         address: '',
         place: '',
+        initialPurchased: 0,
         isActive: true,
     });
 
@@ -69,6 +64,7 @@ function EditWholesalerForm({
                 whatsappNumber: wholesaler.whatsappNumber || '',
                 address: wholesaler.address || '',
                 place: wholesaler.place || '',
+                initialPurchased: wholesaler.initialPurchased || 0,
                 isActive: wholesaler.isActive ?? true,
             });
         }
@@ -79,7 +75,7 @@ function EditWholesalerForm({
         onSave(formData);
     };
 
-    const handleChange = (field: string, value: string | boolean) => {
+    const handleChange = (field: string, value: string | boolean | number) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
@@ -164,6 +160,27 @@ function EditWholesalerForm({
                         placeholder={t('wholesalers_list.dialogs.place_placeholder')}
                         className="pl-10 h-10 md:h-11 text-base md:text-sm"
                     />
+                </div>
+            </div>
+
+            <div className="border-t pt-4">
+                <div className="space-y-2">
+                    <Label htmlFor="edit-initialPurchased" className="text-sm md:text-base">
+                        {t("wholesalers_list.dialogs.opening_balance")}
+                    </Label>
+                    <div className="relative">
+                        <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                            id="edit-initialPurchased"
+                            value={formData.initialPurchased}
+                            onChange={(e) => handleChange('initialPurchased', parseFloat(e.target.value) || 0)}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            className="pl-10 h-10 md:h-11 text-base md:text-sm"
+                        />
+                    </div>
                 </div>
             </div>
 

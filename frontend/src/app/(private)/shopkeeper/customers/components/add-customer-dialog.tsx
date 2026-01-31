@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, IndianRupee, User, Phone, MapPin, MessageCircle } from 'lucide-react';
+import { Plus, IndianRupee, User, Phone, MapPin, MessageCircle, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,6 +45,7 @@ function CustomerForm({
 }: CustomerFormProps) {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
+    const [balanceType, setBalanceType] = useState<'due' | 'advance'>('due');
 
     const createMutation = useMutation({
         mutationFn: async (data: any) => {
@@ -98,7 +99,16 @@ function CustomerForm({
             initialSalesValue &&
             !isNaN(parseFloat(initialSalesValue))
         ) {
-            rawData.initialSales = parseFloat(initialSalesValue);
+            let amount = parseFloat(initialSalesValue);
+            // If it's an advance (Debit), it means negative outstanding for me (customer paid extra).
+            // Backend logic: outstanding = initialSales.
+            // So for Advance, we must send a negative value.
+            if (balanceType === 'advance') {
+                amount = -Math.abs(amount);
+            } else {
+                amount = Math.abs(amount);
+            }
+            rawData.initialSales = amount;
         }
 
         const validation = customerSchema.safeParse(rawData);
@@ -202,18 +212,42 @@ function CustomerForm({
             {/* Opening Balance - Only for Due Customers */}
             {customerType === 'due' && (
                 <div className="border-t pt-4">
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         <Label
                             htmlFor="initialSales"
-                            className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2 text-sm md:text-base"
+                            className="text-sm md:text-base"
                         >
                             {t('wholesalers_list.dialogs.opening_balance')}
-                            <span className="text-xs text-slate-500 font-normal">
-                                {t('customer_dialog.opening_balance_desc')}
-                            </span>
                         </Label>
+
+                        <div className="flex bg-gray-100 p-1 rounded-lg">
+                            <button
+                                type="button"
+                                onClick={() => setBalanceType('due')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all duration-200 h-auto text-center whitespace-normal ${balanceType === 'due'
+                                    ? 'bg-white text-red-600 shadow-sm ring-1 ring-black/5'
+                                    : 'text-gray-500 hover:text-gray-700'
+                                    }`}
+                            >
+                                <ArrowDownLeft className="h-4 w-4 shrink-0" />
+                                {t('billing.due')} (Credit)
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setBalanceType('advance')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all duration-200 h-auto text-center whitespace-normal ${balanceType === 'advance'
+                                    ? 'bg-white text-green-600 shadow-sm ring-1 ring-black/5'
+                                    : 'text-gray-500 hover:text-gray-700'
+                                    }`}
+                            >
+                                <ArrowUpRight className="h-4 w-4 shrink-0" />
+                                {t('wholesaler_payments.detail.advance')} (Debit)
+                            </button>
+                        </div>
+
                         <div className="relative">
-                            <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <IndianRupee className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${balanceType === 'due' ? 'text-red-500' : 'text-green-500'
+                                }`} />
                             <Input
                                 id="initialSales"
                                 name="initialSales"
@@ -222,9 +256,18 @@ function CustomerForm({
                                 step="0.01"
                                 min="0"
                                 placeholder="0.00"
-                                className="pl-10 h-10 md:h-11 text-base md:text-sm font-medium"
+                                className={`pl-10 h-10 md:h-11 text-base md:text-sm font-medium transition-colors ${balanceType === 'due'
+                                    ? 'focus-visible:ring-red-500 bg-red-50/30 border-red-200 placeholder:text-red-300'
+                                    : 'focus-visible:ring-green-500 bg-green-50/30 border-green-200 placeholder:text-green-300'
+                                    }`}
                             />
                         </div>
+                        <p className={`text-xs transition-colors ${balanceType === 'due' ? 'text-red-600' : 'text-green-600'
+                            }`}>
+                            {balanceType === 'due'
+                                ? t('customer_dialog.opening_balance_desc')
+                                : t('customer_dialog.opening_balance_advance_desc')}
+                        </p>
                     </div>
                 </div>
             )}
@@ -243,7 +286,7 @@ function CustomerForm({
                     className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 h-10 md:h-11 text-base md:text-sm font-medium"
                     disabled={createMutation.isPending}
                 >
-                    {createMutation.isPending ? t('wholesalers_list.dialogs.creating') : t('wholesalers_list.dialogs.add_button').replace('മൊത്തക്കച്ചവടക്കാരനെ', customerType === 'due' ? t('sidebar.due_customers') : t('sidebar.normal_customers'))}
+                    {createMutation.isPending ? t('wholesalers_list.dialogs.creating') : (customerType === 'due' ? t('sidebar.add_due_customers') : t('sidebar.add_normal_customers'))}
                 </Button>
             </div>
         </form>
@@ -261,7 +304,7 @@ export function AddCustomerDialog({ customerType }: AddCustomerDialogProps) {
                 <DialogTrigger asChild>
                     <Button className="bg-gradient-to-r from-purple-600 to-pink-600 shadow-md hover:shadow-lg transition-all">
                         <Plus className="mr-2 h-4 w-4" />
-                        {t('sidebar.add_bill').replace('ബില്ല്', customerType === 'due' ? t('sidebar.due_customers') : t('sidebar.normal_customers'))}
+                        {customerType === 'due' ? t('sidebar.add_due_customers') : t('sidebar.add_normal_customers')}
                     </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -288,7 +331,7 @@ export function AddCustomerDialog({ customerType }: AddCustomerDialogProps) {
             <SheetTrigger asChild>
                 <Button className="bg-gradient-to-r from-purple-600 to-pink-600 shadow-md hover:shadow-lg transition-all">
                     <Plus className="mr-2 h-4 w-4" />
-                    {t('sidebar.add_bill').replace('ബില്ല്', customerType === 'due' ? t('sidebar.due_customers') : t('sidebar.normal_customers'))}
+                    {customerType === 'due' ? t('sidebar.add_due_customers') : t('sidebar.add_normal_customers')}
                 </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="rounded-t-[20px] max-h-[90vh] overflow-y-auto px-4 md:px-6">

@@ -115,13 +115,13 @@ export default function DuesReportPage() {
         },
     });
 
-    const customers = ((customersData?.data || []) as Customer[]).filter(c => c.outstandingDue > 0);
-    const wholesalers = ((wholesalersData?.data || []) as Wholesaler[]).filter(w => w.outstandingDue > 0);
+    const customers = ((customersData?.data || []) as Customer[]).filter(c => c.outstandingDue !== 0);
+    const wholesalers = ((wholesalersData?.data || []) as Wholesaler[]).filter(w => w.outstandingDue !== 0);
 
     // Calculate stats
     const customerDues = customers.reduce((sum, c) => sum + c.outstandingDue, 0);
     const wholesalerDues = wholesalers.reduce((sum, w) => sum + w.outstandingDue, 0);
-    const totalOutstanding = customerDues + wholesalerDues;
+    const totalOutstanding = customerDues - wholesalerDues;
 
     const getOverdueDays = (lastTransactionDate?: string) => {
         if (!lastTransactionDate) return 0;
@@ -129,12 +129,12 @@ export default function DuesReportPage() {
     };
 
     const overdueCount = [...customers, ...wholesalers].filter(entity => {
-        return getOverdueDays(entity.lastTransactionDate) > 7;
+        return entity.outstandingDue > 0 && getOverdueDays(entity.lastTransactionDate) > 7;
     }).length;
 
     // Helper function to check if overdue
-    const isOverdue = (lastTransactionDate?: string) => {
-        return getOverdueDays(lastTransactionDate) > 7;
+    const isOverdue = (outstandingDue: number, lastTransactionDate?: string) => {
+        return outstandingDue > 0 && getOverdueDays(lastTransactionDate) > 7;
     };
 
     // Filtered and sorted customers
@@ -152,7 +152,7 @@ export default function DuesReportPage() {
         // Status filter
         if (custStatusFilter !== 'all') {
             filtered = filtered.filter(c => {
-                const overdue = isOverdue(c.lastTransactionDate);
+                const overdue = isOverdue(c.outstandingDue, c.lastTransactionDate);
                 return custStatusFilter === 'overdue' ? overdue : !overdue;
             });
         }
@@ -190,7 +190,7 @@ export default function DuesReportPage() {
         // Status filter
         if (wholeStatusFilter !== 'all') {
             filtered = filtered.filter(w => {
-                const overdue = isOverdue(w.lastTransactionDate);
+                const overdue = isOverdue(w.outstandingDue, w.lastTransactionDate);
                 return wholeStatusFilter === 'overdue' ? overdue : !overdue;
             });
         }
@@ -461,7 +461,7 @@ export default function DuesReportPage() {
                                                 <TableBody>
                                                     {paginatedCustomers.map((customer) => {
                                                         const daysSince = getOverdueDays(customer.lastTransactionDate);
-                                                        const overdue = daysSince > 7;
+                                                        const overdue = isOverdue(customer.outstandingDue, customer.lastTransactionDate);
 
                                                         return (
                                                             <TableRow key={customer._id} className="hover:bg-green-50/50">
@@ -484,8 +484,9 @@ export default function DuesReportPage() {
                                                                     )}
                                                                 </TableCell>
                                                                 <TableCell>
-                                                                    <span className="text-lg font-bold text-red-600">
-                                                                        {formatCurrency(customer.outstandingDue)}
+                                                                    <span className={`text-lg font-bold ${customer.outstandingDue >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                                        {formatCurrency(Math.abs(customer.outstandingDue))}
+                                                                        {customer.outstandingDue < 0 && <span className="text-[10px] ml-1 uppercase">{t('wholesaler_payments.detail.advance')}</span>}
                                                                     </span>
                                                                 </TableCell>
                                                                 <TableCell>
@@ -531,7 +532,7 @@ export default function DuesReportPage() {
                                         <div className="md:hidden">
                                             {paginatedCustomers.map((customer, index) => {
                                                 const daysSince = getOverdueDays(customer.lastTransactionDate);
-                                                const overdue = daysSince > 7;
+                                                const overdue = isOverdue(customer.outstandingDue, customer.lastTransactionDate);
                                                 return (
                                                     <div key={customer._id} className={`p-3 active:scale-[0.99] transition-all ${index !== paginatedCustomers.length - 1 ? 'border-b border-gray-100' : ''}`}>
                                                         <div className="flex justify-between items-start mb-2">
@@ -551,8 +552,12 @@ export default function DuesReportPage() {
                                                                 </div>
                                                             </div>
                                                             <div className="text-right">
-                                                                <span className="block font-bold text-red-600 text-base">{formatCurrency(customer.outstandingDue)}</span>
-                                                                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">{t('reports.outstanding_due')}</span>
+                                                                <span className={`block font-bold text-base ${customer.outstandingDue >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                                    {formatCurrency(Math.abs(customer.outstandingDue))}
+                                                                </span>
+                                                                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+                                                                    {customer.outstandingDue >= 0 ? t('reports.outstanding_due') : t('wholesaler_payments.detail.advance')}
+                                                                </span>
                                                             </div>
                                                         </div>
 
@@ -771,7 +776,7 @@ export default function DuesReportPage() {
                                                 <TableBody>
                                                     {paginatedWholesalers.map((wholesaler) => {
                                                         const daysSince = getOverdueDays(wholesaler.lastTransactionDate);
-                                                        const overdue = daysSince > 7;
+                                                        const overdue = isOverdue(wholesaler.outstandingDue, wholesaler.lastTransactionDate);
 
                                                         return (
                                                             <TableRow key={wholesaler._id} className="hover:bg-orange-50/50">
@@ -794,8 +799,9 @@ export default function DuesReportPage() {
                                                                     )}
                                                                 </TableCell>
                                                                 <TableCell>
-                                                                    <span className="text-lg font-bold text-orange-600">
-                                                                        {formatCurrency(wholesaler.outstandingDue)}
+                                                                    <span className={`text-lg font-bold ${wholesaler.outstandingDue >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                                                        {formatCurrency(Math.abs(wholesaler.outstandingDue))}
+                                                                        {wholesaler.outstandingDue < 0 && <span className="text-[10px] ml-1 uppercase">{t('wholesaler_payments.detail.advance')}</span>}
                                                                     </span>
                                                                 </TableCell>
                                                                 <TableCell>
@@ -841,7 +847,7 @@ export default function DuesReportPage() {
                                         <div className="md:hidden">
                                             {paginatedWholesalers.map((wholesaler, index) => {
                                                 const daysSince = getOverdueDays(wholesaler.lastTransactionDate);
-                                                const overdue = daysSince > 7;
+                                                const overdue = isOverdue(wholesaler.outstandingDue, wholesaler.lastTransactionDate);
                                                 return (
                                                     <div key={wholesaler._id} className={`p-3 active:scale-[0.99] transition-all ${index !== paginatedWholesalers.length - 1 ? 'border-b border-gray-100' : ''}`}>
                                                         <div className="flex justify-between items-start mb-2">
@@ -861,8 +867,12 @@ export default function DuesReportPage() {
                                                                 </div>
                                                             </div>
                                                             <div className="text-right">
-                                                                <span className="block font-bold text-orange-600 text-base">{formatCurrency(wholesaler.outstandingDue)}</span>
-                                                                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">{t('reports.outstanding_due')}</span>
+                                                                <span className={`block font-bold text-base ${wholesaler.outstandingDue >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                                                    {formatCurrency(Math.abs(wholesaler.outstandingDue))}
+                                                                </span>
+                                                                <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+                                                                    {wholesaler.outstandingDue >= 0 ? t('reports.outstanding_due') : t('wholesaler_payments.detail.advance')}
+                                                                </span>
                                                             </div>
                                                         </div>
 

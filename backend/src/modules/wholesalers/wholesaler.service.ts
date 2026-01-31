@@ -5,15 +5,27 @@ export class WholesalerService {
     async create(shopkeeperId: string, input: CreateWholesalerInput): Promise<any> {
         const { initialPurchased, ...wholesalerData } = input;
 
+        const initialAmount = initialPurchased || 0;
+        let totalPurchased = 0;
+        let totalPaid = 0;
+
+        if (initialAmount > 0) {
+            // Payable (Credit): We owe them, so we treat it as a purchase without payment
+            totalPurchased = initialAmount;
+            totalPaid = 0;
+        } else if (initialAmount < 0) {
+            // Receivable (Advance): They owe us, meaning we paid in advance without purchase
+            totalPurchased = 0;
+            totalPaid = Math.abs(initialAmount);
+        }
+
         const wholesaler = new Wholesaler({
             ...wholesalerData,
             shopkeeperId,
-            // If there's an initial purchase amount, it represents:
-            // - Total purchased from this wholesaler before using the app
-            // - This becomes the outstanding debt (totalPaid = 0 initially)
-            totalPurchased: initialPurchased || 0,
-            totalPaid: 0,
-            outstandingDue: initialPurchased || 0,  // Positive value = shopkeeper owes wholesaler
+            initialPurchased: initialAmount,
+            totalPurchased,
+            totalPaid,
+            outstandingDue: initialAmount,
         });
 
         try {

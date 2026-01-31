@@ -28,6 +28,7 @@ import {
     Edit,
     History,
     AlertTriangle,
+    Printer,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Header } from '@/components/app/header';
@@ -66,6 +67,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { PdfPreviewModal } from './components/pdf-preview-modal';
 
 interface Bill {
     _id: string;
@@ -165,6 +167,7 @@ export default function BillHistoryPage() {
     const [deletingBill, setDeletingBill] = useState<Bill | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
     const [limit, setLimit] = useState(10);
 
@@ -331,28 +334,40 @@ export default function BillHistoryPage() {
             {/* Mobile-optimized content */}
             <div className="p-3 md:p-6">
                 {/* Page Header - Compact on mobile */}
-                <div className="mb-4 md:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
+                <div className="mb-4 md:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-gray-900 bg-clip-text text-transparent">
                             {t('history.title')}
                         </h2>
-                        <p className="text-gray-600 text-xs md:text-base mt-0.5 md:mt-1 flex items-center gap-1.5 md:gap-2">
-                            <Calendar className="h-3 w-3 md:h-4 md:w-4" />
+                        <p className="text-gray-600 text-[10px] md:text-base mt-0.5 md:mt-1 flex items-center gap-1.5 md:gap-2">
+                            <Calendar className="h-3 w-3 md:h-4 md:w-4 text-blue-500" />
                             {format(now, 'EEE, MMM d, yyyy')}
                         </p>
                     </div>
-                    {/* Quick action buttons - Hidden on mobile */}
-                    <div className="hidden md:flex gap-3">
-                        <Link href="/shopkeeper/billing">
-                            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/25">
-                                <Plus className="h-4 w-4 mr-2" />
-                                {t('history.new_bill')}
+
+                    {/* Action Bar - Optimized for all screens */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsPdfModalOpen(true)}
+                            className="flex-1 sm:flex-none h-9 sm:h-10 bg-white hover:bg-gray-50 text-blue-600 border-blue-200 hover:border-blue-300 text-xs sm:text-sm"
+                        >
+                            <Printer className="h-3.5 w-3.5 mr-1.5 sm:mr-2" />
+                            {t('Export PDF')}
+                        </Button>
+
+                        <Link href="/shopkeeper/reports/daily" className="hidden sm:block">
+                            <Button variant="outline" size="sm" className="h-9 sm:h-10 text-xs sm:text-sm">
+                                <FileText className="h-3.5 w-3.5 mr-1.5 sm:mr-2" />
+                                {t('history.reports')}
                             </Button>
                         </Link>
-                        <Link href="/shopkeeper/reports/daily">
-                            <Button variant="outline">
-                                <FileText className="h-4 w-4 mr-2" />
-                                {t('history.reports')}
+
+                        <Link href="/shopkeeper/billing" className="flex-1 sm:flex-none">
+                            <Button size="sm" className="w-full h-9 sm:h-10 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md text-xs sm:text-sm">
+                                <Plus className="h-3.5 w-3.5 mr-1.5 sm:mr-2" />
+                                {t('New')}
                             </Button>
                         </Link>
                     </div>
@@ -1172,6 +1187,20 @@ export default function BillHistoryPage() {
                 open={isDeleteOpen}
                 onOpenChange={setIsDeleteOpen}
                 onSuccess={handleSuccess}
+            />
+
+            <PdfPreviewModal
+                open={isPdfModalOpen}
+                onOpenChange={setIsPdfModalOpen}
+                filters={{
+                    billType,
+                    paymentMethod,
+                    startDate: dateRange.startDate,
+                    endDate: dateRange.endDate,
+                    search,
+                    includeDeleted,
+                    showOnlyEdited,
+                }}
             />
         </div>
     );

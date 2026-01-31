@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Header, DeleteConfirmDialog } from '@/components/app';
+import { Printer } from 'lucide-react';
+import { CustomerPdfModal, CustomerAllPaymentsPdfModal, CustomerAllSalesPdfModal } from '../components';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,7 +48,8 @@ import { useTranslation } from 'react-i18next';
 import {
     AddCustomerDialog,
     EditCustomerDialog,
-    CustomerDashboardStats
+    CustomerDashboardStats,
+    RecordCustomerPaymentDialog
 } from '../components';
 
 interface CustomerStatsData {
@@ -147,6 +150,10 @@ export default function DueCustomersPage() {
 
     // Debounce search
     const debouncedSearch = useDebounce(searchInput, 500);
+
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [isPaymentExportModalOpen, setIsPaymentExportModalOpen] = useState(false);
+    const [isSalesExportModalOpen, setIsSalesExportModalOpen] = useState(false);
 
     // Reset to page 1 when table filters change
     useEffect(() => {
@@ -334,22 +341,20 @@ export default function DueCustomersPage() {
 
                 <div className="p-3 md:p-6">
                     {/* Page Header */}
-                    <div className="mb-4 md:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
+                    <div className="mb-4 md:mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                         <div>
                             <div className="flex items-center gap-2">
                                 <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 bg-clip-text text-transparent">
-                                    <span className="hidden sm:inline">{t('sidebar.due_customers')}</span>
-                                    <span className="sm:hidden">{t('billing.status_due')}</span>
+                                    {t('sidebar.due_customers')}
                                 </h2>
                                 <CreditCard className="h-5 w-5 md:h-8 md:w-8 text-indigo-600" />
                             </div>
                             <p className="text-gray-600 mt-0.5 md:mt-1 flex items-center gap-1.5 md:gap-2 text-xs md:text-base">
                                 <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                <span className="hidden md:inline">{format(new Date(), 'EEEE, MMMM d, yyyy')}</span>
-                                <span className="md:hidden">{format(new Date(), 'EEE, MMM d')}</span>
+                                <span>{format(new Date(), 'EEEE, MMMM d, yyyy')}</span>
                             </p>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                        <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full md:w-auto">
                             <Link href="/shopkeeper/customers/dashboard" className="hidden lg:block">
                                 <Button variant="outline" className="shadow-sm">
                                     <LayoutDashboard className="h-4 w-4 mr-2" />
@@ -362,6 +367,7 @@ export default function DueCustomersPage() {
                                     {t('customer_dashboard.normal_customers')}
                                 </Button>
                             </Link>
+                            <RecordCustomerPaymentDialog />
                             <AddCustomerDialog customerType="due" />
                         </div>
                     </div>
@@ -384,8 +390,7 @@ export default function DueCustomersPage() {
                                         className="flex items-center gap-1 md:gap-2 data-[state=active]:bg-indigo-600 data-[state=active]:text-white px-2.5 md:px-6 py-2 md:py-2.5 text-xs md:text-sm"
                                     >
                                         <Users className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                        <span className="hidden sm:inline">{t('common.customers')}</span>
-                                        <span className="sm:hidden">{t('wholesalers_list.list')}</span>
+                                        <span>{t('common.customers')}</span>
                                         <Badge variant="secondary" className="ml-0.5 md:ml-1 bg-indigo-100 text-indigo-700 data-[state=active]:bg-white/20 data-[state=active]:text-white text-[10px] md:text-xs px-1 md:px-2">
                                             {pagination.total}
                                         </Badge>
@@ -407,8 +412,7 @@ export default function DueCustomersPage() {
                                         className="flex items-center gap-1 md:gap-2 data-[state=active]:bg-green-600 data-[state=active]:text-white px-2.5 md:px-6 py-2 md:py-2.5 text-xs md:text-sm"
                                     >
                                         <CreditCard className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                        <span className="hidden sm:inline">{t('sidebar.payments')}</span>
-                                        <span className="sm:hidden">{t('wholesaler_payments.record_payment')}</span>
+                                        <span>{t('sidebar.payments')}</span>
                                         {activeTab === 'payments' && paymentsPagination.total > 0 && (
                                             <Badge variant="secondary" className="ml-0.5 md:ml-1 bg-white/20 text-white text-[10px] md:text-xs px-1 md:px-2">
                                                 {paymentsPagination.total}
@@ -425,19 +429,29 @@ export default function DueCustomersPage() {
                                 <CardHeader className="border-b bg-gray-50/80 p-3 md:py-4 md:px-6">
                                     <div className="space-y-2 md:space-y-4">
                                         <div className="flex flex-row gap-2 md:gap-4 justify-between items-center">
-                                            <CardTitle className="text-sm md:text-lg flex items-center gap-1.5 md:gap-2 flex-shrink-0">
-                                                <div className="p-1.5 md:p-2 rounded-lg bg-indigo-100">
-                                                    <Users className="h-4 w-4 md:h-5 md:w-5 text-indigo-600" />
-                                                </div>
-                                                <span className="hidden sm:inline">{t('sidebar.due_customers')}</span>
-                                                <span className="sm:hidden">{t('common.customers')}</span>
-                                                <Badge variant="secondary" className="ml-1 md:ml-2 bg-indigo-50 text-indigo-700 text-[10px] md:text-xs px-1.5 md:px-2">
-                                                    {pagination.total}
-                                                </Badge>
-                                                {isFetching && !isLoading && (
-                                                    <div className="animate-spin rounded-full h-3 w-3 md:h-4 md:w-4 border-2 border-indigo-500 border-t-transparent" />
-                                                )}
-                                            </CardTitle>
+                                            <div className="flex items-center gap-2 md:gap-4">
+                                                <CardTitle className="text-sm md:text-lg flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+                                                    <div className="p-1.5 md:p-2 rounded-lg bg-indigo-100">
+                                                        <Users className="h-4 w-4 md:h-5 md:w-5 text-indigo-600" />
+                                                    </div>
+                                                    <span>{t('sidebar.due_customers')}</span>
+                                                    <Badge variant="secondary" className="ml-1 md:ml-2 bg-indigo-50 text-indigo-700 text-[10px] md:text-xs px-1.5 md:px-2">
+                                                        {pagination.total}
+                                                    </Badge>
+                                                    {isFetching && !isLoading && (
+                                                        <div className="animate-spin rounded-full h-3 w-3 md:h-4 md:w-4 border-2 border-indigo-500 border-t-transparent" />
+                                                    )}
+                                                </CardTitle>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setIsExportModalOpen(true)}
+                                                    className="h-8 md:h-9 text-indigo-700 border-indigo-200 hover:bg-indigo-50"
+                                                >
+                                                    <Printer className="h-3.5 w-3.5 mr-1.5" />
+                                                    {t('Export PDF')}
+                                                </Button>
+                                            </div>
                                             <div className="relative flex-1 max-w-[180px] md:max-w-[256px]">
                                                 <Search className="absolute left-2.5 md:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
                                                 <Input
@@ -630,7 +644,7 @@ export default function DueCustomersPage() {
                                                                     {customer.name.charAt(0).toUpperCase()}
                                                                 </div>
                                                                 <div>
-                                                                    <p className="font-semibold text-gray-900 text-sm truncate max-w-[140px]">{customer.name}</p>
+                                                                    <p className="font-semibold text-gray-900 text-sm line-clamp-2 max-w-[140px]">{customer.name}</p>
                                                                     {customer.phone && (
                                                                         <p className="text-[10px] text-gray-500 flex items-center gap-1">
                                                                             <Phone className="h-2.5 w-2.5" />
@@ -718,13 +732,23 @@ export default function DueCustomersPage() {
                         <TabsContent value="sales" className="m-0">
                             <Card className="border-0 shadow-lg md:shadow-xl overflow-hidden rounded-xl md:rounded-2xl">
                                 <CardHeader className="border-b bg-gray-50/80 p-3 md:py-4 md:px-6">
-                                    <CardTitle className="text-sm md:text-lg flex items-center gap-1.5 md:gap-2">
-                                        <div className="p-1.5 md:p-2 rounded-lg bg-emerald-100">
-                                            <Receipt className="h-4 w-4 md:h-5 md:w-5 text-emerald-600" />
-                                        </div>
-                                        <span className="hidden sm:inline">{t('history.sale_bills')}</span>
-                                        <span className="sm:hidden">{t('history.sales')}</span>
-                                    </CardTitle>
+                                    <div className="flex items-center justify-between w-full">
+                                        <CardTitle className="text-sm md:text-lg flex items-center gap-1.5 md:gap-2">
+                                            <div className="p-1.5 md:p-2 rounded-lg bg-emerald-100">
+                                                <Receipt className="h-4 w-4 md:h-5 md:w-5 text-emerald-600" />
+                                            </div>
+                                            <span>{t('history.sale_bills')}</span>
+                                        </CardTitle>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setIsSalesExportModalOpen(true)}
+                                            className="h-8 md:h-9 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                                        >
+                                            <Printer className="h-3.5 w-3.5 mr-1.5" />
+                                            {t('Export PDF')}
+                                        </Button>
+                                    </div>
                                 </CardHeader>
                                 <CardContent className="p-0">
                                     {salesLoading ? (
@@ -790,7 +814,7 @@ export default function DueCustomersPage() {
                                                 {sales.map((sale) => (
                                                     <div key={sale._id} className="p-3 border-b hover:bg-gray-50">
                                                         <div className="flex justify-between mb-1">
-                                                            <span className="font-semibold text-sm">{sale.entityName}</span>
+                                                            <span className="font-semibold text-sm line-clamp-2">{sale.entityName}</span>
                                                             <span className="text-xs font-mono text-gray-500">#{sale.billNumber}</span>
                                                         </div>
                                                         <div className="flex justify-between items-center text-xs text-gray-600 mb-2">
@@ -822,13 +846,23 @@ export default function DueCustomersPage() {
                         <TabsContent value="payments" className="m-0">
                             <Card className="border-0 shadow-lg md:shadow-xl overflow-hidden rounded-xl md:rounded-2xl">
                                 <CardHeader className="border-b bg-gray-50/80 p-3 md:py-4 md:px-6">
-                                    <CardTitle className="text-sm md:text-lg flex items-center gap-1.5 md:gap-2">
-                                        <div className="p-1.5 md:p-2 rounded-lg bg-green-100">
-                                            <CreditCard className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
-                                        </div>
-                                        <span className="hidden sm:inline">{t('wholesaler_payments.table.title')}</span>
-                                        <span className="sm:hidden">{t('sidebar.payments')}</span>
-                                    </CardTitle>
+                                    <div className="flex items-center justify-between w-full">
+                                        <CardTitle className="text-sm md:text-lg flex items-center gap-1.5 md:gap-2">
+                                            <div className="p-1.5 md:p-2 rounded-lg bg-green-100">
+                                                <CreditCard className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
+                                            </div>
+                                            <span>{t('wholesaler_payments.table.title')}</span>
+                                        </CardTitle>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setIsPaymentExportModalOpen(true)}
+                                            className="h-8 md:h-9 text-green-700 border-green-200 hover:bg-green-50"
+                                        >
+                                            <Printer className="h-3.5 w-3.5 mr-1.5" />
+                                            {t('Export PDF')}
+                                        </Button>
+                                    </div>
                                 </CardHeader>
                                 <CardContent className="p-0">
                                     {paymentsLoading ? (
@@ -874,7 +908,7 @@ export default function DueCustomersPage() {
                                                 {payments.map((payment) => (
                                                     <div key={payment._id} className="p-3 border-b hover:bg-gray-50 flex justify-between items-center">
                                                         <div>
-                                                            <p className="text-sm font-semibold">{payment.entityName}</p>
+                                                            <p className="text-sm font-semibold line-clamp-2">{payment.entityName}</p>
                                                             <p className="text-xs text-gray-500">{format(new Date(payment.createdAt), 'dd MMM')}</p>
                                                         </div>
                                                         <div className="text-right">
@@ -922,6 +956,26 @@ export default function DueCustomersPage() {
                     onConfirm={handleDeleteConfirm}
                     itemName={selectedCustomer?.name}
                     isLoading={deleteMutation.isPending}
+                />
+
+                <CustomerPdfModal
+                    open={isExportModalOpen}
+                    onOpenChange={setIsExportModalOpen}
+                    filters={{
+                        search: debouncedSearch,
+                        status: statusFilter,
+                        duesFilter: duesFilter,
+                        sortBy: sortBy,
+                        type: 'due'
+                    }}
+                />
+                <CustomerAllPaymentsPdfModal
+                    open={isPaymentExportModalOpen}
+                    onOpenChange={setIsPaymentExportModalOpen}
+                />
+                <CustomerAllSalesPdfModal
+                    open={isSalesExportModalOpen}
+                    onOpenChange={setIsSalesExportModalOpen}
                 />
             </div>
         </>

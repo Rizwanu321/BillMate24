@@ -41,10 +41,13 @@ export function SidebarItem({ item, hasFeature, isCollapsed, isOpen = false, onT
     );
 
     // Check if current path matches this item or any of its children
-    const isActiveExact = pathname === item.href;
-    // Use exact match only for child items
+    const isPathActive = (href: string) => {
+        return pathname === href || pathname.startsWith(href + '/');
+    };
+
+    const isActiveExact = isPathActive(item.href);
     const isChildActive = visibleChildren?.some(
-        (child) => pathname === child.href
+        (child) => isPathActive(child.href)
     );
     const isActive = isActiveExact || isChildActive;
 
@@ -118,7 +121,7 @@ export function SidebarItem({ item, hasFeature, isCollapsed, isOpen = false, onT
                         {visibleChildren.map((child) => {
                             const ChildIcon = child.icon;
                             // Use exact match only for submenu items to prevent multiple items being highlighted
-                            const isChildCurrentlyActive = pathname === child.href;
+                            const isChildCurrentlyActive = isPathActive(child.href);
 
                             return (
                                 <Link

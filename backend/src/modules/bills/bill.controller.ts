@@ -43,6 +43,33 @@ export class BillController {
         }
     }
 
+    async export(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            // For export, we fetch all matching records (limit: 10000)
+            const page = 1;
+            const limit = 10000;
+
+            const filters = billFilterSchema.parse({
+                billType: req.query.billType,
+                entityType: req.query.entityType,
+                entityId: req.query.entityId,
+                paymentMethod: req.query.paymentMethod,
+                startDate: req.query.startDate,
+                endDate: req.query.endDate,
+                search: req.query.search,
+                includeDeleted: req.query.includeDeleted,
+                isEdited: req.query.isEdited,
+            });
+
+            // Reusing get all but with high limit
+            const result = await billService.getAll(req.user!._id, page, limit, filters);
+
+            sendSuccess(res, result.bills, 'Bills exported successfully');
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const bill = await billService.getById(req.user!._id, req.params.id);

@@ -21,9 +21,14 @@ interface Payment {
     createdAt: string;
 }
 
+interface Wholesaler {
+    initialPurchased: number;
+}
+
 interface PaymentsTableProps {
     payments: Payment[];
     isLoading?: boolean;
+    wholesaler?: Wholesaler;
 }
 
 function formatCurrency(amount: number): string {
@@ -61,8 +66,11 @@ const paymentMethodConfig: Record<string, { color: string; gradient: string; ico
     },
 };
 
-export function PaymentsTable({ payments, isLoading }: PaymentsTableProps) {
+export function PaymentsTable({ payments, isLoading, wholesaler }: PaymentsTableProps) {
     const { t } = useTranslation();
+
+    const openingAdvance = wholesaler && wholesaler.initialPurchased < 0 ? Math.abs(wholesaler.initialPurchased) : 0;
+
     if (isLoading) {
         return (
             <div className="p-8 md:p-12 text-center">
@@ -72,7 +80,7 @@ export function PaymentsTable({ payments, isLoading }: PaymentsTableProps) {
         );
     }
 
-    if (!payments || payments.length === 0) {
+    if ((!payments || payments.length === 0) && openingAdvance <= 0) {
         return (
             <div className="p-8 md:p-12 text-center">
                 <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 md:mb-4">
@@ -98,6 +106,31 @@ export function PaymentsTable({ payments, isLoading }: PaymentsTableProps) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
+                        {/* Opening Advance Row */}
+                        {openingAdvance > 0 && (
+                            <TableRow className="bg-green-50/50 border-b-2 border-green-200">
+                                <TableCell className="text-gray-600 font-medium">
+                                    {t('wholesaler_detail.transactions.before_app')}
+                                </TableCell>
+                                <TableCell>
+                                    <span className="text-xl font-bold text-green-600">
+                                        {formatCurrency(openingAdvance)}
+                                    </span>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge className="bg-green-100 text-green-700 border-0 flex items-center gap-1.5 w-fit">
+                                        <Banknote className="h-4 w-4" />
+                                        {t('wholesaler_detail.transactions.opening_balance')}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge className="bg-emerald-100 text-emerald-700 border-0">
+                                        {t('wholesaler_payments.detail.advance')}
+                                    </Badge>
+                                </TableCell>
+                            </TableRow>
+                        )}
+
                         {payments.map((payment) => {
                             const baseConfig = paymentMethodConfig[payment.paymentMethod] || {
                                 color: 'bg-gray-100 text-gray-700',
@@ -145,6 +178,37 @@ export function PaymentsTable({ payments, isLoading }: PaymentsTableProps) {
 
             {/* Mobile Cards - Professional design inspired by Bill History */}
             <div className="md:hidden space-y-3 p-3 bg-gray-50/50">
+                {/* Opening Advance Card */}
+                {openingAdvance > 0 && (
+                    <div className="bg-white rounded-xl shadow-sm border border-green-200 overflow-hidden border-l-4 border-l-green-500">
+                        <div className="p-3">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-400 to-emerald-500 shadow-sm">
+                                    <Banknote className="h-5 w-5 text-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-gray-900 text-sm">{t('wholesaler_detail.transactions.opening_balance')}</p>
+                                    <p className="text-xs text-gray-500 flex items-center gap-1">
+                                        {t('wholesaler_detail.transactions.before_app')}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-lg font-bold text-green-600 tracking-tight">
+                                        {formatCurrency(openingAdvance)}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="bg-green-50 rounded-lg p-2.5 border border-green-100/50">
+                                <div className="flex items-center justify-between">
+                                    <Badge className="bg-emerald-100 text-emerald-700 border-0 text-[10px] px-1.5 h-5 font-medium">
+                                        {t('wholesaler_payments.detail.advance')}
+                                    </Badge>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {payments.map((payment) => {
                     const baseConfig = paymentMethodConfig[payment.paymentMethod] || {
                         color: 'bg-gray-100 text-gray-700',

@@ -178,24 +178,24 @@ export class DashboardService {
             { $group: { _id: null, total: { $sum: '$totalAmount' } } },
         ]);
 
-        // Total due from customers
+        // Net balance from customers (including advances)
         const customerDueResult = await Customer.aggregate([
             { $match: { shopkeeperId: shopkeeperObjectId, type: 'due' } },
             { $group: { _id: null, total: { $sum: '$outstandingDue' }, count: { $sum: 1 } } },
         ]);
 
-        // Total due to wholesalers
+        // Net balance to wholesalers (including advances)
         const wholesalerDueResult = await Wholesaler.aggregate([
-            { $match: { shopkeeperId: shopkeeperObjectId, outstandingDue: { $gt: 0 } } },
+            { $match: { shopkeeperId: shopkeeperObjectId, isDeleted: { $ne: true } } },
             { $group: { _id: null, total: { $sum: '$outstandingDue' }, count: { $sum: 1 } } },
         ]);
 
-        // Customer and Wholesaler counts
+        // Customer and Wholesaler counts (Non-zero balances)
         const [totalCustomers, totalWholesalers, customersWithDues, wholesalersWithDues] = await Promise.all([
             Customer.countDocuments({ shopkeeperId: shopkeeperObjectId }),
             Wholesaler.countDocuments({ shopkeeperId: shopkeeperObjectId, isDeleted: { $ne: true } }),
-            Customer.countDocuments({ shopkeeperId: shopkeeperObjectId, type: 'due', outstandingDue: { $gt: 0 } }),
-            Wholesaler.countDocuments({ shopkeeperId: shopkeeperObjectId, outstandingDue: { $gt: 0 }, isDeleted: { $ne: true } }),
+            Customer.countDocuments({ shopkeeperId: shopkeeperObjectId, type: 'due', outstandingDue: { $ne: 0 } }),
+            Wholesaler.countDocuments({ shopkeeperId: shopkeeperObjectId, outstandingDue: { $ne: 0 }, isDeleted: { $ne: true } }),
         ]);
 
         // Payment method split (this month - from transactions)
@@ -298,20 +298,20 @@ export class DashboardService {
             .map(([date, data]) => ({ date, ...data }))
             .sort((a, b) => a.date.localeCompare(b.date));
 
-        // Top customers with dues
+        // Top customers with outstanding balances (including advances)
         const topCustomersDue = await Customer.find({
             shopkeeperId: shopkeeperObjectId,
             type: 'due',
-            outstandingDue: { $gt: 0 },
+            outstandingDue: { $ne: 0 },
         })
             .sort({ outstandingDue: -1 })
             .limit(5)
             .select('name phone outstandingDue');
 
-        // Top wholesalers with dues
+        // Top wholesalers with outstanding balances (including advances)
         const topWholesalersDue = await Wholesaler.find({
             shopkeeperId: shopkeeperObjectId,
-            outstandingDue: { $gt: 0 },
+            outstandingDue: { $ne: 0 },
             isDeleted: { $ne: true },
         })
             .sort({ outstandingDue: -1 })
@@ -324,7 +324,7 @@ export class DashboardService {
         if (customersWithDues > 0) {
             alerts.push({
                 type: 'warning',
-                message: `${customersWithDues} customers have pending dues`,
+                message: `${customersWithDues} customers have outstanding balances`,
                 count: customersWithDues,
             });
         }
@@ -332,7 +332,7 @@ export class DashboardService {
         if (wholesalersWithDues > 0) {
             alerts.push({
                 type: 'info',
-                message: `${wholesalersWithDues} wholesalers have pending payments`,
+                message: `${wholesalersWithDues} wholesalers have outstanding balances`,
                 count: wholesalersWithDues,
             });
         }
@@ -341,7 +341,7 @@ export class DashboardService {
         const overdueCustomers = await Customer.countDocuments({
             shopkeeperId: shopkeeperObjectId,
             type: 'due',
-            outstandingDue: { $gt: 0 },
+            outstandingDue: { $ne: 0 },
             lastTransactionDate: { $lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
         });
 
@@ -365,9 +365,23 @@ export class DashboardService {
         ]);
         const totalCollected = totalCollectedResult[0]?.total || 0;
 
-        // Total Lifetime Sales (Implicit: Outstanding + Collected)
-        // This ensures opening balances are accounted for in the total "value" delivered
-        const totalLifetimeSales = customerDueResult[0]?.total || 0 + totalCollected;
+        // Total Paid to Wholesalers (Lifetime)
+        const totalPaidResult = await Transaction.aggregate([
+            {
+                $match: {
+                    shopkeeperId: shopkeeperObjectId,
+                    type: 'expense',
+                },
+            },
+            { $group: { _id: null, total: { $sum: '$amount' } } },
+        ]);
+        const totalPaid = totalPaidResult[0]?.total || 0;
+
+        // Total Lifetime Sales (Collected + Net Customer Balance)
+        const totalLifetimeSales = (customerDueResult[0]?.total || 0) + totalCollected;
+
+        // Total Lifetime Purchases (Paid + Net Wholesaler Balance)
+        const totalLifetimePurchases = (wholesalerDueResult[0]?.total || 0) + totalPaid;
 
 
         return {
@@ -376,7 +390,8 @@ export class DashboardService {
             yesterdaySales: yesterdaySalesResult[0]?.total || 0,
             weekSales: weekSalesResult[0]?.total || 0,
             monthSales: monthSalesResult[0]?.total || 0,
-            totalLifetimeSales, // New field
+            totalLifetimeSales,
+            totalLifetimePurchases,
             // Collected data
             todayCollected: todayCollectedResult[0]?.total || 0,
             yesterdayCollected: yesterdayCollectedResult[0]?.total || 0,

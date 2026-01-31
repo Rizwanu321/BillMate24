@@ -76,7 +76,6 @@ const customerSchema = new Schema(
         outstandingDue: {
             type: Number,
             default: 0,
-            min: 0,
         },
         lastPaymentDate: {
             type: Date,

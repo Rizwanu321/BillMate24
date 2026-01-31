@@ -149,7 +149,7 @@ export function CustomerInfo({ customer }: CustomerInfoProps) {
                             </p>
                         </div>
 
-                        {/* Outstanding */}
+                        {/* Outstanding / Advance */}
                         <div className={`rounded-xl md:rounded-2xl p-3 md:p-4 border text-center col-span-1 sm:col-span-2 md:col-span-1 ${customer.outstandingDue > 0
                             ? 'bg-rose-500/10 border-rose-500/20'
                             : 'bg-emerald-500/10 border-emerald-500/20'
@@ -160,6 +160,11 @@ export function CustomerInfo({ customer }: CustomerInfoProps) {
                                         <AlertTriangle className="h-3.5 w-3.5 md:h-4 md:w-4 text-rose-400" />
                                         <span className="text-[10px] md:text-xs text-rose-400/80 font-medium uppercase tracking-wide">{t('billing.due')}</span>
                                     </>
+                                ) : customer.outstandingDue < 0 ? (
+                                    <>
+                                        <CheckCircle2 className="h-3.5 w-3.5 md:h-4 md:w-4 text-emerald-400" />
+                                        <span className="text-[10px] md:text-xs text-emerald-400/80 font-medium uppercase tracking-wide">{t('wholesaler_payments.detail.advance')}</span>
+                                    </>
                                 ) : (
                                     <>
                                         <CheckCircle2 className="h-3.5 w-3.5 md:h-4 md:w-4 text-emerald-400" />
@@ -169,7 +174,11 @@ export function CustomerInfo({ customer }: CustomerInfoProps) {
                             </div>
                             <p className={`text-lg md:text-xl font-bold break-words ${customer.outstandingDue > 0 ? 'text-rose-400' : 'text-emerald-400'
                                 }`}>
-                                {customer.outstandingDue > 0 ? formatCurrency(customer.outstandingDue) : t('wholesalers_list.table.nil_badge')}
+                                {customer.outstandingDue > 0
+                                    ? formatCurrency(customer.outstandingDue)
+                                    : customer.outstandingDue < 0
+                                        ? formatCurrency(Math.abs(customer.outstandingDue))
+                                        : t('wholesalers_list.table.nil_badge')}
                             </p>
                         </div>
                     </div>

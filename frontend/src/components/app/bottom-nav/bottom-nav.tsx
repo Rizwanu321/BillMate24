@@ -25,8 +25,8 @@ interface NavItem {
 const shopkeeperItems: NavItem[] = [
     { href: '/shopkeeper/dashboard', label: 'bottom_nav.home', icon: LayoutDashboard },
     { href: '/shopkeeper/billing', label: 'bottom_nav.bill', icon: Receipt },
-    { href: '/shopkeeper/customers/dashboard', label: 'bottom_nav.customers', icon: Users, activePrefix: '/shopkeeper/customers' },
-    { href: '/shopkeeper/wholesalers/dashboard', label: 'bottom_nav.wholesalers', icon: Package, activePrefix: '/shopkeeper/wholesalers' },
+    { href: '/shopkeeper/customers/due', label: 'bottom_nav.customers', icon: Users, activePrefix: '/shopkeeper/customers' },
+    { href: '/shopkeeper/wholesalers/payments', label: 'bottom_nav.wholesalers', icon: Package, activePrefix: '/shopkeeper/wholesalers' },
     { href: '/shopkeeper/reports/daily', label: 'bottom_nav.reports', icon: BarChart3, activePrefix: '/shopkeeper/reports' },
 ];
 

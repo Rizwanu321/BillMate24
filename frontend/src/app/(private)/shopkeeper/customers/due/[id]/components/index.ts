@@ -6,3 +6,5 @@ export { RecordPaymentDialog } from './record-payment-dialog';
 export { SalesFilters, getDateRangeForFilter } from './sales-filters';
 export type { FilterState, TimeFilterOption } from './sales-filters';
 export { Pagination } from './pagination';
+export { DueCustomerBillsPdfModal } from './due-customer-bills-pdf-modal';
+export { DueCustomerPaymentsPdfModal } from './due-customer-payments-pdf-modal';

@@ -9,6 +9,7 @@ import {
     Store,
     UserCog,
     CreditCard,
+    Database,
 } from 'lucide-react';
 
 export interface SidebarItem {
@@ -34,6 +35,11 @@ export const adminSidebarConfig: SidebarItem[] = [
         title: 'sidebar.shopkeepers',
         href: '/admin/shopkeepers',
         icon: Store,
+    },
+    {
+        title: 'sidebar.storage',
+        href: '/admin/storage',
+        icon: Database,
     },
     {
         title: 'sidebar.subscriptions',

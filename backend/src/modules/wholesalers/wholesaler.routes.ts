@@ -8,6 +8,7 @@ router.use(authenticate, requireShopkeeper, requireWholesalers);
 
 router.post('/', wholesalerController.create.bind(wholesalerController));
 router.get('/', wholesalerController.getAll.bind(wholesalerController));
+router.get('/export', wholesalerController.export.bind(wholesalerController));
 router.get('/stats', wholesalerController.getStats.bind(wholesalerController));
 router.get('/dashboard', wholesalerController.getDashboardStats.bind(wholesalerController));
 router.get('/:id', wholesalerController.getById.bind(wholesalerController));

@@ -24,6 +24,8 @@ export function EditShopkeeperDialog({ shopkeeper, open, onOpenChange }: EditSho
         email: '',
         phone: '',
         businessName: '',
+        address: '',
+        place: '',
     });
     const [features, setFeatures] = useState<Features>({
         wholesalers: false,
@@ -40,6 +42,8 @@ export function EditShopkeeperDialog({ shopkeeper, open, onOpenChange }: EditSho
                 email: shopkeeper.email || '',
                 phone: shopkeeper.phone || '',
                 businessName: shopkeeper.businessName || '',
+                address: shopkeeper.address || '',
+                place: shopkeeper.place || '',
             });
             setFeatures(shopkeeper.features);
         }
@@ -128,6 +132,22 @@ export function EditShopkeeperDialog({ shopkeeper, open, onOpenChange }: EditSho
                                     id="edit-businessName"
                                     value={formData.businessName}
                                     onChange={(e) => setFormData(prev => ({ ...prev, businessName: e.target.value }))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-address">Address</Label>
+                                <Input
+                                    id="edit-address"
+                                    value={formData.address}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-place">Place</Label>
+                                <Input
+                                    id="edit-place"
+                                    value={formData.place}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, place: e.target.value }))}
                                 />
                             </div>
                         </div>

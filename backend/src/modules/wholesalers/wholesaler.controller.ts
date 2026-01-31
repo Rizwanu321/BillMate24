@@ -20,6 +20,31 @@ export class WholesalerController {
         }
     }
 
+    async export(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const search = req.query.search as string | undefined;
+            const status = req.query.status as 'all' | 'active' | 'inactive' | undefined;
+            const duesFilter = req.query.duesFilter as 'all' | 'with_dues' | 'clear' | undefined;
+            const sortBy = req.query.sortBy as 'name' | 'purchases' | 'outstanding' | 'createdAt' | undefined;
+            const includeDeleted = req.query.includeDeleted === 'true';
+
+            // Fetch with a large limit for export
+            const result = await wholesalerService.getAll(
+                req.user!._id,
+                1,
+                10000,
+                search,
+                includeDeleted,
+                status,
+                duesFilter,
+                sortBy
+            );
+            sendSuccess(res, result.wholesalers, 'Wholesalers retrieved for export');
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { page, limit } = getPaginationParams(

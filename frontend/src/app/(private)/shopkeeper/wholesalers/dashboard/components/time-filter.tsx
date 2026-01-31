@@ -30,6 +30,7 @@ export interface DateRange {
 interface TimeFilterProps {
     value: TimeFilterOption;
     onChange: (option: TimeFilterOption, range: DateRange) => void;
+    className?: string;
 }
 
 import { useTranslation } from 'react-i18next';
@@ -62,7 +63,7 @@ export function getDateRange(option: TimeFilterOption, customStart?: Date, custo
     }
 }
 
-export function TimeFilter({ value, onChange }: TimeFilterProps) {
+export function TimeFilter({ value, onChange, className }: TimeFilterProps) {
     const { t } = useTranslation();
     const [customStartDate, setCustomStartDate] = useState('');
     const [customEndDate, setCustomEndDate] = useState('');
@@ -118,13 +119,15 @@ export function TimeFilter({ value, onChange }: TimeFilterProps) {
 
     return (
         <>
-            <div className="flex items-center gap-1.5 md:gap-2">
+            <div className={`flex items-center gap-1.5 md:gap-2 ${className || ''}`}>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="flex items-center gap-1.5 md:gap-2 bg-white shadow-sm hover:bg-gray-50 h-8 md:h-10 px-2.5 md:px-4 text-xs md:text-sm">
-                            <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 text-purple-500" />
-                            <span className="font-medium">{getDisplayLabel()}</span>
-                            <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
+                        <Button variant="outline" className="flex-1 flex items-center justify-between gap-1.5 md:gap-2 bg-white shadow-sm hover:bg-gray-50 h-9 md:h-10 px-2.5 md:px-4 text-xs md:text-sm min-w-0">
+                            <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
+                                <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 text-purple-500 flex-shrink-0" />
+                                <span className="font-medium truncate">{getDisplayLabel()}</span>
+                            </div>
+                            <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400 flex-shrink-0" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
@@ -201,7 +204,7 @@ export function TimeFilter({ value, onChange }: TimeFilterProps) {
                         variant="outline"
                         size="icon"
                         onClick={handleReset}
-                        className="bg-white shadow-sm hover:bg-gray-50 h-8 w-8 md:h-10 md:w-10"
+                        className="bg-white shadow-sm hover:bg-gray-50 h-9 w-9 md:h-10 md:w-10 flex-shrink-0"
                         title={t('wholesaler_dashboard.reset_to_today')}
                     >
                         <RotateCcw className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-500" />

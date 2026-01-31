@@ -14,6 +14,24 @@ export class PaymentController {
         }
     }
 
+    async export(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const filters = {
+                entityType: req.query.entityType as 'wholesaler' | 'customer' | undefined,
+                entityId: req.query.entityId as string | undefined,
+                paymentMethod: req.query.paymentMethod as 'cash' | 'card' | 'online' | undefined,
+                startDate: req.query.startDate as string | undefined,
+                endDate: req.query.endDate as string | undefined,
+                search: req.query.search as string | undefined,
+            };
+
+            const result = await paymentService.getAll(req.user!._id, 1, 10000, filters);
+            sendSuccess(res, result.payments, 'Payments exported successfully');
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { page, limit } = getPaginationParams(
@@ -45,10 +63,15 @@ export class PaymentController {
     async getByEntity(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { entityType, entityId } = req.params;
+            const filters = {
+                startDate: req.query.startDate as string | undefined,
+                endDate: req.query.endDate as string | undefined,
+            };
             const payments = await paymentService.getByEntity(
                 req.user!._id,
                 entityType as 'wholesaler' | 'customer',
-                entityId
+                entityId,
+                filters
             );
             sendSuccess(res, payments, 'Payments retrieved successfully');
         } catch (error) {

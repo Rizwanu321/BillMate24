@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     Plus, Search, MoreHorizontal, Trash2, Edit, Eye, Package, Calendar,
     LayoutDashboard, Phone, MapPin, CreditCard, Filter, X, ChevronLeft,
-    ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, CheckCircle, Users, IndianRupee, RefreshCw
+    ChevronRight, ChevronsLeft, ChevronsRight, AlertCircle, CheckCircle, Users, IndianRupee, RefreshCw, Printer
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Header, DeleteConfirmDialog } from '@/components/app';
@@ -50,7 +50,7 @@ import api from '@/config/axios';
 import { Wholesaler, PaginatedResponse } from '@/types';
 import { toast } from 'sonner';
 import { wholesalerSchema } from '@/schemas/wholesaler.schema';
-import { WholesalerStats, EditWholesalerDialog, AddWholesalerDialog } from './components';
+import { WholesalerStats, EditWholesalerDialog, AddWholesalerDialog, WholesalerPdfModal } from './components';
 
 interface WholesalerStatsData {
     total: number;
@@ -128,6 +128,7 @@ export default function WholesalersPage() {
     // Edit dialog state
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [editingWholesaler, setEditingWholesaler] = useState<Wholesaler | null>(null);
+    const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
     // Build query params for API
     const buildQueryParams = () => {
@@ -300,8 +301,7 @@ export default function WholesalersPage() {
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
-                                <span className="hidden sm:inline">{t('wholesalers_list.subtitle')}</span>
-                                <span className="sm:hidden">{t('wholesalers_list.title')}</span>
+                                {t('wholesalers_list.subtitle')}
                             </h2>
                             <Users className="h-5 w-5 md:h-8 md:w-8 text-indigo-600" />
                         </div>
@@ -311,7 +311,7 @@ export default function WholesalersPage() {
                             <span className="md:hidden">{format(new Date(), 'EEE, MMM d')}</span>
                         </p>
                     </div>
-                    <div className="flex items-center gap-2 md:gap-3">
+                    <div className="grid grid-cols-2 md:flex md:items-center gap-2 md:gap-3 w-full md:w-auto">
                         <Link href="/shopkeeper/wholesalers/dashboard" className="hidden md:block">
                             <Button variant="outline" className="shadow-sm">
                                 <LayoutDashboard className="h-4 w-4 mr-2" />
@@ -324,7 +324,22 @@ export default function WholesalersPage() {
                                 {t('sidebar.payments')}
                             </Button>
                         </Link>
-                        <AddWholesalerDialog />
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsPdfModalOpen(true)}
+                            className="w-full md:w-auto bg-white hover:bg-gray-50 text-indigo-600 border-indigo-200 hover:border-indigo-300 shadow-sm text-xs md:text-sm px-2 md:px-4 h-9 md:h-10"
+                        >
+                            <Printer className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5 md:mr-2" />
+                            <span className="truncate">{t('Export PDF')}</span>
+                        </Button>
+                        <AddWholesalerDialog
+                            trigger={
+                                <Button className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-pink-600 shadow-md hover:shadow-lg transition-all text-xs md:text-sm px-2 md:px-4 h-9 md:h-10">
+                                    <Plus className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4" />
+                                    <span className="truncate">{t("wholesalers_list.add_wholesaler")}</span>
+                                </Button>
+                            }
+                        />
                     </div>
                 </div>
 
@@ -860,6 +875,16 @@ export default function WholesalersPage() {
                 onConfirm={handleDeleteConfirm}
                 itemName={selectedWholesaler?.name}
                 isLoading={deleteMutation.isPending}
+            />
+            <WholesalerPdfModal
+                open={isPdfModalOpen}
+                onOpenChange={setIsPdfModalOpen}
+                filters={{
+                    search,
+                    status: statusFilter,
+                    duesFilter,
+                    sortBy
+                }}
             />
         </div>
     );

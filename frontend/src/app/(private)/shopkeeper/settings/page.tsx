@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,7 +19,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, User, Lock, Store, Settings, Calendar, Shield, Smartphone, Mail, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Loader2, User, Lock, Store, Settings, Calendar, Shield, Smartphone, Mail, AlertCircle, Eye, EyeOff, Navigation } from 'lucide-react';
 import axios from '@/config/axios';
 import { Header } from '@/components/app/header';
 import { format } from 'date-fns';
@@ -35,12 +35,26 @@ export default function SettingsPage() {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    // Fetch fresh user profile on mount to ensure all fields are up-to-date
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const response = await axios.get('/auth/profile');
+                updateUser(response.data.data);
+            } catch (error) {
+                console.error('Failed to fetch profile:', error);
+            }
+        };
+        fetchProfile();
+    }, [updateUser]);
+
     // --- Validation Schemas ---
     const profileSchema = useMemo(() => z.object({
         name: z.string().min(2, t('settings_page.name_min')),
         phone: z.string().optional(),
         businessName: z.string().optional(),
         address: z.string().optional(),
+        place: z.string().optional(),
     }), [t]);
 
     const passwordSchema = useMemo(() => z.object({
@@ -63,6 +77,7 @@ export default function SettingsPage() {
             phone: user?.phone || '',
             businessName: user?.businessName || '',
             address: user?.address || '',
+            place: user?.place || '',
         },
     });
 
@@ -75,6 +90,19 @@ export default function SettingsPage() {
             confirmNewPassword: '',
         },
     });
+
+    // Reset profile form when user data changes (e.g., after login or update)
+    useEffect(() => {
+        if (user) {
+            profileForm.reset({
+                name: user.name || '',
+                phone: user.phone || '',
+                businessName: user.businessName || '',
+                address: user.address || '',
+                place: user.place || '',
+            });
+        }
+    }, [user, profileForm]);
 
     const onProfileSubmit = async (data: ProfileFormValues) => {
         setIsProfileUpdating(true);
@@ -243,6 +271,18 @@ export default function SettingsPage() {
                                                 {...profileForm.register('address')}
                                                 className="h-11 bg-white/50 focus:bg-white transition-colors"
                                             />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="place" className="text-gray-700">{t('settings_page.place')}</Label>
+                                            <div className="relative">
+                                                <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                                <Input
+                                                    id="place"
+                                                    placeholder={t('settings_page.place_placeholder')}
+                                                    {...profileForm.register('place')}
+                                                    className="pl-10 h-11 bg-white/50 focus:bg-white transition-colors"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 

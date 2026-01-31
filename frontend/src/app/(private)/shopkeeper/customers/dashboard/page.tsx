@@ -244,40 +244,40 @@ export default function CustomerDashboardPage() {
 
             <div className="p-3 md:p-6">
                 {/* Header with Filter - Mobile-first responsive */}
-                <div className="mb-4 md:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-3">
-                    <div>
+                <div className="mb-4 md:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
+                    <div className="w-full md:w-auto">
                         <div className="flex items-center gap-2">
                             <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 bg-clip-text text-transparent">
-                                <span className="hidden sm:inline">{t('customer_dashboard.title')}</span>
-                                <span className="sm:hidden">{t('customer_dashboard.customers')}</span>
+                                {t('customer_dashboard.title')}
                             </h2>
                             <LayoutDashboard className="h-5 w-5 md:h-8 md:w-8 text-indigo-600" />
                         </div>
-                        <p className="text-gray-600 mt-0.5 md:mt-1 flex items-center gap-1.5 md:gap-2 text-xs md:text-base">
-                            <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                            <span className="hidden md:inline">{format(new Date(), 'EEEE, MMMM d, yyyy')}</span>
-                            <span className="md:hidden">{format(new Date(), 'EEE, MMM d')}</span>
-                        </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                        <TimeFilter
-                            value={timeFilter}
-                            onChange={handleTimeFilterChange}
-                        />
-                        <div className="flex flex-wrap items-center gap-2 ml-auto sm:ml-0">
-                            <Link href="/shopkeeper/customers/due">
-                                <Button variant="outline" size="sm" className="shadow-sm px-3 md:px-4 h-auto py-2 whitespace-normal leading-tight">
-                                    <CreditCard className="h-4 w-4 mr-2 shrink-0" />
-                                    <span>{t('customer_dashboard.due_customers')}</span>
-                                </Button>
-                            </Link>
-                            <Link href="/shopkeeper/customers/normal">
-                                <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25 px-3 md:px-4 h-auto py-2 whitespace-normal leading-tight">
-                                    <Users className="h-4 w-4 mr-2 shrink-0" />
-                                    <span>{t('customer_dashboard.normal_customers')}</span>
-                                </Button>
-                            </Link>
+                        <div className="flex items-center justify-between mt-0.5 md:mt-1">
+                            <p className="text-gray-600 text-xs md:text-base flex items-center gap-1.5 md:gap-2">
+                                <Calendar className="h-3 w-3 md:h-4 md:w-4" />
+                                {format(new Date(), 'EEE, MMM d, yyyy')}
+                            </p>
+                            <div className="md:hidden min-w-[140px] max-w-[50%] flex justify-end">
+                                <TimeFilter value={timeFilter} onChange={handleTimeFilterChange} className="w-full" />
+                            </div>
                         </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:flex md:items-center gap-2 md:gap-3 w-full md:w-auto">
+                        <div className="hidden md:block">
+                            <TimeFilter value={timeFilter} onChange={handleTimeFilterChange} />
+                        </div>
+                        <Link href="/shopkeeper/customers/due" className="w-full md:w-auto">
+                            <Button variant="outline" size="sm" className="shadow-sm w-full md:w-auto px-3 sm:px-4 h-9">
+                                <CreditCard className="h-4 w-4 mr-2" />
+                                <span>{t('customer_dashboard.due_customers')}</span>
+                            </Button>
+                        </Link>
+                        <Link href="/shopkeeper/customers/normal" className="w-full md:w-auto">
+                            <Button size="sm" className="w-full md:w-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25 px-3 sm:px-4 h-9">
+                                <Users className="h-4 w-4 mr-2" />
+                                <span>{t('customer_dashboard.normal_customers')}</span>
+                            </Button>
+                        </Link>
                     </div>
                 </div>
 

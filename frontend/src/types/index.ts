@@ -68,6 +68,8 @@ export interface Wholesaler {
     address?: string;
     place?: string;
     gstNumber?: string;
+    whatsappNumber?: string;
+    initialPurchased?: number;
     totalPurchased: number;
     totalPaid: number;
     outstandingDue: number;

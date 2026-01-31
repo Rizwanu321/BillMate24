@@ -20,9 +20,9 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subDays } from 'date-fns';
 
-export type TimeFilterOption = 'all' | 'today' | 'this_week' | 'this_month' | 'this_year' | 'custom';
+export type TimeFilterOption = 'all' | 'today' | 'yesterday' | 'this_week' | 'this_month' | 'this_year' | 'custom';
 
 export interface FilterState {
     search: string;
@@ -39,6 +39,7 @@ interface TransactionFiltersProps {
 const filterLabels: Record<TimeFilterOption, string> = {
     all: 'history.time_filters.all',
     today: 'history.time_filters.today',
+    yesterday: 'history.time_filters.yesterday',
     this_week: 'history.time_filters.this_week',
     this_month: 'history.time_filters.this_month',
     this_year: 'history.time_filters.this_year',
@@ -55,6 +56,12 @@ export function getDateRangeForFilter(option: TimeFilterOption, customStart?: st
             return {
                 startDate: format(startOfDay(now), 'yyyy-MM-dd'),
                 endDate: format(endOfDay(now), 'yyyy-MM-dd')
+            };
+        case 'yesterday':
+            const yesterday = subDays(now, 1);
+            return {
+                startDate: format(startOfDay(yesterday), 'yyyy-MM-dd'),
+                endDate: format(endOfDay(yesterday), 'yyyy-MM-dd')
             };
         case 'this_week':
             return {
@@ -159,7 +166,7 @@ export function TransactionFilters({ filters, onFiltersChange }: TransactionFilt
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                        {(['all', 'today', 'this_week', 'this_month', 'this_year'] as TimeFilterOption[]).map((option) => (
+                        {(['all', 'today', 'yesterday', 'this_week', 'this_month', 'this_year'] as TimeFilterOption[]).map((option) => (
                             <DropdownMenuItem
                                 key={option}
                                 onClick={() => handleTimeFilterSelect(option)}

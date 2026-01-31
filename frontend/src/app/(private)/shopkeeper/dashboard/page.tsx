@@ -68,6 +68,7 @@ interface DashboardData {
     topWholesalersDue: any[];
     alerts: { type: string; message: string; count: number }[];
     totalLifetimeSales: number;
+    totalLifetimePurchases: number;
     totalCollected: number;
 }
 
@@ -107,6 +108,7 @@ export default function ShopkeeperDashboard() {
     const totalPayments = dashboard ? (dashboard.paymentMethodSplit.cash + dashboard.paymentMethodSplit.card + dashboard.paymentMethodSplit.online) : 0;
     const netDue = dashboard ? (dashboard.totalDueFromCustomers - dashboard.totalDueToWholesalers) : 0;
     const monthProfit = dashboard ? (dashboard.monthSales - dashboard.monthPurchases) : 0;
+    const allTimeProfit = dashboard ? (dashboard.totalLifetimeSales - dashboard.totalLifetimePurchases) : 0;
 
     // Get current date info
     const now = new Date();
@@ -243,8 +245,10 @@ export default function ShopkeeperDashboard() {
                                             {t('dashboard.lifetime')}
                                         </Badge>
                                     </div>
-                                    <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(dashboard?.totalLifetimeSales || 0)}</h3>
-                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">{t('dashboard.total_sales')}</p>
+                                    <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(Math.abs(dashboard?.totalLifetimeSales || 0))}</h3>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">
+                                        {(dashboard?.totalLifetimeSales || 0) >= 0 ? t('dashboard.total_sales') : t('reports.net_credit_balance')}
+                                    </p>
                                     <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
                                         <div className="flex items-center justify-between text-[10px] md:text-sm">
                                             <span className="text-white/70">{t('dashboard.this_month')}</span>
@@ -252,7 +256,7 @@ export default function ShopkeeperDashboard() {
                                         </div>
                                         <p className="text-[10px] md:text-xs text-white/60 mt-1 flex items-center gap-1">
                                             <Info className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                            {t('dashboard.includes_opening')}
+                                            {t('reports.including_opening_balance')}
                                         </p>
                                     </div>
                                 </CardContent>
@@ -260,18 +264,26 @@ export default function ShopkeeperDashboard() {
                             </Card>
 
                             {/* Due from Customers */}
-                            <Card className="relative overflow-hidden border-0 shadow-lg md:shadow-xl bg-gradient-to-br from-orange-500 to-red-500 text-white">
+                            <Card className={`relative overflow-hidden border-0 shadow-lg md:shadow-xl text-white ${(dashboard?.totalDueFromCustomers || 0) >= 0
+                                ? 'bg-gradient-to-br from-emerald-500 to-green-600'
+                                : 'bg-gradient-to-br from-rose-500 to-red-600'}`}>
                                 <CardContent className="p-3 md:p-6">
                                     <div className="flex items-center justify-between mb-2 md:mb-4">
                                         <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
-                                            <Users className="h-4 w-4 md:h-6 md:w-6" />
+                                            {(dashboard?.totalDueFromCustomers || 0) >= 0 ? (
+                                                <Users className="h-4 w-4 md:h-6 md:w-6" />
+                                            ) : (
+                                                <ArrowDownRight className="h-4 w-4 md:h-6 md:w-6" />
+                                            )}
                                         </div>
                                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                                            {t('dashboard.total_due')}
+                                            {(dashboard?.totalDueFromCustomers || 0) >= 0 ? t('dashboard.total_due') : t('wholesaler_payments.detail.advance')}
                                         </Badge>
                                     </div>
-                                    <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(dashboard?.totalDueFromCustomers || 0)}</h3>
-                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">{t('dashboard.to_collect')}</p>
+                                    <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(Math.abs(dashboard?.totalDueFromCustomers || 0))}</h3>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">
+                                        {(dashboard?.totalDueFromCustomers || 0) >= 0 ? t('dashboard.to_collect') : t('dashboard.to_pay_customer_advance')}
+                                    </p>
                                     <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
                                         <p className="text-[10px] md:text-xs text-white/70">{t('dashboard.from_customers')}</p>
                                         <p className="text-[10px] md:text-xs text-white/60 mt-1 flex items-center gap-1">
@@ -284,18 +296,26 @@ export default function ShopkeeperDashboard() {
                             </Card>
 
                             {/* Due to Wholesalers */}
-                            <Card className="relative overflow-hidden border-0 shadow-lg md:shadow-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
+                            <Card className={`relative overflow-hidden border-0 shadow-lg md:shadow-xl text-white ${(dashboard?.totalDueToWholesalers || 0) >= 0
+                                ? 'bg-gradient-to-br from-orange-500 to-amber-600'
+                                : 'bg-gradient-to-br from-blue-500 to-indigo-600'}`}>
                                 <CardContent className="p-3 md:p-6">
                                     <div className="flex items-center justify-between mb-2 md:mb-4">
                                         <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-white/20 backdrop-blur-sm">
-                                            <Package className="h-4 w-4 md:h-6 md:w-6" />
+                                            {(dashboard?.totalDueToWholesalers || 0) >= 0 ? (
+                                                <Package className="h-4 w-4 md:h-6 md:w-6" />
+                                            ) : (
+                                                <ArrowUpRight className="h-4 w-4 md:h-6 md:w-6" />
+                                            )}
                                         </div>
                                         <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs px-1.5 md:px-2">
-                                            {t('dashboard.total_due')}
+                                            {(dashboard?.totalDueToWholesalers || 0) >= 0 ? t('dashboard.total_due') : t('wholesaler_payments.detail.advance')}
                                         </Badge>
                                     </div>
-                                    <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(dashboard?.totalDueToWholesalers || 0)}</h3>
-                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">{t('dashboard.to_pay')}</p>
+                                    <h3 className="text-lg md:text-3xl font-bold">{formatCurrency(Math.abs(dashboard?.totalDueToWholesalers || 0))}</h3>
+                                    <p className="text-white/80 text-xs md:text-base mt-0.5 md:mt-1">
+                                        {(dashboard?.totalDueToWholesalers || 0) >= 0 ? t('dashboard.to_pay') : t('dashboard.to_receive_wholesaler_advance')}
+                                    </p>
                                     <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20">
                                         <p className="text-[10px] md:text-xs text-white/70">{t('dashboard.to_wholesalers')}</p>
                                         <p className="text-[10px] md:text-xs text-white/60 mt-1 flex items-center gap-1">
@@ -310,6 +330,22 @@ export default function ShopkeeperDashboard() {
 
                         {/* Secondary Stats Row - Scrollable on mobile */}
                         <div className="flex md:grid md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-8 overflow-x-auto pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+                            <Card className={`border-0 shadow-md hover:shadow-lg transition-shadow flex-shrink-0 w-auto min-w-[11rem] md:w-auto ${allTimeProfit >= 0 ? 'bg-purple-50' : 'bg-rose-50'}`}>
+                                <CardContent className="p-3 md:p-4 flex items-center gap-3 md:gap-4">
+                                    <div className={`p-2 md:p-3 rounded-lg md:rounded-xl ${allTimeProfit >= 0 ? 'bg-purple-100' : 'bg-rose-100'}`}>
+                                        <Activity className={`h-4 w-4 md:h-5 md:w-5 ${allTimeProfit >= 0 ? 'text-purple-600' : 'text-rose-600'}`} />
+                                    </div>
+                                    <div>
+                                        <p className={`text-base md:text-2xl font-bold ${allTimeProfit >= 0 ? 'text-purple-700' : 'text-rose-700'}`}>
+                                            {formatCurrency(Math.abs(allTimeProfit))}
+                                        </p>
+                                        <p className="text-xs md:text-sm text-gray-500">
+                                            {allTimeProfit >= 0 ? t('reports.total_profit') : t('reports.total_loss')} ({t('reports.all_time')})
+                                        </p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
                             <Card className="border-0 shadow-md hover:shadow-lg transition-shadow flex-shrink-0 w-auto min-w-[11rem] md:w-auto">
                                 <CardContent className="p-3 md:p-4 flex items-center gap-3 md:gap-4">
                                     <div className="p-2 md:p-3 rounded-lg md:rounded-xl bg-green-100">
@@ -437,15 +473,15 @@ export default function ShopkeeperDashboard() {
                                         {dashboard?.topCustomersDue && dashboard.topCustomersDue.length > 0 ? (
                                             <div className="space-y-1.5 md:space-y-2">
                                                 {dashboard.topCustomersDue.slice(0, 3).map((customer: any) => (
-                                                    <div key={customer._id} className="flex items-center justify-between p-1.5 md:p-2 rounded-lg bg-red-50 hover:bg-red-100 transition-colors">
+                                                    <div key={customer._id} className={`flex items-center justify-between p-1.5 md:p-2 rounded-lg ${customer.outstandingDue >= 0 ? 'bg-red-50 hover:bg-red-100' : 'bg-blue-50 hover:bg-blue-100'} transition-colors`}>
                                                         <div className="flex items-center gap-1.5 md:gap-2">
-                                                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-red-200 flex items-center justify-center text-red-700 font-semibold text-[10px] md:text-sm">
+                                                            <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full ${customer.outstandingDue >= 0 ? 'bg-red-200 text-red-700' : 'bg-blue-200 text-blue-700'} flex items-center justify-center font-semibold text-[10px] md:text-sm`}>
                                                                 {customer.name.charAt(0).toUpperCase()}
                                                             </div>
                                                             <span className="font-medium text-[11px] md:text-sm truncate max-w-[80px] md:max-w-none">{customer.name}</span>
                                                         </div>
-                                                        <Badge variant="destructive" className="font-mono text-[10px] md:text-xs px-1.5 md:px-2">
-                                                            {formatCurrency(customer.outstandingDue)}
+                                                        <Badge variant={customer.outstandingDue >= 0 ? 'destructive' : 'default'} className={`font-mono text-[10px] md:text-xs px-1.5 md:px-2 ${customer.outstandingDue < 0 ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : ''}`}>
+                                                            {formatCurrency(Math.abs(customer.outstandingDue))}
                                                         </Badge>
                                                     </div>
                                                 ))}
@@ -461,15 +497,15 @@ export default function ShopkeeperDashboard() {
                                         {dashboard?.topWholesalersDue && dashboard.topWholesalersDue.length > 0 ? (
                                             <div className="space-y-1.5 md:space-y-2">
                                                 {dashboard.topWholesalersDue.slice(0, 3).map((wholesaler: any) => (
-                                                    <div key={wholesaler._id} className="flex items-center justify-between p-1.5 md:p-2 rounded-lg bg-orange-50 hover:bg-orange-100 transition-colors">
+                                                    <div key={wholesaler._id} className={`flex items-center justify-between p-1.5 md:p-2 rounded-lg ${wholesaler.outstandingDue >= 0 ? 'bg-orange-50 hover:bg-orange-100' : 'bg-green-50 hover:bg-green-100'} transition-colors`}>
                                                         <div className="flex items-center gap-1.5 md:gap-2">
-                                                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-orange-200 flex items-center justify-center text-orange-700 font-semibold text-[10px] md:text-sm">
+                                                            <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full ${wholesaler.outstandingDue >= 0 ? 'bg-orange-200 text-orange-700' : 'bg-green-200 text-green-700'} flex items-center justify-center font-semibold text-[10px] md:text-sm`}>
                                                                 {wholesaler.name.charAt(0).toUpperCase()}
                                                             </div>
                                                             <span className="font-medium text-[11px] md:text-sm truncate max-w-[80px] md:max-w-none">{wholesaler.name}</span>
                                                         </div>
-                                                        <Badge className="bg-orange-100 text-orange-700 font-mono text-[10px] md:text-xs px-1.5 md:px-2">
-                                                            {formatCurrency(wholesaler.outstandingDue)}
+                                                        <Badge className={`font-mono text-[10px] md:text-xs px-1.5 md:px-2 ${wholesaler.outstandingDue >= 0 ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
+                                                            {formatCurrency(Math.abs(wholesaler.outstandingDue))}
                                                         </Badge>
                                                     </div>
                                                 ))}

@@ -8,7 +8,7 @@ export const createCustomerSchema = z.object({
     address: z.string().optional(),
     place: z.string().optional(),
     type: z.enum(['due', 'normal']),
-    initialSales: z.number().min(0, 'Amount must be positive').optional(),
+    initialSales: z.number().optional(),
 }).superRefine((data, ctx) => {
     if (data.type === 'due') {
         if (!data.phone) {

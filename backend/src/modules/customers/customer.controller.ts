@@ -21,6 +21,32 @@ export class CustomerController {
         }
     }
 
+    async export(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const search = req.query.search as string | undefined;
+            const type = req.query.type as CustomerType | undefined;
+            const status = req.query.status as string | undefined;
+            const duesFilter = req.query.duesFilter as string | undefined;
+            const sortBy = req.query.sortBy as string | undefined;
+            const includeDeleted = req.query.includeDeleted === 'true' || status === 'deleted';
+
+            const result = await customerService.getAll(
+                req.user!._id,
+                type,
+                1,
+                10000, // High limit for export
+                search,
+                includeDeleted,
+                status,
+                duesFilter,
+                sortBy
+            );
+            sendSuccess(res, result.customers, 'Customers exported successfully');
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { page, limit } = getPaginationParams(

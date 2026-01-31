@@ -1,6 +1,7 @@
 {
     "common": {
         "walk_in_customer": "Walk-in Customer",
+        "add": "Add",
         "search": "Search...",
         "search_placeholder": "Search by bill # or name...",
         "logout": "Logout",
@@ -35,6 +36,8 @@
         "dashboard": "Dashboard",
         "billing": "Billing",
         "add_bill": "Add Bill",
+        "add_due_customers": "Add Due Customers",
+        "add_normal_customers": "Add Normal Customers",
         "bill_history": "Bill History",
         "wholesalers": "Wholesalers",
         "list": "List",
@@ -45,6 +48,9 @@
         "reports": "Reports",
         "revenue_report": "Revenue Report",
         "outstanding_dues": "Outstanding Dues",
+        "shopkeepers": "Shopkeepers",
+        "storage": "Storage",
+        "subscriptions": "Subscriptions",
         "settings": "Settings"
     },
     "bottom_nav": {
@@ -85,16 +91,18 @@
         "view_customers": "View Customers",
         "view_wholesalers": "View Wholesalers",
         "view": "View",
-        "customers_due_alert": "{{count}} customers have pending dues",
-        "wholesalers_due_alert": "{{count}} wholesalers have pending payments",
+        "customers_due_alert": "{{count}} customers have outstanding balances",
+        "wholesalers_due_alert": "{{count}} wholesalers have outstanding balances",
         "bills_count": "{{count}} bills",
         "includes_opening": "Includes opening balances",
-        "with_dues_count": "{{count}} with dues",
-        "pending_payments_count": "{{count}} pending payments",
+        "with_dues_count": "{{count}} with balances",
+        "pending_payments_count": "{{count}} active accounts",
         "cash": "Cash",
         "card": "Card",
         "online": "Online",
         "total": "Total",
+        "to_pay_customer_advance": "To Pay (Advance)",
+        "to_receive_wholesaler_advance": "To Collect (Advance)",
         "no_pending_dues": "No pending dues",
         "no_pending_payments": "No pending payments",
         "no_bills_yet": "No bills yet",
@@ -120,6 +128,8 @@
         "paid": "Paid",
         "margin": "Margin",
         "all_time": "All Time",
+        "net_sales": "Net Sales",
+        "net_credit_balance": "Net Credit Balance",
         "incl_opening": "(incl. opening)",
         "total_receivables": "Total Receivables (All Time)",
         "total_payables": "Total Payables (All Time)",
@@ -132,8 +142,15 @@
         "loss_in_app": "Loss (in app)",
         "opening_customer_dues": "Opening Customer Dues",
         "opening_wholesaler_dues": "Opening Wholesaler Dues",
-        "total_profit_all_time": "Total Profit (All Time)",
-        "total_loss_all_time": "Total Loss (All Time)",
+        "total_profit_all_time": "= Total Profit (All Time)",
+        "total_loss_all_time": "= Total Loss (All Time)",
+        "opening_customer_to_pay": "Amount to return to Customer (Advance)",
+        "opening_wholesaler_to_receive": "Amount to receive from Wholesaler (Advance)",
+        "total_to_pay_customer_all_time": "= Total to Pay Customer (All Time)",
+        "total_to_receive_wholesaler_all_time": "= Total to Receive from Wholesaler (All Time)",
+        "no_activity": "No Activity",
+        "no_transactions_period": "No transactions were recorded during this period.",
+        "opening_dues_explanation": "Opening dues represent your starting financial position before using the app.",
         "payment_breakdown": "Payment Breakdown",
         "transactions": "Transactions",
         "all": "All",
@@ -173,6 +190,8 @@
         "cash_received_customers": "Cash Received (from customers)",
         "cash_paid_wholesalers": "Cash Paid (to wholesalers)",
         "net_cash_flow_result": "= Net Cash Flow",
+        "net_cash_flow_all_time": "= Net Cash Flow (All Time)",
+        "net_cash_flow_all_time_negative": "= Negative Cash Flow (All Time)",
         "negative": "Negative",
         "sales_receivables": "Sales & Receivables",
         "total_sales_made": "Total Sales Made (in app)",
@@ -180,12 +199,16 @@
         "pending_from_bills": "= Pending from Bills",
         "opening_balance_before": "+ Opening Balance (before app)",
         "total_outstanding_receivable": "= Total Outstanding Receivable",
+        "total_to_pay_to_customer": "= Total to Pay (Advance)",
         "current_receivable": "= Current Receivable",
+        "current_payable_to_customer": "= Current Payable",
         "purchases_payables": "Purchases & Payables",
         "total_purchases_made": "Total Purchases Made (in app)",
         "amount_paid": "Amount Paid",
         "total_outstanding_payable": "= Total Outstanding Payable",
+        "total_to_receive_from_wholesaler": "= Total to Receive (Advance)",
         "current_payable": "= Current Payable",
+        "current_receivable_from_wholesaler": "= Current Receivable",
         "payment_modes_breakdown": "Payment Modes Breakdown",
         "quick_insights": "Quick Insights",
         "profitable_period": "Profitable Period",
@@ -226,6 +249,12 @@
         "received": "Received",
         "net": "Net",
         "total_outstanding": "Total Outstanding",
+        "total_sales_incl_opening": "Total Sales (incl. opening)",
+        "recorded_in_app": "Recorded in App",
+        "opening_balance_pre_app": "+ Opening Balance (Pre-App)",
+        "less_collected_amount": "Less Collected Amount",
+        "total_purchases_incl_opening": "Total Purchases (incl. opening)",
+        "less_paid_amount": "Less Paid Amount",
         "outstanding_dues_title": "Outstanding Dues",
         "track_dues_desc": "Track payments and collections",
         "make_payment": "Make Payment",
@@ -248,7 +277,6 @@
         "contact": "Contact",
         "outstanding_due": "Outstanding Due",
         "last_activity": "Last Activity",
-        "no_activity": "No activity",
         "action": "Action",
         "view": "View",
         "view_details": "View Details",
@@ -327,7 +355,17 @@
         "status_due": "Due",
         "partial": "Partial",
         "bill_number": "Bill No.",
-        "total": "Total"
+        "total": "Total",
+        "new_bill": "New Bill"
+    },
+    "customers": {
+        "normal": {
+            "walk_in_title": "Walk-in Sales",
+            "walk_in_desc": "Manage sales for non-registered or one-time customers here.",
+            "walk_in": "Walk-in Customer",
+            "no_transactions": "No transactions found",
+            "create_first": "Create a bill to get started"
+        }
     },
     "history": {
         "title": "Bill History",
@@ -533,7 +571,11 @@
             "success_restore": "Wholesaler restored successfully",
             "cancel": "Cancel",
             "add_button": "Add Wholesaler",
-            "save_button": "Save Changes"
+            "save_button": "Save Changes",
+            "balance_type_payable": "I Owe (Credit)",
+            "balance_type_receivable": "Advance (Debit)",
+            "balance_payable_desc": "You need to pay this amount to the wholesaler",
+            "balance_receivable_desc": "You have paid this amount in advance"
         },
         "empty": {
             "no_found": "No wholesalers found",
@@ -690,7 +732,8 @@
         "success_add": "Customer added successfully",
         "success_update": "Customer details updated successfully",
         "name": "Customer Name",
-        "opening_balance_desc": "Previous balance due from the customer (if any)"
+        "opening_balance_desc": "Previous balance due from the customer (if any)",
+        "opening_balance_advance_desc": "Advance payment received from the customer"
     },
     "settings_page": {
         "account_settings": "Account Settings",
@@ -719,6 +762,8 @@
         "password_required": "Current password is required",
         "new_password_min": "New password must be at least 6 characters",
         "confirm_password_required": "Confirm password is required",
-        "name_min": "Name must be at least 2 characters"
+        "name_min": "Name must be at least 2 characters",
+        "place": "Place / City",
+        "place_placeholder": "City or Town"
     }
 }

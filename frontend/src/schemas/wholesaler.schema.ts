@@ -6,7 +6,7 @@ export const wholesalerSchema = z.object({
     whatsappNumber: z.string().optional(),
     address: z.string().min(1, 'Address is required'),
     place: z.string().optional(),
-    initialPurchased: z.number().min(0, 'Amount must be positive').optional(),
+    initialPurchased: z.number().optional(),
 });
 
 export type WholesalerSchema = z.infer<typeof wholesalerSchema>;

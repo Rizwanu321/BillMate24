@@ -19,10 +19,10 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subDays } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 
-export type TimeFilterOption = 'all' | 'today' | 'this_week' | 'this_month' | 'this_year' | 'custom';
+export type TimeFilterOption = 'all' | 'today' | 'yesterday' | 'this_week' | 'this_month' | 'this_year' | 'custom';
 
 export interface FilterState {
     search: string;
@@ -39,6 +39,7 @@ interface SalesFiltersProps {
 const filterLabelsMap: Record<TimeFilterOption, string> = {
     all: 'all',
     today: 'today',
+    yesterday: 'yesterday',
     this_week: 'this_week',
     this_month: 'this_month',
     this_year: 'this_year',
@@ -55,6 +56,12 @@ export function getDateRangeForFilter(option: TimeFilterOption, customStart?: st
             return {
                 startDate: format(startOfDay(now), 'yyyy-MM-dd'),
                 endDate: format(endOfDay(now), 'yyyy-MM-dd')
+            };
+        case 'yesterday':
+            const yesterday = subDays(now, 1);
+            return {
+                startDate: format(startOfDay(yesterday), 'yyyy-MM-dd'),
+                endDate: format(endOfDay(yesterday), 'yyyy-MM-dd')
             };
         case 'this_week':
             return {
@@ -136,31 +143,31 @@ export function SalesFilters({ filters, onFiltersChange }: SalesFiltersProps) {
 
     return (
         <>
-            <div className="flex flex-col sm:flex-row gap-2 md:gap-3 items-stretch sm:items-center mb-3 md:mb-4">
+            <div className="flex flex-row items-center gap-2 md:gap-3">
                 {/* Search */}
-                <div className="relative flex-1">
-                    <Search className="absolute left-2.5 md:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
+                <div className="relative w-40 md:w-64">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
                     <Input
                         placeholder={t('common.search')}
                         value={filters.search}
                         onChange={(e) => handleSearchChange(e.target.value)}
-                        className="pl-8 md:pl-10 h-9 md:h-10 text-sm"
+                        className="pl-8 h-9 text-xs md:text-sm bg-white"
                     />
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                     {/* Time Filter */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="flex items-center gap-1 md:gap-2 h-9 md:h-10 px-2 md:px-3 text-xs md:text-sm flex-1 sm:flex-none">
-                                <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 text-indigo-500" />
+                            <Button variant="outline" className="flex items-center gap-1.5 h-9 px-2 md:px-3 text-xs md:text-sm bg-white">
+                                <Calendar className="h-3.5 w-3.5 text-indigo-500" />
                                 <span className="hidden sm:inline">{getTimeFilterLabel()}</span>
                                 <span className="sm:hidden truncate max-w-[80px]">{getTimeFilterLabel()}</span>
-                                <ChevronDown className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-400" />
+                                <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                            {(['all', 'today', 'this_week', 'this_month', 'this_year'] as TimeFilterOption[]).map((option) => (
+                            {(['all', 'today', 'yesterday', 'this_week', 'this_month', 'this_year'] as TimeFilterOption[]).map((option) => (
                                 <DropdownMenuItem
                                     key={option}
                                     onClick={() => handleTimeFilterSelect(option)}
@@ -187,8 +194,8 @@ export function SalesFilters({ filters, onFiltersChange }: SalesFiltersProps) {
 
                     {/* Clear Filters */}
                     {hasActiveFilters && (
-                        <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 md:h-10 px-2 md:px-3">
-                            <X className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                        <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 px-2 md:px-3 text-gray-500 hover:text-red-600">
+                            <X className="h-3.5 w-3.5" />
                             <span className="hidden sm:inline ml-1">{t('history.custom_range.clear')}</span>
                         </Button>
                     )}
@@ -197,7 +204,7 @@ export function SalesFilters({ filters, onFiltersChange }: SalesFiltersProps) {
 
             {/* Active Filters Badge - Mobile friendly */}
             {hasActiveFilters && (
-                <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3 md:mb-4">
+                <div className="flex flex-wrap gap-1.5 md:gap-2 mt-2">
                     {filters.search && (
                         <Badge variant="secondary" className="flex items-center gap-1 text-[10px] md:text-xs px-1.5 md:px-2">
                             {t('common.search')}: {filters.search}

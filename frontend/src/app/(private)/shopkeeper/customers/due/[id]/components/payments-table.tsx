@@ -21,9 +21,14 @@ interface Payment {
     createdAt: string;
 }
 
+interface Customer {
+    totalPaid: number;
+}
+
 interface PaymentsTableProps {
     payments: Payment[];
     isLoading?: boolean;
+    customer?: Customer;
 }
 
 function formatCurrency(amount: number): string {
@@ -43,8 +48,15 @@ const paymentMethodConfig: Record<string, { key: string; icon: React.ReactNode; 
     online: { key: 'online', icon: <Smartphone className="h-3 w-3" />, bgColor: 'bg-purple-100', color: 'text-purple-700' },
 };
 
-export function PaymentsTable({ payments, isLoading }: PaymentsTableProps) {
+export function PaymentsTable({ payments, isLoading, customer }: PaymentsTableProps) {
     const { t } = useTranslation();
+
+    // Calculate opening advance (total paid that came from before using the app logic)
+    // customer.totalPaid includes opening advance relative to sales logic, but more simply:
+    // If we have an opening advance, it contributes to totalPaid.
+    const paymentsTotal = payments.reduce((sum, p) => sum + p.amount, 0);
+    const openingAdvance = customer ? Math.max(0, customer.totalPaid - paymentsTotal) : 0;
+
     if (isLoading) {
         return (
             <div className="p-8 md:p-12 text-center">
@@ -54,7 +66,7 @@ export function PaymentsTable({ payments, isLoading }: PaymentsTableProps) {
         );
     }
 
-    if (!payments || payments.length === 0) {
+    if ((!payments || payments.length === 0) && openingAdvance <= 0) {
         return (
             <div className="p-8 md:p-12 text-center">
                 <CreditCard className="h-8 w-8 md:h-12 md:w-12 text-gray-300 mx-auto mb-3 md:mb-4" />
@@ -78,6 +90,29 @@ export function PaymentsTable({ payments, isLoading }: PaymentsTableProps) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
+                        {/* Opening Advance Row */}
+                        {openingAdvance > 0 && (
+                            <TableRow className="bg-green-50/50 border-b-2 border-green-200">
+                                <TableCell className="text-gray-600 font-medium">
+                                    {t('dashboard.includes_opening').replace('(', '').replace(')', '')}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <span className="text-lg font-bold text-green-600">{formatCurrency(openingAdvance)}</span>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge className="bg-green-100 text-green-700 border-0 flex items-center gap-1.5 w-fit">
+                                        <Banknote className="h-3 w-3" />
+                                        {t('wholesalers_list.dialogs.opening_balance')}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="text-gray-500">
+                                    <Badge className="bg-emerald-100 text-emerald-700 border-0">
+                                        {t('wholesaler_payments.detail.advance')}
+                                    </Badge>
+                                </TableCell>
+                            </TableRow>
+                        )}
+
                         {payments.map((payment) => {
                             const methodConfig = paymentMethodConfig[payment.paymentMethod] || paymentMethodConfig.cash;
                             const methodLabel = methodConfig.key === 'online' ? t('dashboard.online') + ' / UPI' : t(`dashboard.${methodConfig.key}`);
@@ -107,6 +142,35 @@ export function PaymentsTable({ payments, isLoading }: PaymentsTableProps) {
 
             {/* Mobile Cards */}
             <div className="md:hidden">
+                {/* Opening Advance Card */}
+                {openingAdvance > 0 && (
+                    <div className="p-3 bg-green-50 rounded-xl shadow-sm border-l-4 border-l-green-500 border-2 border-green-200 mb-2">
+                        {/* Header Row */}
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white flex-shrink-0">
+                                    <Banknote className="h-4 w-4" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="font-semibold text-gray-900 text-sm">{t('wholesalers_list.dialogs.opening_balance')}</p>
+                                    <p className="text-[10px] text-gray-500">{t('dashboard.includes_opening').replace('(', '').replace(')', '')}</p>
+                                </div>
+                            </div>
+                            <Badge className="bg-emerald-100 text-emerald-700 border-0 text-[10px] px-1.5 flex items-center gap-1 flex-shrink-0">
+                                {t('wholesaler_payments.detail.advance')}
+                            </Badge>
+                        </div>
+
+                        {/* Amount */}
+                        <div className="bg-white rounded-lg p-2 border border-green-100">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-green-600 font-medium">{t('wholesaler_payments.form.amount')}</span>
+                                <span className="font-bold text-green-600 text-base">{formatCurrency(openingAdvance)}</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {payments.map((payment, index) => {
                     const methodConfig = paymentMethodConfig[payment.paymentMethod] || paymentMethodConfig.cash;
                     const methodLabel = methodConfig.key === 'online' ? t('dashboard.online') + ' / UPI' : t(`dashboard.${methodConfig.key}`);
