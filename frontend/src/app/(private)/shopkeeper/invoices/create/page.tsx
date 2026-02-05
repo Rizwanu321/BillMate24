@@ -71,8 +71,9 @@ export default function CreateInvoicePage() {
             toast.success(t('invoices.messages.success_create'));
             router.push(`/shopkeeper/invoices/${invoice._id}`);
         },
-        onError: () => {
-            toast.error(t('invoices.messages.error_create'));
+        onError: (error: any) => {
+            const errorMessage = error?.response?.data?.error || error?.response?.data?.message || t('invoices.messages.error_create');
+            toast.error(errorMessage);
         },
     });
 
@@ -126,9 +127,30 @@ export default function CreateInvoicePage() {
     };
 
     const handleSubmit = (status: 'draft' | 'sent') => {
-        if (!formData.customerName || !formData.items || formData.items.length === 0) {
+        if (!formData.customerName) {
             toast.error(t('invoices.validation.customer_name_required'));
             return;
+        }
+
+        if (!formData.items || formData.items.length === 0) {
+            toast.error(t('invoices.validation.items_required'));
+            return;
+        }
+
+        // Validate individual items
+        for (const item of formData.items) {
+            if (!item.description || item.description.trim() === '') {
+                toast.error(t('invoices.validation.item_description_required'));
+                return;
+            }
+            if (!item.quantity || item.quantity <= 0) {
+                toast.error(t('invoices.validation.item_quantity_required'));
+                return;
+            }
+            if (item.rate < 0) {
+                toast.error(t('invoices.validation.item_rate_required'));
+                return;
+            }
         }
 
         // Prepare data and remove empty dueDate to prevent validation errors

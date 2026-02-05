@@ -889,7 +889,7 @@
         "invoice_no": "ഇൻവോയ്സ് #",
         "invoice_date": "ഇൻവോയ്സ് തീയതി",
         "date": "തീയതി",
-        "due_date": "അവസാന തീയതി (ഓപ്ഷണൽ)",
+        "due_date": "അവസാന തീയതി",
         "invoice_details": "ഇൻവോയ്സ് വിശദാംശങ്ങൾ",
         "invoice_details_desc": "അടിസ്ഥാന വിവരങ്ങൾ",
         "customer_details": "ഉപഭോക്താവിന്റെ വിശദാംശങ്ങൾ",
@@ -1066,7 +1066,7 @@
             "items_required": "കുറഞ്ഞത് ഒരു ഇനം ആവശ്യമാണ്",
             "item_description_required": "ഇനത്തിന്റെ വിവരണം ആവശ്യമാണ്",
             "item_quantity_required": "അളവ് 0-നേക്കാൾ കൂടുതലായിരിക്കണം",
-            "item_rate_required": "നിരക്ക് 0-നേക്കാൾ കൂടുതലായിരിക്കണം",
+            "item_rate_required": "നിരക്ക് 0-ൽ താഴെയാകരുത്",
             "invalid_email": "അസാധുവായ ഇമെയിൽ വിലാസം",
             "invalid_phone": "അസാധുവായ ഫോൺ നമ്പർ"
         },

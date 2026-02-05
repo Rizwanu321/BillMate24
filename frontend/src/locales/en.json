@@ -893,7 +893,7 @@
         "invoice_no": "Invoice #",
         "invoice_date": "Invoice Date",
         "date": "Date",
-        "due_date": "Due Date (Optional)",
+        "due_date": "Due Date",
         "invoice_details": "Invoice Details",
         "invoice_details_desc": "Basic invoice information",
         "customer_details": "Customer Details",
@@ -1068,7 +1068,7 @@
             "items_required": "At least one item is required",
             "item_description_required": "Item description is required",
             "item_quantity_required": "Quantity must be greater than 0",
-            "item_rate_required": "Rate must be greater than 0",
+            "item_rate_required": "Rate cannot be negative",
             "invalid_email": "Invalid email address",
             "invalid_phone": "Invalid phone number"
         },
