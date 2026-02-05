@@ -7,7 +7,9 @@ export const createWholesalerSchema = z.object({
     address: z.string().min(1, 'Address is required'),
     place: z.string().optional(),
     whatsappNumber: z.string().optional(),
-    initialPurchased: z.number().optional(),
+    initialPurchased: z.number().optional(), // DEPRECATED - kept for backward compatibility
+    openingPurchases: z.number().min(0, 'Opening purchases must be positive').optional(),
+    openingPayments: z.number().min(0, 'Opening payments must be positive').optional(),
 });
 
 export const updateWholesalerSchema = z.object({
@@ -17,7 +19,9 @@ export const updateWholesalerSchema = z.object({
     address: z.string().optional(),
     place: z.string().optional(),
     whatsappNumber: z.string().optional(),
-    initialPurchased: z.number().optional(),
+    initialPurchased: z.number().optional(), // DEPRECATED
+    openingPurchases: z.number().min(0, 'Opening purchases must be positive').optional(),
+    openingPayments: z.number().min(0, 'Opening payments must be positive').optional(),
     isActive: z.boolean().optional(),
 });
 

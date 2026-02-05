@@ -21,10 +21,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Package, User, Phone, MessageCircle, MapPin, Save, CheckCircle, XCircle, IndianRupee } from 'lucide-react';
+import { Package, User, Phone, MessageCircle, MapPin, Save, CheckCircle, XCircle, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
-
-
 
 interface EditWholesalerDialogProps {
     isOpen: boolean;
@@ -52,9 +50,14 @@ function EditWholesalerForm({
         whatsappNumber: '',
         address: '',
         place: '',
-        initialPurchased: 0,
         isActive: true,
     });
+
+    const [useSimpleMode, setUseSimpleMode] = useState(true);
+    const [openingPurchases, setOpeningPurchases] = useState<string>("");
+    const [openingPayments, setOpeningPayments] = useState<string>("");
+    const [amountIOwe, setAmountIOwe] = useState<string>("");
+    const [amountTheyOwe, setAmountTheyOwe] = useState<string>("");
 
     useEffect(() => {
         if (wholesaler) {
@@ -64,20 +67,72 @@ function EditWholesalerForm({
                 whatsappNumber: wholesaler.whatsappNumber || '',
                 address: wholesaler.address || '',
                 place: wholesaler.place || '',
-                initialPurchased: wholesaler.initialPurchased || 0,
                 isActive: wholesaler.isActive ?? true,
             });
+
+            // Initialize opening balance states
+            const op = wholesaler.openingPurchases || 0;
+            const opm = wholesaler.openingPayments || 0;
+
+            setOpeningPurchases(op.toString());
+            setOpeningPayments(opm.toString());
+
+            const balance = op - opm;
+            if (balance > 0) {
+                setAmountIOwe(balance.toString());
+                setAmountTheyOwe("");
+            } else if (balance < 0) {
+                setAmountTheyOwe(Math.abs(balance).toString());
+                setAmountIOwe("");
+            } else {
+                setAmountIOwe("");
+                setAmountTheyOwe("");
+            }
         }
     }, [wholesaler]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(formData);
+
+        let finalOpeningPurchases = 0;
+        let finalOpeningPayments = 0;
+
+        if (useSimpleMode) {
+            const iOwe = parseFloat(amountIOwe) || 0;
+            const theyOwe = parseFloat(amountTheyOwe) || 0;
+            if (iOwe > 0) {
+                finalOpeningPurchases = iOwe;
+                finalOpeningPayments = 0;
+            } else if (theyOwe > 0) {
+                finalOpeningPurchases = 0;
+                finalOpeningPayments = theyOwe;
+            }
+        } else {
+            finalOpeningPurchases = parseFloat(openingPurchases) || 0;
+            finalOpeningPayments = parseFloat(openingPayments) || 0;
+        }
+
+        onSave({
+            ...formData,
+            openingPurchases: finalOpeningPurchases,
+            openingPayments: finalOpeningPayments
+        });
     };
 
-    const handleChange = (field: string, value: string | boolean | number) => {
+    const handleChange = (field: string, value: string | boolean) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
+
+    // Calculate opening balance for preview
+    const opValue = useSimpleMode
+        ? (parseFloat(amountIOwe) || 0)
+        : (parseFloat(openingPurchases) || 0);
+
+    const opmValue = useSimpleMode
+        ? (parseFloat(amountTheyOwe) || 0)
+        : (parseFloat(openingPayments) || 0);
+
+    const netOpeningBalance = opValue - opmValue;
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 mt-4 pb-4 md:pb-0">
@@ -163,24 +218,190 @@ function EditWholesalerForm({
                 </div>
             </div>
 
+            {/* Opening Balance Concept - PROFESSIONALLY ADDED HERE */}
             <div className="border-t pt-4">
-                <div className="space-y-2">
-                    <Label htmlFor="edit-initialPurchased" className="text-sm md:text-base">
-                        {t("wholesalers_list.dialogs.opening_balance")}
-                    </Label>
-                    <div className="relative">
-                        <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                            id="edit-initialPurchased"
-                            value={formData.initialPurchased}
-                            onChange={(e) => handleChange('initialPurchased', parseFloat(e.target.value) || 0)}
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder="0.00"
-                            className="pl-10 h-10 md:h-11 text-base md:text-sm"
-                        />
+                <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <p className="text-sm font-medium text-blue-900 mb-1">
+                            {t("wholesalers_list.dialogs.opening_balance_title")}
+                        </p>
+                        <p className="text-xs text-blue-700">
+                            {t("wholesalers_list.dialogs.opening_balance_subtitle")}
+                        </p>
                     </div>
+
+                    {!useSimpleMode ? (
+                        <div className="space-y-4">
+                            {/* Detailed Mode: Opening Purchases and Payments */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Opening Purchases */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="openingPurchases" className="text-xs md:text-sm text-gray-700">
+                                        {t("wholesalers_list.dialogs.opening_purchases")}
+                                    </Label>
+                                    <div className="relative">
+                                        <ArrowDownLeft className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500" />
+                                        <Input
+                                            id="openingPurchases"
+                                            type="number"
+                                            inputMode="decimal"
+                                            step="0.01"
+                                            min="0"
+                                            placeholder="0.00"
+                                            value={openingPurchases}
+                                            onChange={(e) => setOpeningPurchases(e.target.value)}
+                                            className="pl-10 h-10 md:h-11 text-base md:text-sm font-medium bg-red-50/30 border-red-200 focus-visible:ring-red-500"
+                                        />
+                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                        {t("wholesalers_list.dialogs.opening_purchases_help")}
+                                    </p>
+                                </div>
+
+                                {/* Opening Payments */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="openingPayments" className="text-xs md:text-sm text-gray-700">
+                                        {t("wholesalers_list.dialogs.opening_payments")}
+                                    </Label>
+                                    <div className="relative">
+                                        <ArrowUpRight className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                                        <Input
+                                            id="openingPayments"
+                                            type="number"
+                                            inputMode="decimal"
+                                            step="0.01"
+                                            min="0"
+                                            placeholder="0.00"
+                                            value={openingPayments}
+                                            onChange={(e) => setOpeningPayments(e.target.value)}
+                                            className="pl-10 h-10 md:h-11 text-base md:text-sm font-medium bg-green-50/30 border-green-200 focus-visible:ring-green-500"
+                                        />
+                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                        {t("wholesalers_list.dialogs.opening_payments_help")}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Toggle to Simple Mode */}
+                            <div className="flex items-center justify-center pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setUseSimpleMode(true)}
+                                    className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 underline"
+                                >
+                                    {t("wholesalers_list.dialogs.switch_to_simple")}
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {/* Simple Mode: Net Balance Entry */}
+                            <div className="space-y-4">
+                                {/* Amount I Owe */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="amountIOwe" className="text-xs md:text-sm text-gray-700">
+                                        {t("wholesalers_list.dialogs.amount_i_owe")}
+                                    </Label>
+                                    <div className="relative">
+                                        <ArrowDownLeft className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500" />
+                                        <Input
+                                            id="amountIOwe"
+                                            type="number"
+                                            inputMode="decimal"
+                                            step="0.01"
+                                            min="0"
+                                            placeholder="0.00"
+                                            value={amountIOwe}
+                                            onChange={(e) => {
+                                                setAmountIOwe(e.target.value);
+                                                if (e.target.value && parseFloat(e.target.value) > 0) {
+                                                    setAmountTheyOwe("");
+                                                }
+                                            }}
+                                            className="pl-10 h-10 md:h-11 text-base md:text-sm font-medium bg-red-50/30 border-red-200 focus-visible:ring-red-500"
+                                        />
+                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                        {t("wholesalers_list.dialogs.amount_i_owe_help")}
+                                    </p>
+                                </div>
+
+                                <div className="flex items-center justify-center">
+                                    <span className="text-sm font-medium text-gray-500">
+                                        {t("wholesalers_list.dialogs.or")}
+                                    </span>
+                                </div>
+
+                                {/* Amount They Owe */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="amountTheyOwe" className="text-xs md:text-sm text-gray-700">
+                                        {t("wholesalers_list.dialogs.amount_they_owe")}
+                                    </Label>
+                                    <div className="relative">
+                                        <ArrowUpRight className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                                        <Input
+                                            id="amountTheyOwe"
+                                            type="number"
+                                            inputMode="decimal"
+                                            step="0.01"
+                                            min="0"
+                                            placeholder="0.00"
+                                            value={amountTheyOwe}
+                                            onChange={(e) => {
+                                                setAmountTheyOwe(e.target.value);
+                                                if (e.target.value && parseFloat(e.target.value) > 0) {
+                                                    setAmountIOwe("");
+                                                }
+                                            }}
+                                            className="pl-10 h-10 md:h-11 text-base md:text-sm font-medium bg-green-50/30 border-green-200 focus-visible:ring-green-500"
+                                        />
+                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                        {t("wholesalers_list.dialogs.amount_they_owe_help")}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Toggle back to Detailed Mode */}
+                            <div className="flex items-center justify-center pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setUseSimpleMode(false)}
+                                    className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 underline"
+                                >
+                                    {t("wholesalers_list.dialogs.switch_to_detailed")}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Opening Balance Preview */}
+                    {netOpeningBalance !== 0 && (
+                        <div className={`p-3 rounded-lg border-2 ${netOpeningBalance > 0
+                            ? 'bg-red-50 border-red-200'
+                            : 'bg-green-50 border-green-200'
+                            }`}>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-gray-700">
+                                    {t("wholesalers_list.dialogs.opening_balance_preview")}:
+                                </span>
+                                <div className="text-right">
+                                    <p className={`font-bold text-lg ${netOpeningBalance > 0
+                                        ? 'text-red-600'
+                                        : 'text-green-600'
+                                        }`}>
+                                        ₹{Math.abs(netOpeningBalance).toFixed(2)}
+                                    </p>
+                                    <p className="text-xs text-gray-600">
+                                        {netOpeningBalance > 0
+                                            ? t("wholesalers_list.dialogs.you_owe_them")
+                                            : t("wholesalers_list.dialogs.they_owe_you")}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

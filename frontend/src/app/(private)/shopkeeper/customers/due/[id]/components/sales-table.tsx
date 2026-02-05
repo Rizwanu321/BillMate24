@@ -14,6 +14,8 @@ import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 
 interface Customer {
+    openingSales?: number;
+    openingPayments?: number;
     totalSales: number;
     outstandingDue: number;
 }
@@ -34,12 +36,12 @@ interface SalesTableProps {
     isLoading?: boolean;
 }
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number | undefined): string {
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
         minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount ?? 0);
 }
 
 
@@ -54,9 +56,10 @@ const paymentMethodConfig: Record<string, { key: string; icon: React.ReactNode; 
 
 export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
     const { t } = useTranslation();
-    // Calculate opening balance (total sales that came from before using the app)
-    const billsTotal = bills.reduce((sum, bill) => sum + bill.totalAmount, 0);
-    const openingBalance = customer ? Math.max(0, customer.totalSales - billsTotal) : 0;
+    // Use opening sales and payments directly from database
+    const openingBalance = customer?.openingSales || 0;
+    const openingPayment = customer?.openingPayments || 0;
+    const openingDue = Math.max(0, openingBalance - openingPayment);
 
     if (isLoading) {
         return (
@@ -108,12 +111,12 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
                                 <TableCell className="text-right font-bold text-gray-900">
                                     {formatCurrency(openingBalance)}
                                 </TableCell>
-                                <TableCell className="text-right font-semibold text-gray-400">
-                                    ₹0
+                                <TableCell className="text-right font-semibold text-green-600">
+                                    {formatCurrency(openingPayment)}
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <span className="font-semibold text-orange-600">
-                                        {formatCurrency(openingBalance)}
+                                        {formatCurrency(openingDue)}
                                     </span>
                                 </TableCell>
                                 <TableCell>
@@ -122,9 +125,15 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge className="bg-orange-100 text-orange-700 border-0">
-                                        {t('billing.status_due')}
-                                    </Badge>
+                                    {openingDue > 0 ? (
+                                        <Badge className="bg-orange-100 text-orange-700 border-0">
+                                            {t('billing.status_due')}
+                                        </Badge>
+                                    ) : (
+                                        <Badge className="bg-green-100 text-green-700 border-0">
+                                            {t('billing.paid')}
+                                        </Badge>
+                                    )}
                                 </TableCell>
                             </TableRow>
                         )}
@@ -186,25 +195,31 @@ export function SalesTable({ bills, customer, isLoading }: SalesTableProps) {
                                     {t('history.nil')}
                                 </Badge>
                             </div>
-                            <Badge className="bg-orange-100 text-orange-700 border-0 text-[10px] px-1.5">
-                                {t('billing.status_due')}
-                            </Badge>
+                            {openingDue > 0 ? (
+                                <Badge className="bg-orange-100 text-orange-700 border-0 text-[10px] px-1.5">
+                                    {t('billing.status_due')}
+                                </Badge>
+                            ) : (
+                                <Badge className="bg-green-100 text-green-700 border-0 text-[10px] px-1.5">
+                                    {t('billing.paid')}
+                                </Badge>
+                            )}
                         </div>
 
                         {/* Amount Row */}
                         <div className="bg-white rounded-lg p-2">
                             <div className="grid grid-cols-3 gap-2 text-center">
                                 <div>
-                                    <p className="text-[10px] text-gray-500 font-medium">Total</p>
+                                    <p className="text-[10px] text-gray-500 font-medium">{t('dashboard.total')}</p>
                                     <p className="font-bold text-gray-900 text-sm">{formatCurrency(openingBalance)}</p>
                                 </div>
                                 <div>
                                     <p className="text-[10px] text-gray-500 font-medium">{t('billing.paid')}</p>
-                                    <p className="font-bold text-gray-400 text-sm">₹0</p>
+                                    <p className="font-bold text-green-600 text-sm">{formatCurrency(openingPayment)}</p>
                                 </div>
                                 <div>
                                     <p className="text-[10px] text-gray-500 font-medium">{t('billing.due')}</p>
-                                    <p className="font-bold text-orange-600 text-sm">{formatCurrency(openingBalance)}</p>
+                                    <p className="font-bold text-orange-600 text-sm">{formatCurrency(openingDue)}</p>
                                 </div>
                             </div>
                         </div>

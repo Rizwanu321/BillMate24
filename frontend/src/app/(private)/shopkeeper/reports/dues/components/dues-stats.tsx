@@ -64,8 +64,11 @@ export function DuesStats({
                             </Badge>
                         </div>
                         <h3 className="text-xl md:text-3xl font-bold">{formatCurrency(Math.abs(customerDues))}</h3>
-                        <p className="text-white/80 text-[10px] md:text-sm mt-1">
-                            {customerDues >= 0 ? t('reports.from_customers_label') : t('reports.total_to_pay_to_customer')}
+                        <p className="text-white/80 text-[10px] md:text-sm mt-1 uppercase font-bold tracking-wider">
+                            {customerDues >= 0 ? t('reports.customer_outstanding_due') : t('reports.customer_advance')}
+                        </p>
+                        <p className="text-white/60 text-[9px] md:text-[10px] italic">
+                            {t('reports.incl_opening_balance')}
                         </p>
                         <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 flex items-center justify-between">
                             <span className="text-[10px] md:text-xs text-white/70">
@@ -91,8 +94,11 @@ export function DuesStats({
                             </Badge>
                         </div>
                         <h3 className="text-xl md:text-3xl font-bold">{formatCurrency(Math.abs(wholesalerDues))}</h3>
-                        <p className="text-white/80 text-[10px] md:text-sm mt-1">
-                            {wholesalerDues >= 0 ? t('reports.to_wholesalers_label') : t('reports.total_to_receive_from_wholesaler')}
+                        <p className="text-white/80 text-[10px] md:text-sm mt-1 uppercase font-bold tracking-wider">
+                            {wholesalerDues >= 0 ? t('reports.wholesaler_outstanding_due') : t('reports.wholesaler_advance')}
+                        </p>
+                        <p className="text-white/60 text-[9px] md:text-[10px] italic">
+                            {t('reports.incl_opening_balance')}
                         </p>
                         <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 flex items-center justify-between">
                             <span className="text-[10px] md:text-xs text-white/70">

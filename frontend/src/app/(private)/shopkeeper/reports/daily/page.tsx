@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Calendar, ChevronDown, TrendingUp, TrendingDown, IndianRupee, Receipt, Wallet, CreditCard, AlertCircle, ArrowUpRight, ArrowDownRight, BarChart3, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter } from 'lucide-react';
+import { Calendar, ChevronDown, TrendingUp, TrendingDown, IndianRupee, Receipt, Wallet, CreditCard, AlertCircle, ArrowUpRight, ArrowDownRight, ArrowDownLeft, BarChart3, X, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Info } from 'lucide-react';
 import { Header } from '@/components/app/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -165,16 +165,42 @@ export default function RevenueReportPage() {
         queryKey: ['total-dues'],
         queryFn: async () => {
             const [customersRes, wholesalersRes] = await Promise.all([
-                api.get<PaginatedResponse<any>>('/customers?type=due&limit=1000'),
+                api.get<PaginatedResponse<any>>('/customers?limit=1000'),
                 api.get<PaginatedResponse<any>>('/wholesalers?limit=1000'),
             ]);
 
-            const totalCustomerDue = (customersRes.data.data || []).reduce((sum: number, c: any) => sum + (c.outstandingDue || 0), 0);
-            const totalWholesalerDue = (wholesalersRes.data.data || []).reduce((sum: number, w: any) => sum + (w.outstandingDue || 0), 0);
+            // Calculate totals from all customers and wholesalers
+            const customers = customersRes.data.data || [];
+            const wholesalers = wholesalersRes.data.data || [];
+
+            const totalCustomerDue = customers.reduce((sum: number, c: any) => sum + (c.outstandingDue || 0), 0);
+            const totalWholesalerDue = wholesalers.reduce((sum: number, w: any) => sum + (w.outstandingDue || 0), 0);
+
+            // Total sales and purchases (including opening balances)
+            const totalLifetimeSales = customers.reduce((sum: number, c: any) => sum + (c.totalSales || 0), 0);
+            const totalLifetimePurchases = wholesalers.reduce((sum: number, w: any) => sum + (w.totalPurchased || 0), 0);
+
+            // Total collected and paid (including opening payments)
+            const totalLifetimeCollected = customers.reduce((sum: number, c: any) => sum + (c.totalPaid || 0), 0);
+            const totalLifetimePaid = wholesalers.reduce((sum: number, w: any) => sum + (w.totalPaid || 0), 0);
+
+            // Opening balance breakdown for clearer reporting
+            const openingSales = customers.reduce((sum: number, c: any) => sum + (c.openingSales || 0), 0);
+            const openingPayments = customers.reduce((sum: number, c: any) => sum + (c.openingPayments || 0), 0);
+            const openingPurchases = wholesalers.reduce((sum: number, w: any) => sum + (w.openingPurchases || 0), 0);
+            const openingPurchasePayments = wholesalers.reduce((sum: number, w: any) => sum + (w.openingPayments || 0), 0);
 
             return {
                 totalCustomerDue,
                 totalWholesalerDue,
+                totalLifetimeSales,
+                totalLifetimePurchases,
+                totalLifetimeCollected,
+                totalLifetimePaid,
+                openingSales,
+                openingPayments,
+                openingPurchases,
+                openingPurchasePayments,
             };
         },
         refetchOnMount: 'always',
@@ -440,22 +466,14 @@ export default function RevenueReportPage() {
         return filterLabels[timeFilter];
     };
 
-    // Calculate All Time Net Cash Flow Adjustments
-    const openingCustomerDue = (duesData?.totalCustomerDue || 0) - stats.totalSalesDue;
-    const openingWholesalerDue = (duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue;
+    // For "All Time" filter, use the comprehensive lifetime data from database
+    // The outstandingDue already includes opening balances, so no need to calculate separately
 
-    // Start with transaction-based cash flow
-    let allTimeNetCashFlow = stats.netCashFlow;
+    // Calculate opening balances (difference between lifetime and period totals)
+    const openingCustomerDue = (duesData?.totalLifetimeSales || 0) - stats.totalSalesAmount;
+    const openingWholesalerDue = (duesData?.totalLifetimePurchases || 0) - stats.totalPurchasesAmount;
+    const allTimeNetCashFlow = (duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0);
 
-    // Add Opening Advances from Customers (Cash In) - Only if balance is negative (Advance)
-    if (openingCustomerDue < 0) {
-        allTimeNetCashFlow += Math.abs(openingCustomerDue);
-    }
-
-    // Subtract Opening Advances to Wholesalers (Cash Out) - Only if balance is negative (Advance)
-    if (openingWholesalerDue < 0) {
-        allTimeNetCashFlow -= Math.abs(openingWholesalerDue);
-    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-purple-50">
@@ -518,29 +536,26 @@ export default function RevenueReportPage() {
                             <h3 className="text-lg md:text-3xl font-bold">
                                 <span className="md:hidden">{formatCurrency(
                                     timeFilter === 'all'
-                                        ? (duesData?.totalCustomerDue || 0) + stats.totalSalesCollected
+                                        ? (duesData?.totalLifetimeSales || 0)
                                         : stats.totalSalesAmount
                                 )}</span>
                                 <span className="hidden md:inline">{formatCurrency(
                                     timeFilter === 'all'
-                                        ? (duesData?.totalCustomerDue || 0) + stats.totalSalesCollected
+                                        ? (duesData?.totalLifetimeSales || 0)
                                         : stats.totalSalesAmount
                                 )}</span>
                             </h3>
                             <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
-                                {t('reports.total_sales')}{timeFilter === 'all' ? ` ${t('reports.incl_opening')}` : ''}
+                                {t('reports.total_sales')}{timeFilter === 'all' ? ` (${t('reports.all_time')})` : ''}
                             </p>
                             <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
-                                <span className="text-white/70">
+                                <span className="text-white/70 italic">
                                     {timeFilter === 'all'
-                                        ? ((duesData?.totalCustomerDue || 0) >= 0 ? t('reports.outstanding') : t('wholesaler_payments.detail.advance'))
+                                        ? t('reports.incl_opening_balance')
                                         : t('reports.collected')}
                                 </span>
                                 <span className="font-semibold">
-                                    {timeFilter === 'all'
-                                        ? formatCurrency(Math.abs(duesData?.totalCustomerDue || 0))
-                                        : formatCurrency(stats.totalSalesCollected)
-                                    }
+                                    {formatCurrency(timeFilter === 'all' ? (duesData?.totalLifetimeCollected || 0) : stats.totalSalesCollected)}
                                 </span>
                             </div>
                         </CardContent>
@@ -561,29 +576,26 @@ export default function RevenueReportPage() {
                             <h3 className="text-lg md:text-3xl font-bold">
                                 <span className="md:hidden">{formatCurrency(
                                     timeFilter === 'all'
-                                        ? (duesData?.totalWholesalerDue || 0) + stats.totalPurchasesPaid
+                                        ? (duesData?.totalLifetimePurchases || 0)
                                         : stats.totalPurchasesAmount
                                 )}</span>
                                 <span className="hidden md:inline">{formatCurrency(
                                     timeFilter === 'all'
-                                        ? (duesData?.totalWholesalerDue || 0) + stats.totalPurchasesPaid
+                                        ? (duesData?.totalLifetimePurchases || 0)
                                         : stats.totalPurchasesAmount
                                 )}</span>
                             </h3>
                             <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
-                                {t('reports.total_purchases')}{timeFilter === 'all' ? ` ${t('reports.incl_opening')}` : ''}
+                                {t('reports.total_purchases')}{timeFilter === 'all' ? ` (${t('reports.all_time')})` : ''}
                             </p>
                             <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
-                                <span className="text-white/70">
+                                <span className="text-white/70 italic">
                                     {timeFilter === 'all'
-                                        ? ((duesData?.totalWholesalerDue || 0) >= 0 ? t('reports.outstanding') : t('wholesaler_payments.detail.advance'))
+                                        ? t('reports.incl_opening_balance')
                                         : t('reports.paid')}
                                 </span>
                                 <span className="font-semibold">
-                                    {timeFilter === 'all'
-                                        ? formatCurrency(Math.abs(duesData?.totalWholesalerDue || 0))
-                                        : formatCurrency(stats.totalPurchasesPaid)
-                                    }
+                                    {formatCurrency(timeFilter === 'all' ? (duesData?.totalLifetimePaid || 0) : stats.totalPurchasesPaid)}
                                 </span>
                             </div>
                         </CardContent>
@@ -592,18 +604,12 @@ export default function RevenueReportPage() {
 
                     {/* Gross Profit */}
                     <Card className={`relative overflow-hidden border-0 shadow-lg md:shadow-xl text-white rounded-xl md:rounded-2xl ${timeFilter === 'all'
-                        ? (
-                            (stats.grossProfit +
-                                ((duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
-                                ((duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
-                                ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
-                                : 'bg-gradient-to-br from-red-500 to-rose-600'
-                        )
-                        : (
-                            stats.grossProfit >= 0
-                                ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
-                                : 'bg-gradient-to-br from-red-500 to-rose-600'
-                        )
+                        ? ((duesData?.totalLifetimeSales || 0) - (duesData?.totalLifetimePurchases || 0)) >= 0
+                            ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
+                            : 'bg-gradient-to-br from-red-500 to-rose-600'
+                        : stats.grossProfit >= 0
+                            ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
+                            : 'bg-gradient-to-br from-red-500 to-rose-600'
                         }`}>
                         <CardContent className="p-3 md:p-6">
                             <div className="flex items-center justify-between mb-2 md:mb-3">
@@ -611,27 +617,15 @@ export default function RevenueReportPage() {
                                     <IndianRupee className="h-4 w-4 md:h-5 md:w-5" />
                                 </div>
                                 <Badge className={`border-0 text-[10px] md:text-xs px-1.5 md:px-2 ${timeFilter === 'all'
-                                    ? (
-                                        (stats.grossProfit +
-                                            ((duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
-                                            ((duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
-                                            ? 'bg-white/20 text-white'
-                                            : 'bg-white text-red-600'
-                                    )
-                                    : (
-                                        stats.grossProfit >= 0
-                                            ? 'bg-white/20 text-white'
-                                            : 'bg-white text-red-600'
-                                    )
+                                    ? ((duesData?.totalLifetimeSales || 0) - (duesData?.totalLifetimePurchases || 0)) >= 0
+                                        ? 'bg-white/20 text-white'
+                                        : 'bg-white text-red-600'
+                                    : stats.grossProfit >= 0
+                                        ? 'bg-white/20 text-white'
+                                        : 'bg-white text-red-600'
                                     }`}>
                                     {timeFilter === 'all'
-                                        ? (
-                                            (stats.grossProfit +
-                                                ((duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
-                                                ((duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
-                                                ? '✓'
-                                                : '✗'
-                                        )
+                                        ? ((duesData?.totalLifetimeSales || 0) - (duesData?.totalLifetimePurchases || 0)) >= 0 ? '✓' : '✗'
                                         : (stats.grossProfit >= 0 ? '✓' : '✗')
                                     }
                                 </Badge>
@@ -639,44 +633,32 @@ export default function RevenueReportPage() {
                             <h3 className="text-lg md:text-3xl font-bold">
                                 <span className="md:hidden">{formatCurrency(Math.abs(
                                     timeFilter === 'all'
-                                        ? (
-                                            stats.grossProfit +
-                                            ((duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
-                                            ((duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)
-                                        )
+                                        ? ((duesData?.totalLifetimeSales || 0) - (duesData?.totalLifetimePurchases || 0))
                                         : stats.grossProfit
                                 ))}</span>
                                 <span className="hidden md:inline">{formatCurrency(Math.abs(
                                     timeFilter === 'all'
-                                        ? (
-                                            stats.grossProfit +
-                                            ((duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
-                                            ((duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)
-                                        )
+                                        ? ((duesData?.totalLifetimeSales || 0) - (duesData?.totalLifetimePurchases || 0))
                                         : stats.grossProfit
                                 ))}</span>
                             </h3>
                             <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
                                 {timeFilter === 'all'
-                                    ? (
-                                        (stats.grossProfit +
-                                            ((duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
-                                            ((duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
-                                            ? t('reports.total_profit')
-                                            : t('reports.total_loss')
-                                    )
-                                    : (
-                                        stats.grossProfit >= 0 ? t('reports.gross_profit') : t('reports.gross_loss')
-                                    )
+                                    ? ((duesData?.totalLifetimeSales || 0) - (duesData?.totalLifetimePurchases || 0)) >= 0
+                                        ? t('reports.total_profit')
+                                        : t('reports.total_loss')
+                                    : stats.grossProfit >= 0 ? t('reports.gross_profit') : t('reports.gross_loss')
                                 }
                             </p>
                             <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
-                                <span className="text-white/70">
-                                    {timeFilter === 'all' ? t('reports.all_time') : t('reports.margin')}
+                                <span className="text-white/70 italic">
+                                    {timeFilter === 'all' ? t('reports.incl_opening_balance') : t('reports.margin')}
                                 </span>
                                 <span className="font-semibold">
                                     {timeFilter === 'all'
-                                        ? t('reports.incl_opening')
+                                        ? ((duesData?.totalLifetimeSales || 0) > 0
+                                            ? ((((duesData?.totalLifetimeSales || 0) - (duesData?.totalLifetimePurchases || 0)) / (duesData?.totalLifetimeSales || 1)) * 100).toFixed(1) + '%'
+                                            : '0%')
                                         : (stats.totalSalesAmount > 0 ? ((stats.grossProfit / stats.totalSalesAmount) * 100).toFixed(1) + '%' : '0%')
                                     }
                                 </span>
@@ -687,7 +669,7 @@ export default function RevenueReportPage() {
 
                     {/* Net Cash Flow */}
                     <Card className={`relative overflow-hidden border-0 shadow-lg md:shadow-xl text-white rounded-xl md:rounded-2xl ${(timeFilter === 'all'
-                        ? allTimeNetCashFlow
+                        ? ((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0))
                         : stats.netCashFlow) >= 0
                         ? 'bg-gradient-to-br from-blue-500 to-cyan-600'
                         : 'bg-gradient-to-br from-red-500 to-pink-600'
@@ -698,37 +680,44 @@ export default function RevenueReportPage() {
                                     <Wallet className="h-4 w-4 md:h-5 md:w-5" />
                                 </div>
                                 <Badge className={`border-0 text-[10px] md:text-xs px-1.5 md:px-2 ${(timeFilter === 'all'
-                                    ? allTimeNetCashFlow
+                                    ? ((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0))
                                     : stats.netCashFlow) >= 0 ? 'bg-white/20 text-white' : 'bg-white text-red-600'}`}>
                                     {(timeFilter === 'all'
-                                        ? allTimeNetCashFlow
+                                        ? ((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0))
                                         : stats.netCashFlow) >= 0 ? '+' : '-'}
                                 </Badge>
                             </div>
                             <h3 className="text-lg md:text-3xl font-bold">
-                                <span className="md:hidden">{formatCurrency(Math.abs(
-                                    timeFilter === 'all'
-                                        ? allTimeNetCashFlow
-                                        : stats.netCashFlow
-                                ))}</span>
-                                <span className="hidden md:inline">{formatCurrency(Math.abs(
-                                    timeFilter === 'all'
-                                        ? allTimeNetCashFlow
-                                        : stats.netCashFlow
-                                ))}</span>
+                                <span className="md:hidden">{(timeFilter === 'all'
+                                    ? ((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0))
+                                    : stats.netCashFlow) < 0 ? '-' : ''}{formatCurrency(Math.abs(
+                                        timeFilter === 'all'
+                                            ? ((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0))
+                                            : stats.netCashFlow
+                                    ))}</span>
+                                <span className="hidden md:inline">{(timeFilter === 'all'
+                                    ? ((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0))
+                                    : stats.netCashFlow) < 0 ? '-' : ''}{formatCurrency(Math.abs(
+                                        timeFilter === 'all'
+                                            ? ((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0))
+                                            : stats.netCashFlow
+                                    ))}</span>
                             </h3>
                             <p className="text-white/80 text-[10px] md:text-sm mt-0.5 md:mt-1">
                                 {timeFilter === 'all'
-                                    ? allTimeNetCashFlow >= 0
-                                        ? t('reports.net_cash_flow')
-                                        : t('reports.negative_cash_flow')
+                                    ? t('reports.cash_in_hand_all_time')
                                     : t('reports.net_cash_flow')
                                 }
-                                {timeFilter === 'all' ? ` (${t('reports.all_time')})` : ''}
                             </p>
                             <div className="flex mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/20 items-center justify-between text-[10px] md:text-sm">
-                                <span className="text-white/70">{t('reports.transactions')}</span>
-                                <span className="font-semibold">{stats.transactionCount}</span>
+                                <span className="text-white/70 italic">
+                                    {timeFilter === 'all' ? t('reports.incl_opening_balance') : t('reports.transactions')}
+                                </span>
+                                <span className="font-semibold">
+                                    {timeFilter === 'all'
+                                        ? (stats.salesCount + stats.purchasesCount) // Fallback to period count if lifetime count not in duesData
+                                        : stats.transactionCount}
+                                </span>
                             </div>
                         </CardContent>
                         <div className="absolute -bottom-4 -right-4 w-16 md:w-20 h-16 md:h-20 bg-white/10 rounded-full blur-2xl" />
@@ -745,7 +734,9 @@ export default function RevenueReportPage() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] md:text-xs text-gray-500">{t('reports.cash_received')}</p>
-                                    <p className="text-sm md:text-lg font-bold text-green-600">{formatCurrency(stats.totalSalesCollected)}</p>
+                                    <p className="text-sm md:text-lg font-bold text-green-600">
+                                        {formatCurrency(timeFilter === 'all' ? (duesData?.totalLifetimeCollected || 0) : stats.totalSalesCollected)}
+                                    </p>
                                 </div>
                             </div>
                         </CardContent>
@@ -759,33 +750,49 @@ export default function RevenueReportPage() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] md:text-xs text-gray-500">{t('reports.cash_paid')}</p>
-                                    <p className="text-sm md:text-lg font-bold text-orange-600">{formatCurrency(stats.totalPurchasesPaid)}</p>
+                                    <p className="text-sm md:text-lg font-bold text-orange-600">
+                                        {formatCurrency(timeFilter === 'all' ? (duesData?.totalLifetimePaid || 0) : stats.totalPurchasesPaid)}
+                                    </p>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     <Card className={`border-0 shadow-md rounded-xl col-span-2 md:col-span-1 ${(timeFilter === 'all'
-                        ? allTimeNetCashFlow
+                        ? ((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0))
                         : stats.netCashFlow) < 0 ? 'bg-red-50' : ''}`}>
                         <CardContent className="pt-3 pb-3 md:pt-4 md:pb-4 px-3 md:px-6">
                             <div className="flex flex-row items-center gap-3">
                                 <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center ${(timeFilter === 'all'
-                                    ? allTimeNetCashFlow
+                                    ? ((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0))
                                     : stats.netCashFlow) >= 0 ? 'bg-purple-100' : 'bg-red-100'}`}>
                                     <Wallet className={`h-4 w-4 md:h-5 md:w-5 ${(timeFilter === 'all'
-                                        ? allTimeNetCashFlow
+                                        ? ((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0))
                                         : stats.netCashFlow) >= 0 ? 'text-purple-600' : 'text-red-600'}`} />
                                 </div>
-                                <div>
+                                <div className="flex-1">
                                     <p className="text-[10px] md:text-xs text-gray-500">{t('reports.net_cash_flow')}</p>
                                     <p className={`text-sm md:text-lg font-bold ${(timeFilter === 'all'
-                                        ? allTimeNetCashFlow
+                                        ? ((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0))
                                         : stats.netCashFlow) >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
                                         {formatCurrency(timeFilter === 'all'
-                                            ? allTimeNetCashFlow
+                                            ? ((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0))
                                             : stats.netCashFlow)}
                                     </p>
+                                    {(timeFilter === 'all'
+                                        ? ((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0))
+                                        : stats.netCashFlow) < 0 && (
+                                            <p className="text-[8px] md:text-[10px] text-red-500 mt-0.5 italic">
+                                                {t('reports.paid_more_than_collected')}
+                                            </p>
+                                        )}
+                                    {(timeFilter === 'all'
+                                        ? ((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0))
+                                        : stats.netCashFlow) >= 0 && (
+                                            <p className="text-[8px] md:text-[10px] text-purple-500 mt-0.5 italic">
+                                                {t('reports.collected_more_than_paid')}
+                                            </p>
+                                        )}
                                 </div>
                             </div>
                         </CardContent>
@@ -799,7 +806,7 @@ export default function RevenueReportPage() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] md:text-xs text-gray-500">
-                                        {(duesData?.totalCustomerDue || 0) >= 0 ? t('reports.total_receivables') : t('dashboard.to_pay')}
+                                        {(duesData?.totalCustomerDue || 0) >= 0 ? t('reports.customer_outstanding_due') : t('reports.customer_advance')}
                                     </p>
                                     <p className={`text-sm md:text-lg font-bold ${(duesData?.totalCustomerDue || 0) >= 0 ? 'text-yellow-600' : 'text-red-600'}`}>
                                         {formatCurrency(Math.abs(duesData?.totalCustomerDue || 0))}
@@ -818,7 +825,7 @@ export default function RevenueReportPage() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] md:text-xs text-gray-500">
-                                        {(duesData?.totalWholesalerDue || 0) >= 0 ? t('reports.total_payables') : t('dashboard.to_collect')}
+                                        {(duesData?.totalWholesalerDue || 0) >= 0 ? t('reports.wholesaler_outstanding_due') : t('reports.wholesaler_advance')}
                                     </p>
                                     <p className={`text-sm md:text-lg font-bold ${(duesData?.totalWholesalerDue || 0) >= 0 ? 'text-red-600' : 'text-green-600'}`}>
                                         {formatCurrency(Math.abs(duesData?.totalWholesalerDue || 0))}
@@ -850,85 +857,48 @@ export default function RevenueReportPage() {
                                     {timeFilter === 'all' ? (
                                         /* All Time - Show complete profit including opening balance */
                                         <>
+                                            {/* Total Sales */}
                                             <div className="flex justify-between items-center py-2 border-b border-dashed">
                                                 <span className="text-gray-600 flex items-center gap-2">
                                                     <TrendingUp className="h-4 w-4 text-green-500" />
-                                                    {t('reports.total_sales_in_app')}
+                                                    {t('reports.total_sales_all_time')}
                                                 </span>
-                                                <span className="font-semibold text-green-600">{formatCurrency(stats.totalSalesAmount)}</span>
+                                                <span className="font-semibold text-green-600">{formatCurrency(duesData?.totalLifetimeSales || 0)}</span>
                                             </div>
+
+                                            {/* Total Purchases */}
                                             <div className="flex justify-between items-center py-2 border-b border-dashed">
                                                 <span className="text-gray-600 flex items-center gap-2">
                                                     <TrendingDown className="h-4 w-4 text-orange-500" />
-                                                    {t('reports.total_purchases_in_app')}
+                                                    {t('reports.total_purchases_all_time')}
                                                 </span>
-                                                <span className="font-semibold text-orange-600">- {formatCurrency(stats.totalPurchasesAmount)}</span>
+                                                <span className="font-semibold text-orange-600">- {formatCurrency(duesData?.totalLifetimePurchases || 0)}</span>
                                             </div>
-                                            <div className={`flex justify-between items-center py-2 px-3 rounded-lg ${stats.grossProfit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-                                                <span className={`font-medium ${stats.grossProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                                                    = {stats.grossProfit >= 0 ? t('reports.profit_in_app') : t('reports.loss_in_app')}
-                                                </span>
-                                                <span className={`font-bold text-lg ${stats.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                    {formatCurrency(stats.grossProfit)}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between items-center py-2 border-t border-gray-200 pt-2">
-                                                <span className="text-sm text-gray-600 flex items-center gap-2">
-                                                    <span className={`font-bold text-base ${((duesData?.totalCustomerDue || 0) - stats.totalSalesDue) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>+</span>
-                                                    <TrendingUp className="h-4 w-4 text-blue-500" />
-                                                    {((duesData?.totalCustomerDue || 0) - stats.totalSalesDue) >= 0
-                                                        ? t('reports.opening_customer_dues')
-                                                        : t('reports.opening_customer_to_pay')}
-                                                </span>
-                                                <span className={`font-semibold text-sm ${((duesData?.totalCustomerDue || 0) - stats.totalSalesDue) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                                                    {formatCurrency((duesData?.totalCustomerDue || 0) - stats.totalSalesDue)}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between items-center py-2">
-                                                <span className="text-sm text-gray-600 flex items-center gap-2">
-                                                    <span className="font-bold text-base text-orange-600">-</span>
-                                                    <TrendingDown className="h-4 w-4 text-orange-500" />
-                                                    {((duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue) >= 0
-                                                        ? t('reports.opening_wholesaler_dues')
-                                                        : t('reports.opening_wholesaler_to_receive')}
-                                                </span>
-                                                <span className={`font-semibold text-sm ${((duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue) >= 0 ? 'text-orange-600' : 'text-green-600'}`}>
-                                                    {formatCurrency(Math.abs((duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue))}
-                                                </span>
-                                            </div>
-                                            <div className={`flex justify-between items-center py-2 px-3 rounded-lg ${(stats.grossProfit +
-                                                ((duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
-                                                ((duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
+
+                                            {/* Total Profit/Loss Result */}
+                                            <div className={`flex justify-between items-center py-2 px-3 rounded-lg ${((duesData?.totalLifetimeSales || 0) - (duesData?.totalLifetimePurchases || 0)) >= 0
                                                 ? 'bg-purple-50 border border-purple-200'
                                                 : 'bg-red-50 border border-red-200'
                                                 }`}>
-                                                <span className={`font-bold ${(stats.grossProfit +
-                                                    ((duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
-                                                    ((duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
+                                                <span className={`font-bold ${((duesData?.totalLifetimeSales || 0) - (duesData?.totalLifetimePurchases || 0)) >= 0
                                                     ? 'text-purple-700'
                                                     : 'text-red-700'
                                                     }`}>
-                                                    {(stats.grossProfit +
-                                                        ((duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
-                                                        ((duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
+                                                    = {((duesData?.totalLifetimeSales || 0) - (duesData?.totalLifetimePurchases || 0)) >= 0
                                                         ? t('reports.total_profit_all_time')
                                                         : t('reports.total_loss_all_time')}
                                                 </span>
-                                                <span className={`font-bold text-xl ${(stats.grossProfit +
-                                                    ((duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
-                                                    ((duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue)) >= 0
+                                                <span className={`font-bold text-xl ${((duesData?.totalLifetimeSales || 0) - (duesData?.totalLifetimePurchases || 0)) >= 0
                                                     ? 'text-purple-600'
                                                     : 'text-red-600'
                                                     }`}>
-                                                    {formatCurrency(
-                                                        Math.abs(stats.grossProfit +
-                                                            ((duesData?.totalCustomerDue || 0) - stats.totalSalesDue) -
-                                                            ((duesData?.totalWholesalerDue || 0) - stats.totalPurchasesDue))
-                                                    )}
+                                                    {formatCurrency(Math.abs((duesData?.totalLifetimeSales || 0) - (duesData?.totalLifetimePurchases || 0)))}
                                                 </span>
                                             </div>
+
+                                            {/* Explanation */}
                                             <p className="text-[10px] text-gray-500 mt-2 italic px-1">
-                                                * {t('reports.opening_dues_explanation')}
+                                                * {t('reports.includes_opening_balances')}
                                             </p>
                                         </>
                                     ) : (
@@ -969,76 +939,123 @@ export default function RevenueReportPage() {
                                     <span className="text-xs font-normal text-gray-500 ml-2">({t('reports.money_movement')})</span>
                                 </h4>
                                 <div className="space-y-3">
-                                    <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                        <span className="text-gray-600 flex items-center gap-2">
-                                            <ArrowUpRight className="h-4 w-4 text-green-500" />
-                                            {t('reports.cash_received_customers')}
-                                        </span>
-                                        <span className="font-semibold text-green-600">{formatCurrency(stats.totalSalesCollected)}</span>
+                                    {/* Money Collected */}
+                                    <div className="bg-green-50 rounded-lg p-3 border border-green-100">
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-1.5 bg-green-100 rounded-lg">
+                                                    <ArrowDownLeft className="h-4 w-4 text-green-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold text-green-700 text-sm">{t('reports.cash_collected_label')}</p>
+                                                    <p className="text-xs text-green-600/70">{t('reports.cash_collected_subtitle')}</p>
+                                                </div>
+                                            </div>
+                                            <span className="font-bold text-lg text-green-600">
+                                                {formatCurrency(timeFilter === 'all' ? (duesData?.totalLifetimeCollected || 0) : stats.totalSalesCollected)}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between items-center py-2 border-b border-dashed">
-                                        <span className="text-gray-600 flex items-center gap-2">
-                                            <ArrowDownRight className="h-4 w-4 text-orange-500" />
-                                            {t('reports.cash_paid_wholesalers')}
-                                        </span>
-                                        <span className="font-semibold text-orange-600">- {formatCurrency(stats.totalPurchasesPaid)}</span>
+
+                                    {/* Money Paid Out */}
+                                    <div className="bg-orange-50 rounded-lg p-3 border border-orange-100">
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-1.5 bg-orange-100 rounded-lg">
+                                                    <ArrowUpRight className="h-4 w-4 text-orange-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold text-orange-700 text-sm">{t('reports.cash_paid_out_label')}</p>
+                                                    <p className="text-xs text-orange-600/70">{t('reports.cash_paid_out_subtitle')}</p>
+                                                </div>
+                                            </div>
+                                            <span className="font-bold text-lg text-orange-600">
+                                                - {formatCurrency(timeFilter === 'all' ? (duesData?.totalLifetimePaid || 0) : stats.totalPurchasesPaid)}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className={`flex justify-between items-center py-2 px-3 rounded-lg ${stats.netCashFlow >= 0 ? 'bg-blue-50' : 'bg-red-50'}`}>
-                                        <span className={`font-medium ${stats.netCashFlow >= 0 ? 'text-blue-700' : 'text-red-700'}`}>
-                                            = {t('reports.net_cash_flow_result')} {stats.netCashFlow < 0 && `(${t('reports.negative')})`}
-                                        </span>
-                                        <span className={`font-bold text-lg ${stats.netCashFlow >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                                            {formatCurrency(stats.netCashFlow)}
-                                        </span>
-                                    </div>
+
+                                    {/* Divider */}
+                                    <div className="border-t-2 border-dashed border-gray-300 my-2"></div>
+
+                                    {/* Cash in Hand Result - Show period-specific ONLY when NOT viewing all time */}
+                                    {timeFilter !== 'all' && (
+                                        <div className={`rounded-lg p-4 ${stats.netCashFlow >= 0 ? 'bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200' : 'bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-200'}`}>
+                                            <div className="flex justify-between items-center">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`p-2 rounded-lg ${stats.netCashFlow >= 0 ? 'bg-blue-500' : 'bg-red-500'}`}>
+                                                        <Wallet className="h-5 w-5 text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <p className={`font-bold ${stats.netCashFlow >= 0 ? 'text-blue-700' : 'text-red-700'}`}>
+                                                            {t('reports.cash_in_hand_period')}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {timeFilter === 'custom' ? t('reports.custom_range') : getFilterLabels(t)[timeFilter]}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <span className={`font-bold text-2xl ${stats.netCashFlow >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                                                    {stats.netCashFlow >= 0 ? '' : '-'}{formatCurrency(Math.abs(stats.netCashFlow))}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {timeFilter === 'all' && (
                                         <>
-                                            {/* Plus Opening Customer Advance (If any) */}
-                                            {openingCustomerDue < 0 && (
-                                                <div className="flex justify-between items-center py-2 border-t border-gray-200 pt-2">
-                                                    <span className="text-sm text-gray-600 flex items-center gap-2">
-                                                        <span className="font-bold text-base text-blue-600">+</span>
-                                                        <TrendingUp className="h-4 w-4 text-blue-500" />
-                                                        {t('wholesaler_payments.detail.advance')} {t('reports.collected')}
-                                                    </span>
-                                                    <span className="font-semibold text-sm text-blue-600">
-                                                        {formatCurrency(Math.abs(openingCustomerDue))}
-                                                    </span>
-                                                </div>
-                                            )}
-
-                                            {/* Minus Opening Wholesaler Advance (If any) */}
-                                            {openingWholesalerDue < 0 && (
-                                                <div className="flex justify-between items-center py-2">
-                                                    <span className="text-sm text-gray-600 flex items-center gap-2">
-                                                        <span className="font-bold text-base text-orange-600">-</span>
-                                                        <TrendingDown className="h-4 w-4 text-orange-500" />
-                                                        {t('wholesaler_payments.detail.advance')} {t('reports.paid')}
-                                                    </span>
-                                                    <span className="font-semibold text-sm text-orange-600">
-                                                        {formatCurrency(Math.abs(openingWholesalerDue))}
-                                                    </span>
-                                                </div>
-                                            )}
-
-                                            <div className={`flex justify-between items-center py-2 px-3 rounded-lg ${allTimeNetCashFlow >= 0
-                                                ? 'bg-blue-50 border border-blue-200'
-                                                : 'bg-red-50 border border-red-200'
+                                            {/* All Time Total */}
+                                            <div className={`rounded-lg p-4 mt-3 ${((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0)) >= 0
+                                                ? 'bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-300'
+                                                : 'bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-300'
                                                 }`}>
-                                                <span className={`font-bold ${allTimeNetCashFlow >= 0
-                                                    ? 'text-blue-700'
-                                                    : 'text-red-700'
-                                                    }`}>
-                                                    {allTimeNetCashFlow >= 0
-                                                        ? t('reports.net_cash_flow_all_time')
-                                                        : t('reports.net_cash_flow_all_time_negative')}
-                                                </span>
-                                                <span className={`font-bold text-xl ${allTimeNetCashFlow >= 0
-                                                    ? 'text-blue-600'
-                                                    : 'text-red-600'
-                                                    }`}>
-                                                    {formatCurrency(Math.abs(allTimeNetCashFlow))}
-                                                </span>
+                                                <div className="flex justify-between items-center">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={`p-2 rounded-lg ${((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0)) >= 0 ? 'bg-purple-500' : 'bg-red-500'}`}>
+                                                            <Wallet className="h-5 w-5 text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <p className={`font-bold ${((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0)) >= 0 ? 'text-purple-700' : 'text-red-700'}`}>
+                                                                {t('reports.cash_in_hand_all_time')}
+                                                            </p>
+                                                            <p className="text-xs text-gray-500">{t('reports.including_opening_balances')}</p>
+                                                        </div>
+                                                    </div>
+                                                    <span className={`font-bold text-2xl ${((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0)) >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
+                                                        {((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0)) >= 0 ? '' : '-'}{formatCurrency(Math.abs((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0)))}
+                                                    </span>
+                                                </div>
+                                                {/* Explanation for negative cash */}
+                                                {((duesData?.totalLifetimeCollected || 0) - (duesData?.totalLifetimePaid || 0)) < 0 && (duesData?.openingPurchasePayments || 0) > 0 && (
+                                                    <p className="text-xs text-red-600 mt-2 italic">
+                                                        💡 {t('reports.includes_opening_payment', { amount: `₹${(duesData?.openingPurchasePayments || 0).toLocaleString('en-IN')}` })}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {/* Help Info Box */}
+                                            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                                <div className="flex gap-2">
+                                                    <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-blue-700 mb-1">
+                                                            {t('reports.cash_flow_help_title')}
+                                                        </p>
+                                                        <ul className="text-xs text-blue-600 space-y-1 ml-0 list-none">
+                                                            <li className="flex items-start gap-1.5">
+                                                                <span className="text-blue-500 mt-0.5">•</span>
+                                                                <span><strong>{t('reports.physical_cash')}:</strong> {t('reports.cash_flow_help_line1')}</span>
+                                                            </li>
+                                                            <li className="flex items-start gap-1.5">
+                                                                <span className="text-blue-500 mt-0.5">•</span>
+                                                                <span><strong>{t('reports.net_worth')}:</strong> {t('reports.cash_flow_help_line2')}</span>
+                                                            </li>
+                                                        </ul>
+                                                        <p className="text-xs text-blue-600 mt-2 italic">
+                                                            {t('reports.cash_flow_example')}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </>
                                     )}
@@ -1053,32 +1070,15 @@ export default function RevenueReportPage() {
                                 </h4>
                                 <div className="space-y-3">
                                     {timeFilter === 'all' ? (
-                                        /* All Time - Show complete unified breakdown with opening balance */
+                                        /* All Time - Show complete unified breakdown */
                                         <div className="space-y-4">
                                             {/* Total Breakdown Block */}
                                             <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                                                 <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200">
-                                                    <span className="text-sm font-bold text-gray-700">{t('reports.total_sales_incl_opening')}</span>
-                                                    <span className="text-lg font-bold text-gray-900">{formatCurrency(stats.totalSalesAmount + openingCustomerDue)}</span>
+                                                    <span className="text-sm font-bold text-gray-700">{t('reports.total_sales_all_time')}</span>
+                                                    <span className="text-lg font-bold text-gray-900">{formatCurrency(duesData?.totalLifetimeSales || 0)}</span>
                                                 </div>
-                                                <div className="space-y-1.5">
-                                                    <div className="flex justify-between text-xs text-gray-600">
-                                                        <span className="flex items-center gap-1.5">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
-                                                            {t('reports.recorded_in_app')}
-                                                        </span>
-                                                        <span className="font-medium">{formatCurrency(stats.totalSalesAmount)}</span>
-                                                    </div>
-                                                    <div className="flex justify-between text-xs text-gray-600">
-                                                        <span className="flex items-center gap-1.5">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
-                                                            {t('reports.opening_balance_pre_app')}
-                                                        </span>
-                                                        <span className={`font-medium ${openingCustomerDue >= 0 ? 'text-gray-900' : 'text-blue-600'}`}>
-                                                            {openingCustomerDue >= 0 ? '+' : ''} {formatCurrency(openingCustomerDue)}
-                                                        </span>
-                                                    </div>
-                                                </div>
+                                                <p className="text-xs text-gray-500 italic">{t('reports.includes_opening_balances')}</p>
                                             </div>
 
                                             {/* Collection Block */}
@@ -1088,7 +1088,7 @@ export default function RevenueReportPage() {
                                                         <ArrowDownRight className="h-4 w-4 text-green-500" />
                                                         {t('reports.less_collected_amount')}
                                                     </span>
-                                                    <span className="font-semibold text-sm text-green-600">- {formatCurrency(stats.totalSalesCollected)}</span>
+                                                    <span className="font-semibold text-sm text-green-600">- {formatCurrency(duesData?.totalLifetimeCollected || 0)}</span>
                                                 </div>
 
                                                 <div className={`flex justify-between items-center py-2 px-3 rounded-lg mt-2 ${(duesData?.totalCustomerDue || 0) >= 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
@@ -1118,9 +1118,9 @@ export default function RevenueReportPage() {
                                                         <span className="text-sm text-gray-600">{t('reports.amount_collected')}</span>
                                                         <span className="font-semibold text-sm text-green-600">- {formatCurrency(stats.totalSalesCollected)}</span>
                                                     </div>
-                                                    <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-yellow-50">
-                                                        <span className="font-medium text-sm text-yellow-700">{t('reports.pending_from_bills')}</span>
-                                                        <span className="font-bold text-yellow-600">{formatCurrency(stats.totalSalesDue)}</span>
+                                                    <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-yellow-50 border border-yellow-200">
+                                                        <span className="font-semibold text-sm text-yellow-700">{t('reports.pending_to_collect_this_period')}</span>
+                                                        <span className="font-bold text-base text-yellow-600">{formatCurrency(stats.totalSalesDue)}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1130,7 +1130,7 @@ export default function RevenueReportPage() {
                                                 <p className="text-xs font-semibold text-gray-500 uppercase mb-2">{t('reports.all_time')}</p>
                                                 <div className={`flex justify-between items-center py-2 px-3 rounded-lg ${(duesData?.totalCustomerDue || 0) >= 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
                                                     <span className={`text-sm font-medium ${(duesData?.totalCustomerDue || 0) >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                                                        {(duesData?.totalCustomerDue || 0) >= 0 ? t('reports.total_outstanding_receivable') : t('reports.total_to_pay_to_customer')}
+                                                        = {(duesData?.totalCustomerDue || 0) >= 0 ? t('reports.total_outstanding_receivable') : t('reports.total_to_pay_to_customer')}
                                                     </span>
                                                     <span className={`font-bold text-lg ${(duesData?.totalCustomerDue || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                         {formatCurrency(Math.abs(duesData?.totalCustomerDue || 0))}
@@ -1160,32 +1160,15 @@ export default function RevenueReportPage() {
                                 </h4>
                                 <div className="space-y-3">
                                     {timeFilter === 'all' ? (
-                                        /* All Time - Show complete unified breakdown with opening balance */
+                                        /* All Time - Show complete unified breakdown */
                                         <div className="space-y-4">
                                             {/* Total Breakdown Block */}
                                             <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                                                 <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200">
-                                                    <span className="text-sm font-bold text-gray-700">{t('reports.total_purchases_incl_opening')}</span>
-                                                    <span className="text-lg font-bold text-gray-900">{formatCurrency(stats.totalPurchasesAmount + openingWholesalerDue)}</span>
+                                                    <span className="text-sm font-bold text-gray-700">{t('reports.total_purchases_all_time')}</span>
+                                                    <span className="text-lg font-bold text-gray-900">{formatCurrency(duesData?.totalLifetimePurchases || 0)}</span>
                                                 </div>
-                                                <div className="space-y-1.5">
-                                                    <div className="flex justify-between text-xs text-gray-600">
-                                                        <span className="flex items-center gap-1.5">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
-                                                            {t('reports.recorded_in_app')}
-                                                        </span>
-                                                        <span className="font-medium">{formatCurrency(stats.totalPurchasesAmount)}</span>
-                                                    </div>
-                                                    <div className="flex justify-between text-xs text-gray-600">
-                                                        <span className="flex items-center gap-1.5">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
-                                                            {t('reports.opening_balance_pre_app')}
-                                                        </span>
-                                                        <span className={`font-medium ${openingWholesalerDue >= 0 ? 'text-gray-900' : 'text-orange-600'}`}>
-                                                            {openingWholesalerDue >= 0 ? '+' : ''} {formatCurrency(openingWholesalerDue)}
-                                                        </span>
-                                                    </div>
-                                                </div>
+                                                <p className="text-xs text-gray-500 italic">{t('reports.includes_opening_balances')}</p>
                                             </div>
 
                                             {/* Payment Block */}
@@ -1195,7 +1178,7 @@ export default function RevenueReportPage() {
                                                         <ArrowUpRight className="h-4 w-4 text-orange-500" />
                                                         {t('reports.less_paid_amount')}
                                                     </span>
-                                                    <span className="font-semibold text-sm text-orange-600">- {formatCurrency(stats.totalPurchasesPaid)}</span>
+                                                    <span className="font-semibold text-sm text-orange-600">- {formatCurrency(duesData?.totalLifetimePaid || 0)}</span>
                                                 </div>
 
                                                 <div className={`flex justify-between items-center py-2 px-3 rounded-lg mt-2 ${(duesData?.totalWholesalerDue || 0) >= 0 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
@@ -1225,9 +1208,9 @@ export default function RevenueReportPage() {
                                                         <span className="text-sm text-gray-600">{t('reports.amount_paid')}</span>
                                                         <span className="font-semibold text-sm text-green-600">- {formatCurrency(stats.totalPurchasesPaid)}</span>
                                                     </div>
-                                                    <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-orange-50">
-                                                        <span className="font-medium text-sm text-orange-700">{t('reports.pending_from_bills')}</span>
-                                                        <span className="font-bold text-orange-600">{formatCurrency(stats.totalPurchasesDue)}</span>
+                                                    <div className="flex justify-between items-center py-2 px-3 rounded-lg bg-orange-50 border border-orange-200">
+                                                        <span className="font-semibold text-sm text-orange-700">{t('reports.pending_to_pay_this_period')}</span>
+                                                        <span className="font-bold text-base text-orange-600">{formatCurrency(stats.totalPurchasesDue)}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1237,7 +1220,7 @@ export default function RevenueReportPage() {
                                                 <p className="text-xs font-semibold text-gray-500 uppercase mb-2">{t('reports.all_time')}</p>
                                                 <div className={`flex justify-between items-center py-2 px-3 rounded-lg ${(duesData?.totalWholesalerDue || 0) >= 0 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
                                                     <span className={`text-sm font-medium ${(duesData?.totalWholesalerDue || 0) >= 0 ? 'text-red-700' : 'text-green-700'}`}>
-                                                        {(duesData?.totalWholesalerDue || 0) >= 0 ? t('reports.total_outstanding_payable') : t('reports.total_to_receive_from_wholesaler')}
+                                                        = {(duesData?.totalWholesalerDue || 0) >= 0 ? t('reports.total_outstanding_payable') : t('reports.total_to_receive_from_wholesaler')}
                                                     </span>
                                                     <span className={`font-bold text-lg ${(duesData?.totalWholesalerDue || 0) >= 0 ? 'text-red-600' : 'text-green-600'}`}>
                                                         {formatCurrency(Math.abs(duesData?.totalWholesalerDue || 0))}

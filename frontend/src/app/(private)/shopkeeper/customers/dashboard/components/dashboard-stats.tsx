@@ -51,16 +51,22 @@ export function CustomerDashboardStats({
     const isPositiveGrowth = Number(growth) >= 0;
     const isAllTime = timeFilter === 'all_time';
 
+    // For "All Time", use statsData which includes opening balance
     const displayOutstanding = isAllTime && statsData ? statsData.totalOutstanding : totalOutstanding;
 
-    // For All Time: Sales = Outstanding + Collected
-    const displaySales = isAllTime && statsData
-        ? displayOutstanding + totalCollected
+    // Use actual totalSales from statsData for All Time (includes opening sales)
+    const displaySales = isAllTime && statsData?.totalSales
+        ? statsData.totalSales
         : totalSales;
+
+    // Use actual totalPaid from statsData for All Time (includes opening payments)
+    const displayPaid = isAllTime && statsData?.totalPaid
+        ? statsData.totalPaid
+        : totalCollected;
 
     const displayCustomers = isAllTime && statsData ? statsData.total : totalCustomers;
 
-    const collectionRate = displaySales > 0 ? ((totalCollected / displaySales) * 100).toFixed(1) : 0;
+    const collectionRate = displaySales > 0 ? ((displayPaid / displaySales) * 100).toFixed(1) : 0;
 
     // Common styling for cards
     const cardContentClass = "p-3 sm:p-4 md:p-5 lg:p-6 flex flex-col justify-between h-full relative z-10";
@@ -129,29 +135,35 @@ export function CustomerDashboardStats({
             {/* Collected */}
             <StatCard
                 title={t('customer_dashboard.total_collected')}
-                value={formatCurrency(totalCollected)}
-                subtext={`${collectionRate}% ${t('wholesaler_dashboard.payment_rate')}`}
+                value={formatCurrency(displayPaid)}
+                subtext={isAllTime ? t('wholesaler_dashboard.incl_opening') : `${collectionRate}% ${t('wholesaler_dashboard.payment_rate')}`}
                 icon={CreditCard}
                 gradient="bg-gradient-to-br from-cyan-500 to-blue-600"
                 subtextColor="text-cyan-100"
-                extra={
+                extra={!isAllTime && (
                     <div className="h-1 sm:h-1.5 w-full bg-black/20 rounded-full overflow-hidden mt-1 mb-1 text-right">
                         <div
                             className="h-full bg-white/90 rounded-full transition-all duration-500"
                             style={{ width: `${Math.min(100, Number(collectionRate))}%` }}
                         />
                     </div>
-                }
+                )}
             />
 
             {/* Outstanding */}
             <StatCard
-                title={t('customer_dashboard.total_outstanding')}
-                value={formatCurrency(displayOutstanding)}
-                subtext={displayOutstanding > 0 ? t('billing.status_due') : t('wholesaler_dashboard.network')}
+                title={isAllTime
+                    ? (displayOutstanding >= 0 ? t('customer_dashboard.total_outstanding') : t('customer_dashboard.you_owe_them_advance'))
+                    : (displayOutstanding >= 0 ? t('customer_dashboard.they_owe_you') : t('customer_dashboard.you_owe_them'))
+                }
+                value={formatCurrency(Math.abs(displayOutstanding))}
+                subtext={isAllTime
+                    ? t('wholesaler_dashboard.incl_opening')
+                    : (displayOutstanding >= 0 ? t('billing.status_due') : t('customer_dashboard.advance_paid'))
+                }
                 icon={AlertCircle}
-                gradient={displayOutstanding > 0 ? 'bg-gradient-to-br from-rose-500 to-red-600' : 'bg-gradient-to-br from-green-500 to-emerald-600'}
-                subtextColor={displayOutstanding > 0 ? 'text-rose-100' : 'text-green-100'}
+                gradient={displayOutstanding >= 0 ? 'bg-gradient-to-br from-rose-500 to-red-600' : 'bg-gradient-to-br from-green-500 to-emerald-600'}
+                subtextColor={displayOutstanding >= 0 ? 'text-rose-100' : 'text-green-100'}
             />
 
             {/* Bills */}

@@ -48,7 +48,7 @@ import { useTranslation } from 'react-i18next';
 import {
     AddCustomerDialog,
     EditCustomerDialog,
-    CustomerDashboardStats,
+    CustomerStats,
     RecordCustomerPaymentDialog
 } from '../components';
 
@@ -56,6 +56,7 @@ interface CustomerStatsData {
     total: number;
     active: number;
     inactive: number;
+    deleted: number;
     withDues: number;
     totalOutstanding: number;
     totalSales: number;
@@ -93,13 +94,13 @@ const paymentMethodConfig: Record<string, { color: string; bgColor: string; icon
 
 const ITEMS_PER_PAGE = 10;
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number | undefined): string {
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount ?? 0);
 }
 
 
@@ -372,12 +373,19 @@ export default function DueCustomersPage() {
                         </div>
                     </div>
 
-                    {/* Simplified Stats Cards (No Time Filters) */}
-                    <CustomerDashboardStats
-                        totalCustomers={totalCustomers}
-                        totalSales={totalSales}
-                        totalPaid={totalPaid}
-                        totalOutstanding={totalOutstanding}
+                    {/* Stats Cards */}
+                    <CustomerStats
+                        stats={summaryStats || {
+                            total: 0,
+                            active: 0,
+                            inactive: 0,
+                            deleted: 0,
+                            withDues: 0,
+                            totalOutstanding: 0,
+                            totalSales: 0,
+                            totalPaid: 0
+                        }}
+                        isLoading={!summaryStats}
                     />
 
                     {/* Tabs */}
@@ -532,7 +540,7 @@ export default function DueCustomersPage() {
                                                             <TableHead className="font-semibold">{t('wholesalers_list.table.contact')}</TableHead>
                                                             <TableHead className="font-semibold text-right">{t('dashboard.total_sales')}</TableHead>
                                                             <TableHead className="font-semibold text-right">{t('billing.paid')}</TableHead>
-                                                            <TableHead className="font-semibold text-right">{t('billing.due')}</TableHead>
+                                                            <TableHead className="font-semibold text-right">{t('reports.outstanding')}</TableHead>
                                                             <TableHead className="font-semibold">{t('billing.status')}</TableHead>
                                                             <TableHead className="font-semibold text-right">{t('wholesalers_list.table.actions')}</TableHead>
                                                         </TableRow>
@@ -573,9 +581,11 @@ export default function DueCustomersPage() {
                                                                     {formatCurrency(customer.totalPaid)}
                                                                 </TableCell>
                                                                 <TableCell className="text-right">
-                                                                    <span className={`font-bold ${customer.outstandingDue > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                                                        {customer.outstandingDue > 0 ? formatCurrency(customer.outstandingDue) : t('wholesalers_list.table.clear_badge')}
-                                                                    </span>
+                                                                    <div className="flex flex-col items-end">
+                                                                        <span className={`font-bold ${customer.outstandingDue > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                                                            {customer.outstandingDue > 0 ? formatCurrency(customer.outstandingDue) : t('wholesalers_list.table.clear_badge')}
+                                                                        </span>
+                                                                    </div>
                                                                 </TableCell>
                                                                 <TableCell>
                                                                     <Badge className={customer.isActive !== false
@@ -710,9 +720,14 @@ export default function DueCustomersPage() {
                                                                 <p className="font-semibold text-green-600">{formatCurrency(customer.totalPaid)}</p>
                                                             </div>
                                                             <div>
-                                                                <p className="text-gray-500 text-[10px]">{t('billing.due')}</p>
+                                                                <p className="text-gray-500 text-[10px]">
+                                                                    {customer.outstandingDue > 0 ? t('reports.customer_outstanding_due') : t('reports.customer_advance')}
+                                                                </p>
                                                                 <p className={`font-bold ${customer.outstandingDue > 0 ? 'text-red-600' : 'text-green-600'}`}>
                                                                     {customer.outstandingDue > 0 ? formatCurrency(customer.outstandingDue) : t('wholesalers_list.table.nil_badge')}
+                                                                </p>
+                                                                <p className="text-[9px] text-gray-400 italic opacity-80">
+                                                                    {t('reports.incl_opening_balance')}
                                                                 </p>
                                                             </div>
                                                         </div>

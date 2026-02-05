@@ -3,29 +3,42 @@ import { CreateWholesalerInput, UpdateWholesalerInput } from './wholesaler.valid
 
 export class WholesalerService {
     async create(shopkeeperId: string, input: CreateWholesalerInput): Promise<any> {
-        const { initialPurchased, ...wholesalerData } = input;
+        const { initialPurchased, openingPurchases, openingPayments, ...wholesalerData } = input;
 
-        const initialAmount = initialPurchased || 0;
-        let totalPurchased = 0;
-        let totalPaid = 0;
+        // Support both old and new formats
+        let finalOpeningPurchases = 0;
+        let finalOpeningPayments = 0;
 
-        if (initialAmount > 0) {
-            // Payable (Credit): We owe them, so we treat it as a purchase without payment
-            totalPurchased = initialAmount;
-            totalPaid = 0;
-        } else if (initialAmount < 0) {
-            // Receivable (Advance): They owe us, meaning we paid in advance without purchase
-            totalPurchased = 0;
-            totalPaid = Math.abs(initialAmount);
+        if (openingPurchases !== undefined || openingPayments !== undefined) {
+            // New format: Use the explicit opening purchases and payments
+            finalOpeningPurchases = openingPurchases || 0;
+            finalOpeningPayments = openingPayments || 0;
+        } else if (initialPurchased !== undefined && initialPurchased !== 0) {
+            // Old format: Convert initialPurchased to the new format
+            if (initialPurchased > 0) {
+                // Positive: They delivered goods worth this amount (we owe them)
+                finalOpeningPurchases = initialPurchased;
+                finalOpeningPayments = 0;
+            } else {
+                // Negative: We paid advance (they owe us goods)
+                finalOpeningPurchases = 0;
+                finalOpeningPayments = Math.abs(initialPurchased);
+            }
         }
+
+        // Calculate opening balance: purchases - payments
+        // Positive = we owe them, Negative = they owe us
+        const openingBalance = finalOpeningPurchases - finalOpeningPayments;
 
         const wholesaler = new Wholesaler({
             ...wholesalerData,
             shopkeeperId,
-            initialPurchased: initialAmount,
-            totalPurchased,
-            totalPaid,
-            outstandingDue: initialAmount,
+            initialPurchased: initialPurchased || 0, // Keep for backward compatibility
+            openingPurchases: finalOpeningPurchases,
+            openingPayments: finalOpeningPayments,
+            totalPurchased: finalOpeningPurchases,
+            totalPaid: finalOpeningPayments,
+            outstandingDue: openingBalance,
         });
 
         try {
@@ -119,19 +132,64 @@ export class WholesalerService {
 
     async update(shopkeeperId: string, id: string, input: UpdateWholesalerInput): Promise<any> {
         try {
-            const wholesaler = await Wholesaler.findOneAndUpdate(
-                { _id: id, shopkeeperId },
-                { $set: input },
-                { new: true, runValidators: true }
-            );
+            const wholesaler = await Wholesaler.findOne({ _id: id, shopkeeperId });
             if (!wholesaler) {
                 throw new Error('Wholesaler not found');
             }
+
+            const { openingPurchases, openingPayments, initialPurchased, ...otherData } = input;
+
+            // Check if opening balances are being updated
+            let needsRecalculation = false;
+            let updatedOpeningPurchases = wholesaler.openingPurchases;
+            let updatedOpeningPayments = wholesaler.openingPayments;
+
+            // Handle DEPRECATED initialPurchased if provided but openingPurchases/Payments are not
+            if (initialPurchased !== undefined && openingPurchases === undefined && openingPayments === undefined) {
+                if (initialPurchased > 0) {
+                    updatedOpeningPurchases = initialPurchased;
+                    updatedOpeningPayments = 0;
+                } else if (initialPurchased < 0) {
+                    updatedOpeningPurchases = 0;
+                    updatedOpeningPayments = Math.abs(initialPurchased);
+                } else {
+                    updatedOpeningPurchases = 0;
+                    updatedOpeningPayments = 0;
+                }
+                needsRecalculation = true;
+            } else {
+                if (openingPurchases !== undefined && openingPurchases !== wholesaler.openingPurchases) {
+                    updatedOpeningPurchases = openingPurchases;
+                    needsRecalculation = true;
+                }
+
+                if (openingPayments !== undefined && openingPayments !== wholesaler.openingPayments) {
+                    updatedOpeningPayments = openingPayments;
+                    needsRecalculation = true;
+                }
+            }
+
+            if (needsRecalculation) {
+                // Adjust totals by the difference in opening balances
+                const purchaseDiff = updatedOpeningPurchases - wholesaler.openingPurchases;
+                const paymentDiff = updatedOpeningPayments - wholesaler.openingPayments;
+
+                wholesaler.openingPurchases = updatedOpeningPurchases;
+                wholesaler.openingPayments = updatedOpeningPayments;
+                wholesaler.totalPurchased += purchaseDiff;
+                wholesaler.totalPaid += paymentDiff;
+                wholesaler.outstandingDue = wholesaler.totalPurchased - wholesaler.totalPaid;
+            }
+
+            // Apply other updates
+            Object.assign(wholesaler, otherData);
+
+            await wholesaler.save();
             return wholesaler.toObject();
         } catch (error: any) {
             // Handle duplicate key errors
             if (error.code === 11000) {
-                const field = Object.keys(error.keyPattern || {})[1]; // Second key is phone/whatsappNumber
+                const field = Object.keys(error.keyPattern || {})[1];
                 if (field === 'phone') {
                     throw new Error('Phone number already exists for another wholesaler');
                 } else if (field === 'whatsappNumber') {

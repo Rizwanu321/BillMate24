@@ -6,6 +6,7 @@ import { customerRoutes } from './modules/customers';
 import { billRoutes } from './modules/bills';
 import { paymentRoutes } from './modules/payments';
 import { dashboardRoutes } from './modules/dashboard';
+import { invoiceRoutes } from './modules/invoices';
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use('/customers', customerRoutes);
 router.use('/bills', billRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/invoices', invoiceRoutes);
 
 export default router;

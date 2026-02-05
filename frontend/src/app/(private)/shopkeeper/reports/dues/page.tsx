@@ -484,10 +484,17 @@ export default function DuesReportPage() {
                                                                     )}
                                                                 </TableCell>
                                                                 <TableCell>
-                                                                    <span className={`text-lg font-bold ${customer.outstandingDue >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                                        {formatCurrency(Math.abs(customer.outstandingDue))}
-                                                                        {customer.outstandingDue < 0 && <span className="text-[10px] ml-1 uppercase">{t('wholesaler_payments.detail.advance')}</span>}
-                                                                    </span>
+                                                                    <div className="flex flex-col">
+                                                                        <span className={`text-lg font-bold ${customer.outstandingDue >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                                            {formatCurrency(Math.abs(customer.outstandingDue))}
+                                                                        </span>
+                                                                        <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+                                                                            {customer.outstandingDue >= 0 ? t('reports.customer_outstanding_due') : t('reports.customer_advance')}
+                                                                        </span>
+                                                                        <span className="text-[9px] text-gray-400 italic">
+                                                                            {t('reports.incl_opening_balance')}
+                                                                        </span>
+                                                                    </div>
                                                                 </TableCell>
                                                                 <TableCell>
                                                                     {customer.lastTransactionDate ? (
@@ -556,7 +563,10 @@ export default function DuesReportPage() {
                                                                     {formatCurrency(Math.abs(customer.outstandingDue))}
                                                                 </span>
                                                                 <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
-                                                                    {customer.outstandingDue >= 0 ? t('reports.outstanding_due') : t('wholesaler_payments.detail.advance')}
+                                                                    {customer.outstandingDue >= 0 ? t('reports.customer_outstanding_due') : t('reports.customer_advance')}
+                                                                </span>
+                                                                <span className="block text-[9px] text-gray-400 opacity-80 mt-0.5 whitespace-nowrap">
+                                                                    {t('reports.incl_opening_balance')}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -799,10 +809,17 @@ export default function DuesReportPage() {
                                                                     )}
                                                                 </TableCell>
                                                                 <TableCell>
-                                                                    <span className={`text-lg font-bold ${wholesaler.outstandingDue >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                                                        {formatCurrency(Math.abs(wholesaler.outstandingDue))}
-                                                                        {wholesaler.outstandingDue < 0 && <span className="text-[10px] ml-1 uppercase">{t('wholesaler_payments.detail.advance')}</span>}
-                                                                    </span>
+                                                                    <div className="flex flex-col">
+                                                                        <span className={`text-lg font-bold ${wholesaler.outstandingDue >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                                                            {formatCurrency(Math.abs(wholesaler.outstandingDue))}
+                                                                        </span>
+                                                                        <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+                                                                            {wholesaler.outstandingDue >= 0 ? t('reports.wholesaler_outstanding_due') : t('reports.wholesaler_advance')}
+                                                                        </span>
+                                                                        <span className="text-[9px] text-gray-400 italic">
+                                                                            {t('reports.incl_opening_balance')}
+                                                                        </span>
+                                                                    </div>
                                                                 </TableCell>
                                                                 <TableCell>
                                                                     {wholesaler.lastTransactionDate ? (
@@ -871,7 +888,10 @@ export default function DuesReportPage() {
                                                                     {formatCurrency(Math.abs(wholesaler.outstandingDue))}
                                                                 </span>
                                                                 <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
-                                                                    {wholesaler.outstandingDue >= 0 ? t('reports.outstanding_due') : t('wholesaler_payments.detail.advance')}
+                                                                    {wholesaler.outstandingDue >= 0 ? t('reports.wholesaler_outstanding_due') : t('reports.wholesaler_advance')}
+                                                                </span>
+                                                                <span className="block text-[9px] text-gray-400 opacity-80 mt-0.5 whitespace-nowrap">
+                                                                    {t('reports.incl_opening_balance')}
                                                                 </span>
                                                             </div>
                                                         </div>

@@ -130,6 +130,23 @@ export const shopkeeperSidebarConfig: SidebarItem[] = [
         ],
     },
     {
+        title: 'sidebar.invoices',
+        href: '/shopkeeper/invoices',
+        icon: FileText,
+        children: [
+            {
+                title: 'sidebar.create_invoice',
+                href: '/shopkeeper/invoices/create',
+                icon: Receipt,
+            },
+            {
+                title: 'sidebar.invoice_list',
+                href: '/shopkeeper/invoices',
+                icon: FileText,
+            },
+        ],
+    },
+    {
         title: 'sidebar.reports',
         href: '/shopkeeper/reports',
         icon: FileText,

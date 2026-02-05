@@ -22,6 +22,7 @@ interface Payment {
 }
 
 interface Customer {
+    openingPayments?: number;
     totalPaid: number;
 }
 
@@ -31,12 +32,12 @@ interface PaymentsTableProps {
     customer?: Customer;
 }
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number | undefined): string {
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
         minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount ?? 0);
 }
 
 
@@ -51,11 +52,8 @@ const paymentMethodConfig: Record<string, { key: string; icon: React.ReactNode; 
 export function PaymentsTable({ payments, isLoading, customer }: PaymentsTableProps) {
     const { t } = useTranslation();
 
-    // Calculate opening advance (total paid that came from before using the app logic)
-    // customer.totalPaid includes opening advance relative to sales logic, but more simply:
-    // If we have an opening advance, it contributes to totalPaid.
-    const paymentsTotal = payments.reduce((sum, p) => sum + p.amount, 0);
-    const openingAdvance = customer ? Math.max(0, customer.totalPaid - paymentsTotal) : 0;
+    // Use opening payments directly from database
+    const openingAdvance = customer?.openingPayments || 0;
 
     if (isLoading) {
         return (

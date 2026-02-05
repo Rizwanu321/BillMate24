@@ -21,9 +21,7 @@ interface Payment {
     createdAt: string;
 }
 
-interface Wholesaler {
-    initialPurchased: number;
-}
+import { Wholesaler } from '@/types';
 
 interface PaymentsTableProps {
     payments: Payment[];
@@ -31,12 +29,12 @@ interface PaymentsTableProps {
     wholesaler?: Wholesaler;
 }
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number | undefined): string {
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
         minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount ?? 0);
 }
 
 const paymentMethodConfig: Record<string, { color: string; gradient: string; icon: React.ReactNode; label: string }> = {
@@ -69,7 +67,8 @@ const paymentMethodConfig: Record<string, { color: string; gradient: string; ico
 export function PaymentsTable({ payments, isLoading, wholesaler }: PaymentsTableProps) {
     const { t } = useTranslation();
 
-    const openingAdvance = wholesaler && wholesaler.initialPurchased < 0 ? Math.abs(wholesaler.initialPurchased) : 0;
+    // Use opening payments directly from database
+    const openingAdvance = wholesaler?.openingPayments || 0;
 
     if (isLoading) {
         return (

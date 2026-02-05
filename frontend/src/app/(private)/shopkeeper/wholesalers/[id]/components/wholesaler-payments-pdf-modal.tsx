@@ -16,16 +16,12 @@ import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { FilterState } from './transaction-filters';
 
+import { Wholesaler } from '@/types';
+
 interface WholesalerPaymentsPdfModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    wholesaler: {
-        _id: string;
-        name: string;
-        totalPurchased: number;
-        totalPaid: number;
-        outstandingDue: number;
-    };
+    wholesaler: Wholesaler;
     filters?: FilterState;
 }
 

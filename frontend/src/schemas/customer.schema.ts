@@ -8,6 +8,8 @@ export const customerSchema = z.object({
     place: z.string().optional(),
     type: z.enum(['due', 'normal']),
     initialSales: z.number().optional(),
+    openingSales: z.number().optional(),
+    openingPayments: z.number().optional(),
 }).superRefine((data, ctx) => {
     if (data.type === 'due') {
         if (!data.phone || data.phone.trim().length === 0) {

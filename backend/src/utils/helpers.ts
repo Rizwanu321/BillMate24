@@ -33,6 +33,7 @@ export const sendPaginated = <T>(
     res: Response,
     data: T[],
     pagination: PaginatedResponse<T>['pagination'],
+    additionalData?: Record<string, any>,
     message = 'Success'
 ): Response => {
     const response: PaginatedResponse<T> = {
@@ -40,6 +41,7 @@ export const sendPaginated = <T>(
         message,
         data,
         pagination,
+        ...additionalData,
     };
     return res.status(200).json(response);
 };

@@ -15,11 +15,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import Link from 'next/link';
 
-interface Wholesaler {
-    totalPurchased: number;
-    outstandingDue: number;
-    initialPurchased: number;
-}
+import { Wholesaler } from '@/types';
 
 interface Bill {
     _id: string;
@@ -37,12 +33,12 @@ interface TransactionsTableProps {
     isLoading?: boolean;
 }
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number | undefined): string {
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
         minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount ?? 0);
 }
 
 const paymentMethodColors: Record<string, string> = {
@@ -54,7 +50,10 @@ const paymentMethodColors: Record<string, string> = {
 
 export function TransactionsTable({ bills, wholesaler, isLoading }: TransactionsTableProps) {
     const { t } = useTranslation();
-    const openingBalance = wholesaler?.initialPurchased || 0;
+    // Use opening purchases and payments directly from database
+    const openingBalance = wholesaler?.openingPurchases || 0;
+    const openingPayment = wholesaler?.openingPayments || 0;
+    const openingDue = Math.max(0, openingBalance - openingPayment);
 
     if (isLoading) {
         return (
@@ -100,7 +99,7 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {/* Opening Balance Row - Only show if it's a debt/due to the wholesaler */}
+                        {/* Opening Balance Row */}
                         {openingBalance > 0 && (
                             <TableRow className="bg-blue-50/50 border-b-2 border-blue-200">
                                 <TableCell className="text-gray-600 font-medium">
@@ -114,23 +113,29 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                                 <TableCell className="text-right font-bold text-gray-900">
                                     {formatCurrency(openingBalance)}
                                 </TableCell>
-                                <TableCell className="text-right font-semibold text-gray-400">
-                                    {formatCurrency(0)}
+                                <TableCell className="text-right font-semibold text-green-600">
+                                    {formatCurrency(openingPayment)}
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <span className="font-semibold text-orange-600">
-                                        {formatCurrency(openingBalance)}
+                                        {formatCurrency(openingDue)}
                                     </span>
                                 </TableCell>
                                 <TableCell>
                                     <Badge className="bg-gray-100 text-gray-600 border-0 text-xs">
-                                        N/A
+                                        {t('history.nil')}
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge className="bg-orange-100 text-orange-700 border-0">
-                                        {t('wholesaler_detail.transactions.pending_status')}
-                                    </Badge>
+                                    {openingDue > 0 ? (
+                                        <Badge className="bg-orange-100 text-orange-700 border-0">
+                                            {t('wholesaler_detail.transactions.pending_status')}
+                                        </Badge>
+                                    ) : (
+                                        <Badge className="bg-green-100 text-green-700 border-0">
+                                            {t('billing.paid')}
+                                        </Badge>
+                                    )}
                                 </TableCell>
                             </TableRow>
                         )}
@@ -183,7 +188,7 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
 
             {/* Mobile Cards - App-like with colored borders */}
             <div className="md:hidden p-2 space-y-2 bg-gray-50/50">
-                {/* Opening Balance Card - Only show if it's a debt/due to the wholesaler */}
+                {/* Opening Balance Card */}
                 {openingBalance > 0 && (
                     <div className="p-3 bg-blue-50 rounded-xl shadow-sm border-l-4 border-l-blue-500 border-2 border-blue-200">
                         {/* Header Row */}
@@ -196,27 +201,31 @@ export function TransactionsTable({ bills, wholesaler, isLoading }: Transactions
                                     {t('history.nil')}
                                 </Badge>
                             </div>
-                            <Badge className="bg-orange-100 text-orange-700 border-0 text-[10px] px-1.5">
-                                {t('wholesaler_detail.transactions.pending_status')}
-                            </Badge>
+                            {openingDue > 0 ? (
+                                <Badge className="bg-orange-100 text-orange-700 border-0 text-[10px] px-1.5">
+                                    {t('wholesaler_detail.transactions.pending_status')}
+                                </Badge>
+                            ) : (
+                                <Badge className="bg-green-100 text-green-700 border-0 text-[10px] px-1.5">
+                                    {t('billing.paid')}
+                                </Badge>
+                            )}
                         </div>
 
-                        {/* Stats Row */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
+                        {/* Amount Row */}
+                        <div className="bg-white rounded-lg p-2">
+                            <div className="grid grid-cols-3 gap-2 text-center">
                                 <div>
-                                    <p className="text-[10px] text-gray-500">{t('wholesaler_detail.info.purchased')}</p>
-                                    <p className="text-xs font-bold text-gray-900">{formatCurrency(openingBalance)}</p>
+                                    <p className="text-[10px] text-gray-500 font-medium">{t('dashboard.total')}</p>
+                                    <p className="font-bold text-gray-900 text-sm">{formatCurrency(openingBalance)}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-gray-500">{t('wholesaler_detail.info.paid')}</p>
-                                    <p className="text-xs font-bold text-gray-600">{formatCurrency(0)}</p>
+                                    <p className="text-[10px] text-gray-500 font-medium">{t('billing.paid')}</p>
+                                    <p className="font-bold text-green-600 text-sm">{formatCurrency(openingPayment)}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-gray-500">{t('wholesaler_detail.info.due')}</p>
-                                    <p className="text-xs font-bold text-orange-600">
-                                        {formatCurrency(openingBalance)}
-                                    </p>
+                                    <p className="text-[10px] text-gray-500 font-medium">{t('billing.due')}</p>
+                                    <p className="font-bold text-orange-600 text-sm">{formatCurrency(openingDue)}</p>
                                 </div>
                             </div>
                         </div>

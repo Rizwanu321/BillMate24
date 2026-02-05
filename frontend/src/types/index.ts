@@ -70,6 +70,8 @@ export interface Wholesaler {
     gstNumber?: string;
     whatsappNumber?: string;
     initialPurchased?: number;
+    openingPurchases?: number;
+    openingPayments?: number;
     totalPurchased: number;
     totalPaid: number;
     outstandingDue: number;
@@ -88,10 +90,13 @@ export interface Customer {
     shopkeeperId: string;
     name: string;
     phone?: string;
+    whatsappNumber?: string;
     email?: string;
     address?: string;
     place?: string;
     type: CustomerType;
+    openingSales: number;
+    openingPayments: number;
     totalSales: number;
     totalPaid: number;
     outstandingDue: number;

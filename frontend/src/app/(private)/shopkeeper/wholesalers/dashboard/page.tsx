@@ -141,9 +141,15 @@ export default function WholesalerDashboardPage() {
                 0
             );
 
+            const totalWholesalerPaid = data.reduce(
+                (sum: number, w: any) => sum + (w.totalPaid || 0),
+                0
+            );
+
             return {
                 totalWholesalerDue,
-                totalWholesalerPurchased
+                totalWholesalerPurchased,
+                totalWholesalerPaid
             };
         },
         refetchOnMount: 'always',

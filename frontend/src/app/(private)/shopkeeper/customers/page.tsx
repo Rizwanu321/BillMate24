@@ -38,12 +38,12 @@ import { useAuth } from '@/hooks/use-auth';
 import { AddCustomerDialog, EditCustomerDialog } from './components';
 import { DeleteConfirmDialog } from '@/components/app';
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number | undefined): string {
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
         minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount ?? 0);
 }
 
 export default function CustomersPage() {

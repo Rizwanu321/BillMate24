@@ -120,8 +120,21 @@ export function SidebarItem({ item, hasFeature, isCollapsed, isOpen = false, onT
                     <div className="ml-4 mt-1 space-y-1 border-l border-white/10 pl-4">
                         {visibleChildren.map((child) => {
                             const ChildIcon = child.icon;
-                            // Use exact match only for submenu items to prevent multiple items being highlighted
-                            const isChildCurrentlyActive = isPathActive(child.href);
+
+                            // Basic active check
+                            let isChildCurrentlyActive = isPathActive(child.href);
+
+                            // If active by prefix (not exact match), check if a more specific sibling also matches
+                            if (isChildCurrentlyActive && pathname !== child.href) {
+                                const hasMoreSpecificMatch = visibleChildren.some(sibling =>
+                                    sibling !== child &&
+                                    sibling.href.length > child.href.length &&
+                                    isPathActive(sibling.href)
+                                );
+                                if (hasMoreSpecificMatch) {
+                                    isChildCurrentlyActive = false;
+                                }
+                            }
 
                             return (
                                 <Link

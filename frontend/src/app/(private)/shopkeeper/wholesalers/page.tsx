@@ -536,15 +536,27 @@ export default function WholesalersPage() {
                                                         {formatCurrency(w.totalPaid)}
                                                     </TableCell>
                                                     <TableCell className="text-right">
-                                                        <Badge
-                                                            variant={w.outstandingDue > 0 ? 'destructive' : 'secondary'}
-                                                            className={w.outstandingDue > 0
-                                                                ? 'bg-red-100 text-red-700 border-0 font-mono'
-                                                                : 'bg-green-100 text-green-700 border-0'
-                                                            }
-                                                        >
-                                                            {w.outstandingDue > 0 ? formatCurrency(w.outstandingDue) : t('wholesalers_list.table.clear_badge')}
-                                                        </Badge>
+                                                        <div className="flex flex-col items-end">
+                                                            {w.outstandingDue > 0 ? (
+                                                                <span className="font-bold text-red-600">
+                                                                    {formatCurrency(w.outstandingDue)}
+                                                                </span>
+                                                            ) : w.outstandingDue < 0 ? (
+                                                                <span className="font-bold text-green-600">
+                                                                    {formatCurrency(Math.abs(w.outstandingDue))}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-gray-400 font-medium">
+                                                                    {t('wholesalers_list.table.nil_badge')}
+                                                                </span>
+                                                            )}
+                                                            <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+                                                                {w.outstandingDue > 0 ? t('wholesalers_list.stats.outstanding') : (w.outstandingDue < 0 ? t('wholesaler_dashboard.they_owe_you_advance') : '')}
+                                                            </span>
+                                                            <span className="text-[9px] text-gray-400 italic">
+                                                                {t('wholesaler_dashboard.incl_opening')}
+                                                            </span>
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <Badge className={w.isActive
@@ -702,12 +714,15 @@ export default function WholesalersPage() {
 
                                                     {/* Due */}
                                                     <div>
-                                                        <p className="text-[10px] text-gray-500 font-medium">{t('billing.due')}</p>
-                                                        {w.outstandingDue > 0 ? (
-                                                            <p className="font-bold text-red-600 text-sm">{formatCurrency(w.outstandingDue)}</p>
-                                                        ) : (
-                                                            <p className="font-bold text-green-600 text-sm">{t('wholesalers_list.table.nil_badge')}</p>
-                                                        )}
+                                                        <p className="text-[10px] text-gray-500 font-medium whitespace-nowrap overflow-hidden">
+                                                            {w.outstandingDue > 0 ? t('wholesalers_list.stats.outstanding') : (w.outstandingDue < 0 ? t('wholesaler_dashboard.they_owe_you_advance') : t('billing.due'))}
+                                                        </p>
+                                                        <p className={`font-bold text-sm ${w.outstandingDue > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                                            {w.outstandingDue !== 0 ? formatCurrency(Math.abs(w.outstandingDue)) : t('wholesalers_list.table.nil_badge')}
+                                                        </p>
+                                                        <p className="text-[9px] text-gray-400 italic mt-0.5 whitespace-nowrap">
+                                                            {t('wholesaler_dashboard.incl_opening')}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </div>

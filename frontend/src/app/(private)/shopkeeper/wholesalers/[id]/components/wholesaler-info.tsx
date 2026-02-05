@@ -5,30 +5,18 @@ import { useTranslation } from 'react-i18next';
 import { Package, Phone, MapPin, MessageCircle, TrendingUp, Wallet, AlertTriangle, CheckCircle2, Sparkles, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 
-interface Wholesaler {
-    _id: string;
-    name: string;
-    phone?: string;
-    whatsappNumber?: string;
-    address?: string;
-    place?: string;
-    totalPurchased: number;
-    totalPaid: number;
-    outstandingDue: number;
-    createdAt: string;
-    isActive?: boolean;
-}
+import { Wholesaler } from '@/types';
 
 interface WholesalerInfoProps {
     wholesaler: Wholesaler;
 }
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number | undefined): string {
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
         minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(amount ?? 0);
 }
 
 

@@ -39,6 +39,11 @@ export class DashboardService {
         totalLifetimeSales: number;
         totalLifetimePurchases: number;
         totalCollected: number;
+        // Opening balance breakdown for clearer reporting
+        openingSales: number;
+        openingPayments: number;
+        openingPurchases: number;
+        openingPurchasePayments: number;
     }> {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -179,16 +184,24 @@ export class DashboardService {
             { $group: { _id: null, total: { $sum: '$totalAmount' } } },
         ]);
 
-        // Net balance from customers (including advances)
+        // Net balance from customers (positive = they owe us, negative = we owe them advance)
         const customerDueResult = await Customer.aggregate([
             { $match: { shopkeeperId: shopkeeperObjectId, type: 'due' } },
-            { $group: { _id: null, total: { $sum: '$outstandingDue' }, count: { $sum: 1 } } },
+            { $group: { _id: null, totalOutstanding: { $sum: '$outstandingDue' }, count: { $sum: 1 } } },
         ]);
 
-        // Net balance to wholesalers (including advances)
-        const wholesalerDueResult = await Wholesaler.aggregate([
+        // Wholesaler aggregations - get actual totals
+        const wholesalerStatsResult = await Wholesaler.aggregate([
             { $match: { shopkeeperId: shopkeeperObjectId, isDeleted: { $ne: true } } },
-            { $group: { _id: null, total: { $sum: '$outstandingDue' }, count: { $sum: 1 } } },
+            {
+                $group: {
+                    _id: null,
+                    totalPurchased: { $sum: '$totalPurchased' },
+                    totalPaid: { $sum: '$totalPaid' },
+                    totalOutstanding: { $sum: '$outstandingDue' },
+                    count: { $sum: 1 }
+                }
+            },
         ]);
 
         // Customer and Wholesaler counts (Non-zero balances)
@@ -366,23 +379,46 @@ export class DashboardService {
         ]);
         const totalCollected = totalCollectedResult[0]?.total || 0;
 
-        // Total Paid to Wholesalers (Lifetime)
-        const totalPaidResult = await Transaction.aggregate([
+        // Get wholesaler totals
+        const wholesalerTotalPurchased = wholesalerStatsResult[0]?.totalPurchased || 0;
+        const wholesalerTotalPaid = wholesalerStatsResult[0]?.totalPaid || 0;
+        const wholesalerTotalOutstanding = wholesalerStatsResult[0]?.totalOutstanding || 0;
+
+        // Total Lifetime Sales = What we sold (from bills) + What's still outstanding from customers
+        const totalLifetimeSales = (customerDueResult[0]?.totalOutstanding || 0) + totalCollected;
+
+        // Total Lifetime Purchases = Total purchased from wholesalers (actual goods value)
+        const totalLifetimePurchases = wholesalerTotalPurchased;
+
+        // Calculate opening balance breakdown for clearer reporting
+        // Get sum of all opening balances from customers
+        const customerOpeningBalances = await Customer.aggregate([
+            { $match: { shopkeeperId: shopkeeperObjectId, type: 'due' } },
             {
-                $match: {
-                    shopkeeperId: shopkeeperObjectId,
-                    type: 'expense',
-                },
+                $group: {
+                    _id: null,
+                    totalOpeningSales: { $sum: '$openingSales' },
+                    totalOpeningPayments: { $sum: '$openingPayments' },
+                }
             },
-            { $group: { _id: null, total: { $sum: '$amount' } } },
         ]);
-        const totalPaid = totalPaidResult[0]?.total || 0;
 
-        // Total Lifetime Sales (Collected + Net Customer Balance)
-        const totalLifetimeSales = (customerDueResult[0]?.total || 0) + totalCollected;
+        // Get sum of all opening balances from wholesalers
+        const wholesalerOpeningBalances = await Wholesaler.aggregate([
+            { $match: { shopkeeperId: shopkeeperObjectId, isDeleted: { $ne: true } } },
+            {
+                $group: {
+                    _id: null,
+                    totalOpeningPurchases: { $sum: '$openingPurchases' },
+                    totalOpeningPayments: { $sum: '$openingPayments' },
+                }
+            },
+        ]);
 
-        // Total Lifetime Purchases (Paid + Net Wholesaler Balance)
-        const totalLifetimePurchases = (wholesalerDueResult[0]?.total || 0) + totalPaid;
+        const openingSales = customerOpeningBalances[0]?.totalOpeningSales || 0;
+        const openingPayments = customerOpeningBalances[0]?.totalOpeningPayments || 0;
+        const openingPurchases = wholesalerOpeningBalances[0]?.totalOpeningPurchases || 0;
+        const openingPurchasePayments = wholesalerOpeningBalances[0]?.totalOpeningPayments || 0;
 
 
         return {
@@ -405,9 +441,9 @@ export class DashboardService {
             // Counts
             todayBillCount: todaySalesResult[0]?.count || 0,
             monthBillCount: monthSalesResult[0]?.count || 0,
-            // Dues
-            totalDueFromCustomers: customerDueResult[0]?.total || 0,
-            totalDueToWholesalers: wholesalerDueResult[0]?.total || 0,
+            // Dues - use the outstanding totals
+            totalDueFromCustomers: customerDueResult[0]?.totalOutstanding || 0,
+            totalDueToWholesalers: wholesalerTotalOutstanding,
             paymentMethodSplit,
             recentTransactions,
             totalCustomers,
@@ -419,6 +455,11 @@ export class DashboardService {
             topCustomersDue,
             topWholesalersDue,
             alerts,
+            // Opening balance breakdown
+            openingSales,
+            openingPayments,
+            openingPurchases,
+            openingPurchasePayments,
         };
     }
 

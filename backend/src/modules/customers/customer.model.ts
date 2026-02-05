@@ -8,6 +8,8 @@ interface CustomerDocument extends Document {
     address?: string;
     place?: string;
     type: 'due' | 'normal';
+    openingSales: number;
+    openingPayments: number;
     totalSales: number;
     totalPaid: number;
     outstandingDue: number;
@@ -62,6 +64,19 @@ const customerSchema = new Schema(
             type: String,
             enum: ['due', 'normal'],
             required: [true, 'Customer type is required'],
+        },
+        // Opening balance fields for clear tracking
+        openingSales: {
+            type: Number,
+            default: 0,
+            min: 0,
+            // Amount of sales made to this customer before using the app
+        },
+        openingPayments: {
+            type: Number,
+            default: 0,
+            min: 0,
+            // Amount of payments received from this customer before using the app
         },
         totalSales: {
             type: Number,

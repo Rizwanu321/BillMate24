@@ -15,17 +15,12 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 
+import { Wholesaler } from '@/types';
+
 interface WholesalerBillsPdfModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    wholesaler: {
-        _id: string;
-        name: string;
-        totalPurchased: number;
-        totalPaid: number;
-        outstandingDue: number;
-        initialPurchased?: number;
-    };
+    wholesaler: Wholesaler;
     filters: {
         startDate?: string;
         endDate?: string;

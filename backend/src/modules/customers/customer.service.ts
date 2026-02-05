@@ -5,20 +5,38 @@ type CustomerType = 'due' | 'normal';
 
 export class CustomerService {
     async create(shopkeeperId: string, input: CreateCustomerInput): Promise<any> {
-        const { initialSales, ...customerData } = input;
+        const { initialSales, openingSales, openingPayments, ...customerData } = input;
+
+        // Determine opening balances
+        let finalOpeningSales = 0;
+        let finalOpeningPayments = 0;
+
+        // Priority 1: Use openingSales and openingPayments if provided (new dual-mode system)
+        if (openingSales !== undefined || openingPayments !== undefined) {
+            finalOpeningSales = openingSales || 0;
+            finalOpeningPayments = openingPayments || 0;
+        }
+        // Priority 2: Use initialSales if provided (backward compatibility)
+        else if (initialSales !== undefined) {
+            // If initialSales > 0: Customer owes money (Past Sales)
+            // If initialSales < 0: Customer paid in advance (Advance Payment)
+            if (initialSales > 0) {
+                finalOpeningSales = initialSales;
+                finalOpeningPayments = 0;
+            } else if (initialSales < 0) {
+                finalOpeningSales = 0;
+                finalOpeningPayments = Math.abs(initialSales);
+            }
+        }
 
         const customer = new Customer({
             ...customerData,
             shopkeeperId,
-            // If there's an initial sales amount, it represents:
-            // - Total sales to this customer before using the app
-            // - This becomes the outstanding debt (totalPaid = 0 initially)
-            // Handle opening balance
-            // If initialSales > 0: Customer owes money (Past Sales)
-            // If initialSales < 0: Customer paid in advance (Advance Payment)
-            totalSales: (initialSales && initialSales > 0) ? initialSales : 0,
-            totalPaid: (initialSales && initialSales < 0) ? Math.abs(initialSales) : 0,
-            outstandingDue: initialSales || 0,
+            openingSales: finalOpeningSales,
+            openingPayments: finalOpeningPayments,
+            totalSales: finalOpeningSales,
+            totalPaid: finalOpeningPayments,
+            outstandingDue: finalOpeningSales - finalOpeningPayments,
         });
 
         try {
@@ -131,14 +149,42 @@ export class CustomerService {
 
     async update(shopkeeperId: string, id: string, input: UpdateCustomerInput): Promise<any> {
         try {
-            const customer = await Customer.findOneAndUpdate(
-                { _id: id, shopkeeperId },
-                { $set: input },
-                { new: true }
-            );
+            const customer = await Customer.findOne({ _id: id, shopkeeperId });
             if (!customer) {
                 throw new Error('Customer not found');
             }
+
+            // Check if opening balances are being updated
+            let needsRecalculation = false;
+            let updatedOpeningSales = customer.openingSales;
+            let updatedOpeningPayments = customer.openingPayments;
+
+            if (input.openingSales !== undefined && input.openingSales !== customer.openingSales) {
+                updatedOpeningSales = input.openingSales;
+                needsRecalculation = true;
+            }
+
+            if (input.openingPayments !== undefined && input.openingPayments !== customer.openingPayments) {
+                updatedOpeningPayments = input.openingPayments;
+                needsRecalculation = true;
+            }
+
+            if (needsRecalculation) {
+                // Adjust totals by the difference in opening balances
+                const salesDiff = updatedOpeningSales - customer.openingSales;
+                const paymentDiff = updatedOpeningPayments - customer.openingPayments;
+
+                customer.openingSales = updatedOpeningSales;
+                customer.openingPayments = updatedOpeningPayments;
+                customer.totalSales += salesDiff;
+                customer.totalPaid += paymentDiff;
+                customer.outstandingDue = customer.totalSales - customer.totalPaid;
+            }
+
+            // Apply other updates
+            Object.assign(customer, input);
+
+            await customer.save();
             return customer.toObject();
         } catch (error: any) {
             // Handle duplicate key errors

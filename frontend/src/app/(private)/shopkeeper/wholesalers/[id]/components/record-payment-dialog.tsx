@@ -17,11 +17,7 @@ import {
 import api from '@/config/axios';
 import { toast } from 'sonner';
 
-interface Wholesaler {
-    _id: string;
-    name: string;
-    outstandingDue: number;
-}
+import { Wholesaler } from '@/types';
 
 interface RecordPaymentDialogProps {
     wholesaler: Wholesaler;

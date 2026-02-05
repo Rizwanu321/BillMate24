@@ -29,6 +29,8 @@ interface Customer {
     phone?: string;
     whatsappNumber?: string;
     address?: string;
+    openingSales?: number;
+    openingPayments?: number;
     totalSales: number;
     totalPaid: number;
     outstandingDue: number;

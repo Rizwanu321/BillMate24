@@ -7,7 +7,9 @@ interface WholesalerDocument extends Document {
     whatsappNumber?: string;
     address?: string;
     place?: string;
-    initialPurchased: number;
+    initialPurchased: number; // DEPRECATED
+    openingPurchases: number;
+    openingPayments: number;
     totalPurchased: number;
     totalPaid: number;
     outstandingDue: number;
@@ -51,9 +53,23 @@ const wholesalerSchema = new Schema(
             type: String,
             trim: true,
         },
+        // DEPRECATED: Use openingPurchases and openingPayments instead
         initialPurchased: {
             type: Number,
             default: 0,
+        },
+        // New fields for clear opening balance tracking
+        openingPurchases: {
+            type: Number,
+            default: 0,
+            min: 0,
+            // Amount of goods purchased before using the app
+        },
+        openingPayments: {
+            type: Number,
+            default: 0,
+            min: 0,
+            // Amount of money paid before using the app
         },
         totalPurchased: {
             type: Number,
