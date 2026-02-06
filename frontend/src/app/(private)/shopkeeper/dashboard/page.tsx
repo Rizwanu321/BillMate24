@@ -70,6 +70,14 @@ interface DashboardData {
     totalLifetimeSales: number;
     totalLifetimePurchases: number;
     totalCollected: number;
+    // Lifetime totals matching Revenue Report
+    totalLifetimeCollected: number;
+    totalLifetimePaid: number;
+    // Opening balance breakdown
+    openingSales?: number;
+    openingPayments?: number;
+    openingPurchases?: number;
+    openingPurchasePayments?: number;
 }
 
 function formatCurrency(amount: number): string {

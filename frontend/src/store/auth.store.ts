@@ -88,25 +88,49 @@ export const useAuthStore = create<AuthState>()(
                 user: state.user,
                 isAuthenticated: state.isAuthenticated,
             }),
-            onRehydrateStorage: () => (state) => {
-                if (typeof window === 'undefined') return;
-
-                // Check if cookies exist on rehydration
-                const accessToken = Cookies.get('accessToken');
-                const refreshToken = Cookies.get('refreshToken');
-
-                console.log('Rehydrating auth state - accessToken:', !!accessToken, 'refreshToken:', !!refreshToken, 'isAuthenticated:', state?.isAuthenticated);
-
-                // If no refresh token at all, clear auth state
-                if (!refreshToken && state?.isAuthenticated) {
-                    console.log('Refresh token missing - clearing auth state');
-                    state.user = null;
-                    state.isAuthenticated = false;
+            onRehydrateStorage: () => (state, error) => {
+                // Always ensure setHydrated is called, even on error
+                // This prevents infinite loading states
+                if (typeof window === 'undefined') {
+                    // SSR - mark as hydrated immediately
+                    return;
                 }
-                // If we have refresh token but no access token, the axios interceptor will handle refresh
-                // So we keep the authenticated state
 
-                state?.setHydrated();
+                try {
+                    // Check if cookies exist on rehydration
+                    const accessToken = Cookies.get('accessToken');
+                    const refreshToken = Cookies.get('refreshToken');
+
+                    console.log('Rehydrating auth state - accessToken:', !!accessToken, 'refreshToken:', !!refreshToken, 'isAuthenticated:', state?.isAuthenticated, 'error:', error);
+
+                    if (error) {
+                        console.error('Error during hydration:', error);
+                        // On error, clear auth state and still mark as hydrated
+                        if (state) {
+                            state.user = null;
+                            state.isAuthenticated = false;
+                        }
+                    } else if (state) {
+                        // If no refresh token at all, clear auth state
+                        if (!refreshToken && state.isAuthenticated) {
+                            console.log('Refresh token missing - clearing auth state');
+                            state.user = null;
+                            state.isAuthenticated = false;
+                        }
+                        // If we have refresh token but no access token, the axios interceptor will handle refresh
+                        // So we keep the authenticated state
+                    }
+                } catch (e) {
+                    console.error('Error in rehydration callback:', e);
+                    // Clear state on any error
+                    if (state) {
+                        state.user = null;
+                        state.isAuthenticated = false;
+                    }
+                } finally {
+                    // Always mark as hydrated to prevent infinite loading
+                    state?.setHydrated();
+                }
             },
         }
     )

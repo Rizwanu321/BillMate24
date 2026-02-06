@@ -39,6 +39,9 @@ export class DashboardService {
         totalLifetimeSales: number;
         totalLifetimePurchases: number;
         totalCollected: number;
+        // Lifetime totals matching Revenue Report
+        totalLifetimeCollected: number;
+        totalLifetimePaid: number;
         // Opening balance breakdown for clearer reporting
         openingSales: number;
         openingPayments: number;
@@ -185,9 +188,18 @@ export class DashboardService {
         ]);
 
         // Net balance from customers (positive = they owe us, negative = we owe them advance)
+        // Also get totalSales and totalPaid for accurate lifetime calculations
         const customerDueResult = await Customer.aggregate([
             { $match: { shopkeeperId: shopkeeperObjectId, type: 'due' } },
-            { $group: { _id: null, totalOutstanding: { $sum: '$outstandingDue' }, count: { $sum: 1 } } },
+            {
+                $group: {
+                    _id: null,
+                    totalOutstanding: { $sum: '$outstandingDue' },
+                    totalSales: { $sum: '$totalSales' },
+                    totalPaid: { $sum: '$totalPaid' },
+                    count: { $sum: 1 }
+                }
+            },
         ]);
 
         // Wholesaler aggregations - get actual totals
@@ -367,7 +379,7 @@ export class DashboardService {
             });
         }
 
-        // Total Collected (Lifetime)
+        // Total Collected (Lifetime) - from Transaction model (for period-based reports)
         const totalCollectedResult = await Transaction.aggregate([
             {
                 $match: {
@@ -384,11 +396,23 @@ export class DashboardService {
         const wholesalerTotalPaid = wholesalerStatsResult[0]?.totalPaid || 0;
         const wholesalerTotalOutstanding = wholesalerStatsResult[0]?.totalOutstanding || 0;
 
-        // Total Lifetime Sales = What we sold (from bills) + What's still outstanding from customers
-        const totalLifetimeSales = (customerDueResult[0]?.totalOutstanding || 0) + totalCollected;
+        // Get customer totals - These match the Revenue Report calculation
+        const customerTotalSales = customerDueResult[0]?.totalSales || 0;
+        const customerTotalPaid = customerDueResult[0]?.totalPaid || 0;
 
-        // Total Lifetime Purchases = Total purchased from wholesalers (actual goods value)
+        // Total Lifetime Sales = Sum of all customer.totalSales (includes opening balance)
+        // This matches the Revenue Report: customers.reduce((sum, c) => sum + (c.totalSales || 0), 0)
+        const totalLifetimeSales = customerTotalSales;
+
+        // Total Lifetime Purchases = Total purchased from wholesalers (includes opening balance)
+        // This matches the Revenue Report: wholesalers.reduce((sum, w) => sum + (w.totalPurchased || 0), 0)
         const totalLifetimePurchases = wholesalerTotalPurchased;
+
+        // Total Lifetime Collected = Sum of all customer.totalPaid (includes opening payments)
+        const totalLifetimeCollected = customerTotalPaid;
+
+        // Total Lifetime Paid = Sum of all wholesaler.totalPaid (includes opening payments)
+        const totalLifetimePaid = wholesalerTotalPaid;
 
         // Calculate opening balance breakdown for clearer reporting
         // Get sum of all opening balances from customers
@@ -435,6 +459,9 @@ export class DashboardService {
             weekCollected: weekCollectedResult[0]?.total || 0,
             monthCollected: monthCollectedResult[0]?.total || 0,
             totalCollected, // New field
+            // Lifetime totals matching Revenue Report
+            totalLifetimeCollected,
+            totalLifetimePaid,
             // Purchase data
             todayPurchases: todayPurchasesResult[0]?.total || 0,
             monthPurchases: monthPurchasesResult[0]?.total || 0,

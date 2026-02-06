@@ -165,6 +165,35 @@ api.interceptors.response.use(
                     // Process queued requests with new token
                     processQueue(null, accessToken);
 
+                    // Fetch user profile and update Zustand store
+                    // This ensures the user state is properly restored after token refresh
+                    try {
+                        const profileResponse = await axios.get(`${API_URL}/auth/profile`, {
+                            headers: {
+                                Authorization: `Bearer ${accessToken}`,
+                            },
+                        });
+
+                        if (profileResponse.data?.data) {
+                            // Dynamically import to avoid circular dependencies
+                            const { useAuthStore } = await import('@/store/auth.store');
+                            const updateUser = useAuthStore.getState().updateUser;
+                            const setAuth = useAuthStore.getState().setAuth;
+
+                            // If user exists, just update. Otherwise, set full auth state.
+                            const currentUser = useAuthStore.getState().user;
+                            if (currentUser) {
+                                updateUser(profileResponse.data.data);
+                            } else {
+                                setAuth(profileResponse.data.data, { accessToken, refreshToken: newRefreshToken });
+                            }
+                            console.log('User profile restored after token refresh');
+                        }
+                    } catch (profileError) {
+                        console.warn('Could not restore user profile after token refresh:', profileError);
+                        // Not critical - the request will still work
+                    }
+
                     // Retry original request with new token
                     originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                     return api(originalRequest);
